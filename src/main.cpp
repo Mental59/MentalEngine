@@ -1,3 +1,14 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <vector>
+
+
+#include "glFramework/glShaderProgram.hpp"
+#include "glFramework/glProgramPipeline.hpp"
+#include "glFramework/glDebug.hpp"
+#include "image/bitmap.hpp"
+#include "image/cubemapUtils.hpp"
+
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -7,31 +18,22 @@
 #include <assimp/cimport.h>
 #include <assimp/version.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-
-#include "glFramework/glShaderProgram.hpp"
-#include "glFramework/glProgramPipeline.hpp"
-#include "glFramework/glDebug.hpp"
-
-#include <vector>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 using glm::mat4;
 using glm::vec2;
 using glm::vec3;
+using glm::vec4;
+using glm::ivec2;
 
 struct PerFrameData
 {
+	mat4 model;
 	mat4 mvp;
-};
-
-struct VertexData
-{
-	vec3 pos;
-	vec2 tc;
+	vec4 cameraPos;
 };
 
 int main(void)
@@ -40,7 +42,8 @@ int main(void)
 		[](int error, const char* description)
 		{
 			fprintf(stderr, "Error: %s\n", description);
-		});
+		}
+	);
 
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
@@ -50,7 +53,7 @@ int main(void)
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
 
-	GLFWwindow* window = glfwCreateWindow(1024, 768, "Mental engine", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(1024, 768, "Simple example", nullptr, nullptr);
 	if (!window)
 	{
 		glfwTerminate();
@@ -63,7 +66,8 @@ int main(void)
 		{
 			if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 				glfwSetWindowShouldClose(window, GLFW_TRUE);
-		});
+		}
+	);
 
 	glfwMakeContextCurrent(window);
 	gladLoadGL(glfwGetProcAddress);
@@ -71,12 +75,15 @@ int main(void)
 
 	initDebug();
 
-	GLShaderProgram shaderVertex("data/shaders/chapter03/GL02.vert");
-	GLShaderProgram shaderGeometry("data/shaders/chapter03/GL02.geom");
-	GLShaderProgram shaderFragment("data/shaders/chapter03/GL02.frag");
-	GLShaderProgram shaders[3]{ shaderVertex, shaderGeometry, shaderFragment };
-	GLProgramPipeline pipeline(shaders, 3);
-	pipeline.use();
+	GLShaderProgram shdModelVertex("data/shaders/chapter03/GL03_duck.vert");
+	GLShaderProgram shdModelFragment("data/shaders/chapter03/GL03_duck.frag");
+	GLShaderProgram programs1[2]{ shdModelVertex, shdModelFragment };
+	GLProgramPipeline progModel(programs1, 2);
+
+	GLShaderProgram shdCubeVertex("data/shaders/chapter03/GL03_cube.vert");
+	GLShaderProgram shdCubeFragment("data/shaders/chapter03/GL03_cube.frag");
+	GLShaderProgram programs2[2]{ shdCubeVertex, shdCubeFragment };
+	GLProgramPipeline progCube(programs2, 2);
 
 	const GLsizeiptr kUniformBufferSize = sizeof(PerFrameData);
 
@@ -87,6 +94,7 @@ int main(void)
 
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 	const aiScene* scene = aiImportFile("data/rubber_duck/scene.gltf", aiProcess_Triangulate);
 
@@ -96,13 +104,21 @@ int main(void)
 		exit(255);
 	}
 
+	struct VertexData
+	{
+		vec3 pos;
+		vec3 n;
+		vec2 tc;
+	};
+
 	const aiMesh* mesh = scene->mMeshes[0];
 	std::vector<VertexData> vertices;
 	for (unsigned i = 0; i != mesh->mNumVertices; i++)
 	{
 		const aiVector3D v = mesh->mVertices[i];
+		const aiVector3D n = mesh->mNormals[i];
 		const aiVector3D t = mesh->mTextureCoords[0][i];
-		vertices.push_back({ .pos = vec3(v.x, v.z, v.y), .tc = vec2(t.x, t.y) });
+		vertices.push_back({ .pos = vec3(v.x, v.z, v.y), .n = vec3(n.x, n.y, n.z), .tc = vec2(t.x, t.y) });
 	}
 	std::vector<unsigned int> indices;
 	for (unsigned i = 0; i != mesh->mNumFaces; i++)
@@ -115,9 +131,14 @@ int main(void)
 	const size_t kSizeIndices = sizeof(unsigned int) * indices.size();
 	const size_t kSizeVertices = sizeof(VertexData) * vertices.size();
 
+	// indices
+	GLuint dataIndices;
+	glCreateBuffers(1, &dataIndices);
+	glNamedBufferStorage(dataIndices, kSizeIndices, indices.data(), 0);
 	GLuint vao;
 	glCreateVertexArrays(1, &vao);
 	glBindVertexArray(vao);
+	glVertexArrayElementBuffer(vao, dataIndices);
 
 	// vertices
 	GLuint dataVertices;
@@ -125,27 +146,71 @@ int main(void)
 	glNamedBufferStorage(dataVertices, kSizeVertices, vertices.data(), 0);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, dataVertices);
 
-	// indices
-	GLuint dataIndices;
-	glCreateBuffers(1, &dataIndices);
-	glNamedBufferStorage(dataIndices, kSizeIndices, indices.data(), 0);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, dataIndices);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	// texture
-	int w, h, comp;
-	const uint8_t* img = stbi_load("data/rubber_duck/textures/Duck_baseColor.png", &w, &h, &comp, 3);
-
 	GLuint texture;
-	glCreateTextures(GL_TEXTURE_2D, 1, &texture);
-	glTextureParameteri(texture, GL_TEXTURE_MAX_LEVEL, 0);
-	glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTextureStorage2D(texture, 1, GL_RGB8, w, h);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTextureSubImage2D(texture, 0, 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, img);
-	glBindTextures(0, 1, &texture);
+	{
+		int w, h, comp;
+		const uint8_t* img = stbi_load("data/rubber_duck/textures/Duck_baseColor.png", &w, &h, &comp, 3);
 
-	stbi_image_free((void*)img);
+		if (!img)
+		{
+			printf("Failed to load base texture\n");
+			return -1;
+		}
+
+		glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+		glTextureParameteri(texture, GL_TEXTURE_MAX_LEVEL, 0);
+		glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureStorage2D(texture, 1, GL_RGB8, w, h);
+		glTextureSubImage2D(texture, 0, 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, img);
+		glBindTextures(0, 1, &texture);
+
+		stbi_image_free((void*)img);
+	}
+
+	// cube map
+	GLuint cubemapTex;
+	{
+		int w, h, comp;
+		const float* img = stbi_loadf("data/piazza_bologni_4k.hdr", &w, &h, &comp, 3);
+
+		if (!img)
+		{
+			printf("Failed to load hdr map\n");
+			return -1;
+		}
+
+		Bitmap in(w, h, comp, eBitmapFormat_Float, img);
+		Bitmap out = convertEquirectangularMapToVerticalCross(in);
+		stbi_image_free((void*)img);
+
+		stbi_write_hdr("screenshot.hdr", out.w_, out.h_, out.comp_, (const float*)out.data_.data());
+
+		Bitmap cubemap = convertVerticalCrossToCubeMapFaces(out);
+
+		glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &cubemapTex);
+		glTextureParameteri(cubemapTex, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(cubemapTex, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(cubemapTex, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glTextureParameteri(cubemapTex, GL_TEXTURE_BASE_LEVEL, 0);
+		glTextureParameteri(cubemapTex, GL_TEXTURE_MAX_LEVEL, 0);
+		glTextureParameteri(cubemapTex, GL_TEXTURE_MAX_LEVEL, 0);
+		glTextureParameteri(cubemapTex, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTextureParameteri(cubemapTex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTextureParameteri(cubemapTex, GL_TEXTURE_CUBE_MAP_SEAMLESS, GL_TRUE);
+		glTextureStorage2D(cubemapTex, 1, GL_RGB32F, cubemap.w_, cubemap.h_);
+		const uint8_t* data = cubemap.data_.data();
+
+		for (unsigned i = 0; i != 6; ++i)
+		{
+			glTextureSubImage3D(cubemapTex, 0, 0, 0, i, cubemap.w_, cubemap.h_, 1, GL_RGB, GL_FLOAT, data);
+			data += cubemap.w_ * cubemap.h_ * cubemap.comp_ * Bitmap::getBytesPerComponent(cubemap.fmt_);
+		}
+		glBindTextures(1, 1, &cubemapTex);
+	}
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -156,12 +221,23 @@ int main(void)
 		glViewport(0, 0, width, height);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
 		const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
 
-		const PerFrameData perFrameData = { .mvp = p * m };
-		glNamedBufferSubData(perFrameDataBuffer, 0, kUniformBufferSize, &perFrameData);
-		glDrawArrays(GL_TRIANGLES, 0, indices.size());
+		{
+			const mat4 m = glm::rotate(glm::translate(mat4(1.0f), vec3(0.0f, -0.5f, -1.5f)), (float)glfwGetTime(), vec3(0.0f, 1.0f, 0.0f));
+			const PerFrameData perFrameData = { .model = m, .mvp = p * m, .cameraPos = vec4(0.0f) };
+			glNamedBufferSubData(perFrameDataBuffer, 0, kUniformBufferSize, &perFrameData);
+			progModel.use();
+			glDrawElements(GL_TRIANGLES, static_cast<unsigned>(indices.size()), GL_UNSIGNED_INT, nullptr);
+		}
+
+		{
+			const mat4 m = glm::scale(mat4(1.0f), vec3(2.0f));
+			const PerFrameData perFrameData = { .model = m, .mvp = p * m, .cameraPos = vec4(0.0f) };
+			glNamedBufferSubData(perFrameDataBuffer, 0, kUniformBufferSize, &perFrameData);
+			progCube.use();
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -170,6 +246,7 @@ int main(void)
 	glDeleteBuffers(1, &dataIndices);
 	glDeleteBuffers(1, &dataVertices);
 	glDeleteBuffers(1, &perFrameDataBuffer);
+	glDeleteVertexArrays(1, &vao);
 
 	glfwDestroyWindow(window);
 	glfwTerminate();
