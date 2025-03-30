@@ -30,6 +30,8 @@ macro(SETUP_APP projname version)
   target_sources(MentalEngine PRIVATE ${DEPS_SOURCES})
 
   if(MSVC)
+    unset(CMAKE_INCLUDE_SYSTEM_FLAG_CXX)
+    unset(_CMAKE_INCLUDE_SYSTEM_FLAG_CXX_WARNING)
 		set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 	endif()
 endmacro()

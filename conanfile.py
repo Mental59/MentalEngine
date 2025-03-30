@@ -1,5 +1,5 @@
 from conan import ConanFile
-from conan.tools.cmake import cmake_layout, CMake
+from conan.tools.cmake import cmake_layout
 
 
 class MentalEngine(ConanFile):
@@ -10,9 +10,11 @@ class MentalEngine(ConanFile):
         self.requires("glfw/3.4")
         self.requires("glm/cci.20230113")
         self.requires("stb/cci.20230920")
+        self.requires("assimp/5.4.3")
+        self.requires("glslang/11.7.0")
+        self.requires("volk/1.3.296.0")
         # self.requires("imgui/1.91.8")
         # self.requires("easy_profiler/2.1.0")
-        self.requires("assimp/5.4.3")
         # self.requires("taskflow/3.9.0")
         # self.requires("meshoptimizer/0.22")
 
@@ -92,8 +94,3 @@ class MentalEngine(ConanFile):
 
     def layout(self):
         cmake_layout(self)
-    
-    def build(self):
-        cmake = CMake(self)
-        cmake.configure()
-        cmake.build()
