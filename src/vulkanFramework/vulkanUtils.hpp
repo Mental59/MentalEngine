@@ -4,7 +4,7 @@
 #include <volk.h>
 #include <glslang/Include/glslang_c_interface.h>
 
-namespace VulkanFramework
+namespace mental
 {
 	struct ShaderModule final
 	{

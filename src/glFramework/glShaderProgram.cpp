@@ -2,12 +2,12 @@
 #include "glShaderProgram.hpp"
 #include "utils/utils.hpp"
 
-GLShaderProgram::GLShaderProgram(const char* fileName)
+mental::GLShaderProgram::GLShaderProgram(const char* fileName)
 	: GLShaderProgram(glShaderTypeFromFilename(fileName), readShaderFile(fileName).c_str(), fileName)
 {
 }
 
-GLShaderProgram::GLShaderProgram(GLenum type, const char* text, const char* fileName)
+mental::GLShaderProgram::GLShaderProgram(GLenum type, const char* text, const char* fileName)
 	: type_(type),
 	typeBit_(glShaderTypeBitFromType(type_)),
 	handle_(glCreateProgram())
@@ -40,12 +40,12 @@ GLShaderProgram::GLShaderProgram(GLenum type, const char* text, const char* file
 	glDeleteShader(shaderHandle);
 }
 
-GLShaderProgram::~GLShaderProgram()
+mental::GLShaderProgram::~GLShaderProgram()
 {
 	glDeleteProgram(handle_);
 }
 
-GLuint GLShaderProgram::createShader(const char* text, const char* fileName)
+GLuint mental::GLShaderProgram::createShader(const char* text, const char* fileName)
 {
 	GLuint shaderHandle = glCreateShader(type_);
 	glShaderSource(shaderHandle, 1, &text, nullptr);
@@ -70,7 +70,7 @@ GLuint GLShaderProgram::createShader(const char* text, const char* fileName)
 	return shaderHandle;
 }
 
-GLenum glShaderTypeFromFilename(const char* fileName)
+GLenum mental::glShaderTypeFromFilename(const char* fileName)
 {
 	if (endsWith(fileName, ".vert"))
 		return GL_VERTEX_SHADER;
@@ -95,7 +95,7 @@ GLenum glShaderTypeFromFilename(const char* fileName)
 	return 0;
 }
 
-GLbitfield glShaderTypeBitFromType(GLenum type)
+GLbitfield mental::glShaderTypeBitFromType(GLenum type)
 {
 	if (type == GL_VERTEX_SHADER)
 		return GL_VERTEX_SHADER_BIT;

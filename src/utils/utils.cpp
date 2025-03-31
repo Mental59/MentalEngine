@@ -4,7 +4,7 @@
 
 #include "utils.hpp"
 
-void printShaderSource(const char* text)
+void mental::printShaderSource(const char* text)
 {
 	int line = 1;
 
@@ -28,7 +28,7 @@ void printShaderSource(const char* text)
 	printf("\n");
 }
 
-bool endsWith(const char* s, const char* part)
+bool mental::endsWith(const char* s, const char* part)
 {
 	const size_t sLength = strlen(s);
 	const size_t partLength = strlen(part);
@@ -37,7 +37,7 @@ bool endsWith(const char* s, const char* part)
 	return strcmp(s + sLength - partLength, part) == 0;
 }
 
-std::string readShaderFile(const char* fileName)
+std::string mental::readShaderFile(const char* fileName)
 {
 	FILE* file = fopen(fileName, "r");
 

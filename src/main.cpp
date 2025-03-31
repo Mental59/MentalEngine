@@ -22,9 +22,9 @@ void saveSPIRVBinaryFile(const char* filename, unsigned int* code, size_t size)
 
 void testShaderCompilation(const char* sourceFilename, const char* destFilename)
 {
-	VulkanFramework::ShaderModule shaderModule;
+	mental::ShaderModule shaderModule;
 
-	if (VulkanFramework::compileShaderFile(sourceFilename, shaderModule) < 1)
+	if (mental::compileShaderFile(sourceFilename, shaderModule) < 1)
 		return;
 
 	saveSPIRVBinaryFile(destFilename, shaderModule.SPIRV.data(), shaderModule.SPIRV.size());

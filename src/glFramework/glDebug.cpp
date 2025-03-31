@@ -1,7 +1,7 @@
 #include "glDebug.hpp"
 #include "cstdio"
 
-void messageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, void const* user_param)
+void mental::messageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, GLchar const* message, void const* user_param)
 {
 	auto const srcStr = [source]() {
 		switch (source)
@@ -43,7 +43,7 @@ void messageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLs
 	printf("%s, %s, %s, %i: %s\n\n", srcStr, typeStr, severityStr, id, message);
 }
 
-void initDebug()
+void mental::initDebug()
 {
 	glDebugMessageCallback(messageCallback, nullptr);
 	glEnable(GL_DEBUG_OUTPUT);

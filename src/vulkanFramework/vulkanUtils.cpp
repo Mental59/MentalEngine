@@ -4,7 +4,7 @@
 
 namespace
 {
-	size_t compileShader(glslang_stage_t stage, const char* shaderSource, VulkanFramework::ShaderModule& shaderModule)
+	size_t compileShader(glslang_stage_t stage, const char* shaderSource, mental::ShaderModule& shaderModule)
 	{
 		const glslang_resource_t defaultResource = {
             /* .MaxLights = */ 32,
@@ -137,7 +137,7 @@ namespace
 			fprintf(stderr, "GLSL preprocessing failed\n");
 			fprintf(stderr, "\n%s", glslang_shader_get_info_log(shader));
 			fprintf(stderr, "\n%s", glslang_shader_get_info_debug_log(shader));
-			printShaderSource(input.code);
+			mental::printShaderSource(input.code);
 			return 0;
 		}
 
@@ -146,7 +146,7 @@ namespace
 			fprintf(stderr, "GLSL parsing failed\n");
 			fprintf(stderr, "\n%s", glslang_shader_get_info_log(shader));
 			fprintf(stderr, "\n%s", glslang_shader_get_info_debug_log(shader));
-			printShaderSource(glslang_shader_get_preprocessed_code(shader));
+            mental::printShaderSource(glslang_shader_get_preprocessed_code(shader));
 			return 0;
 		}
 
@@ -181,7 +181,7 @@ namespace
 	}
 }
 
-glslang_stage_t VulkanFramework::glslangShaderStageFromFileName(const char* fileName)
+glslang_stage_t mental::glslangShaderStageFromFileName(const char* fileName)
 {
     if (endsWith(fileName, ".vert"))
         return GLSLANG_STAGE_VERTEX;
@@ -204,7 +204,7 @@ glslang_stage_t VulkanFramework::glslangShaderStageFromFileName(const char* file
     return GLSLANG_STAGE_VERTEX;
 }
 
-size_t VulkanFramework::compileShaderFile(const char* file, ShaderModule& shaderModule)
+size_t mental::compileShaderFile(const char* file, ShaderModule& shaderModule)
 {
     std::string shaderSource = readShaderFile(file);
 
