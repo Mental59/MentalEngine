@@ -1,14 +1,17 @@
 cmake_minimum_required(VERSION 3.30)
 
+include(cmake/CMakeHelpers.cmake)
+setup_conan()
+
 project(MentalEngine)
 
-include(cmake/CMakeHelpers.cmake)
+setup_app(MentalEngine 0.0.1)
 
 find_package(glm REQUIRED)
 find_package(glfw3 3.4 REQUIRED)
 find_package(stb REQUIRED)
 find_package(assimp REQUIRED)
-find_package(glslang REQUIRED CONFIG)
+find_package(glslang REQUIRED)
 find_package(volk REQUIRED)
 # find_package(imgui REQUIRED)
 # find_package(easy_profiler REQUIRED)
@@ -17,8 +20,6 @@ find_package(volk REQUIRED)
 
 # add_subdirectory(deps/libs/optick)
 # add_subdirectory(deps/libs/etc2comp)
-
-SETUP_APP(MentalEngine 0.0.1)
 
 target_link_libraries(
   MentalEngine PRIVATE

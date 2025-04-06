@@ -1,6 +1,8 @@
 #include "vulkanUtils.hpp"
 #include "utils/utils.hpp"
 #include <string>
+#include <cassert>
+#include <cstdlib>
 
 namespace
 {
@@ -214,4 +216,14 @@ size_t mental::compileShaderFile(const char* file, ShaderModule& shaderModule)
     }
 
     return compileShader(glslangShaderStageFromFileName(file), shaderSource.c_str(), shaderModule);
+}
+
+void mental::check(bool check, const char* fileName, int lineNumber)
+{
+    if (!check)
+    {
+        printf("CHECK() failed at %s:%i\n", fileName, lineNumber);
+        assert(false);
+        exit(EXIT_FAILURE);
+    }
 }
