@@ -2,10 +2,10 @@
 #include "cubemapUtils.hpp"
 #include <math.h>
 
+using glm::clamp;
+using glm::ivec2;
 using glm::vec3;
 using glm::vec4;
-using glm::ivec2;
-using glm::clamp;
 
 vec3 mental::faceCoordsToXYZ(int i, int j, int faceID, int faceSize)
 {
@@ -33,15 +33,8 @@ mental::Bitmap mental::convertEquirectangularMapToVerticalCross(const Bitmap& b)
 
 	Bitmap result(w, h, b.comp_, b.fmt_);
 
-	const ivec2 kFaceOffsets[] =
-	{
-		ivec2(faceSize, faceSize * 3),
-		ivec2(0, faceSize),
-		ivec2(faceSize, faceSize),
-		ivec2(faceSize * 2, faceSize),
-		ivec2(faceSize, 0),
-		ivec2(faceSize, faceSize * 2)
-	};
+	const ivec2 kFaceOffsets[] = {ivec2(faceSize, faceSize * 3), ivec2(0, faceSize), ivec2(faceSize, faceSize), ivec2(faceSize * 2, faceSize),
+		ivec2(faceSize, 0), ivec2(faceSize, faceSize * 2)};
 
 	const int clampW = b.w_ - 1;
 	const int clampH = b.h_ - 1;
@@ -118,41 +111,41 @@ mental::Bitmap mental::convertVerticalCrossToCubeMapFaces(const Bitmap& b)
 
 				switch (face)
 				{
-					// GL_TEXTURE_CUBE_MAP_POSITIVE_X
-				case 0:
-					x = i;
-					y = faceHeight + j;
-					break;
+						// GL_TEXTURE_CUBE_MAP_POSITIVE_X
+					case 0:
+						x = i;
+						y = faceHeight + j;
+						break;
 
-					// GL_TEXTURE_CUBE_MAP_NEGATIVE_X
-				case 1:
-					x = 2 * faceWidth + i;
-					y = 1 * faceHeight + j;
-					break;
+						// GL_TEXTURE_CUBE_MAP_NEGATIVE_X
+					case 1:
+						x = 2 * faceWidth + i;
+						y = 1 * faceHeight + j;
+						break;
 
-					// GL_TEXTURE_CUBE_MAP_POSITIVE_Y
-				case 2:
-					x = 2 * faceWidth - (i + 1);
-					y = 1 * faceHeight - (j + 1);
-					break;
+						// GL_TEXTURE_CUBE_MAP_POSITIVE_Y
+					case 2:
+						x = 2 * faceWidth - (i + 1);
+						y = 1 * faceHeight - (j + 1);
+						break;
 
-					// GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
-				case 3:
-					x = 2 * faceWidth - (i + 1);
-					y = 3 * faceHeight - (j + 1);
-					break;
+						// GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
+					case 3:
+						x = 2 * faceWidth - (i + 1);
+						y = 3 * faceHeight - (j + 1);
+						break;
 
-					// GL_TEXTURE_CUBE_MAP_POSITIVE_Z
-				case 4:
-					x = 2 * faceWidth - (i + 1);
-					y = b.h_ - (j + 1);
-					break;
+						// GL_TEXTURE_CUBE_MAP_POSITIVE_Z
+					case 4:
+						x = 2 * faceWidth - (i + 1);
+						y = b.h_ - (j + 1);
+						break;
 
-					// GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
-				case 5:
-					x = faceWidth + i;
-					y = faceHeight + j;
-					break;
+						// GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+					case 5:
+						x = faceWidth + i;
+						y = faceHeight + j;
+						break;
 				}
 
 				memcpy(dst, src + (y * b.w_ + x) * pixelSize, pixelSize);

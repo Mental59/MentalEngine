@@ -13,10 +13,10 @@ void saveSPIRVBinaryFile(const char* filename, unsigned int* code, size_t size)
 {
 	FILE* f = fopen(filename, "w");
 
-	if (!f)
-		return;
+	if (!f) return;
 
 	fwrite(code, sizeof(uint32_t), size, f);
+
 	fclose(f);
 }
 
@@ -24,8 +24,7 @@ void testShaderCompilation(const char* sourceFilename, const char* destFilename)
 {
 	mental::ShaderModule shaderModule;
 
-	if (mental::compileShaderFile(sourceFilename, shaderModule) < 1)
-		return;
+	if (mental::compileShaderFile(sourceFilename, shaderModule) < 1) return;
 
 	saveSPIRVBinaryFile(destFilename, shaderModule.SPIRV.data(), shaderModule.SPIRV.size());
 }

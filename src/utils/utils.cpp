@@ -32,8 +32,7 @@ bool mental::endsWith(const char* s, const char* part)
 {
 	const size_t sLength = strlen(s);
 	const size_t partLength = strlen(part);
-	if (sLength < partLength)
-		return false;
+	if (sLength < partLength) return false;
 	return strcmp(s + sLength - partLength, part) == 0;
 }
 
@@ -52,7 +51,8 @@ std::string mental::readShaderFile(const char* fileName)
 	fseek(file, 0L, SEEK_SET);
 
 	char* buffer = (char*)_malloca(bytesinfile + 1);
-	if (!buffer) {
+	if (!buffer)
+	{
 		return std::string();
 	}
 	const size_t bytesread = fread(buffer, 1, bytesinfile, file);
@@ -60,12 +60,11 @@ std::string mental::readShaderFile(const char* fileName)
 
 	buffer[bytesread] = 0;
 
-	static constexpr unsigned char BOM[] = { 0xEF, 0xBB, 0xBF };
+	static constexpr unsigned char BOM[] = {0xEF, 0xBB, 0xBF};
 
 	if (bytesread > 3)
 	{
-		if (!memcmp(buffer, BOM, 3))
-			memset(buffer, ' ', 3);
+		if (!memcmp(buffer, BOM, 3)) memset(buffer, ' ', 3);
 	}
 
 	std::string code(buffer);

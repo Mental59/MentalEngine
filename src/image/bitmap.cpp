@@ -1,16 +1,19 @@
 #include "bitmap.hpp"
 
-mental::Bitmap::Bitmap(int w, int h, int comp, eBitmapFormat fmt) :w_(w), h_(h), comp_(comp), fmt_(fmt), data_(w* h* comp* getBytesPerComponent(fmt))
+mental::Bitmap::Bitmap(int w, int h, int comp, eBitmapFormat fmt)
+	: w_(w), h_(h), comp_(comp), fmt_(fmt), data_(w * h * comp * getBytesPerComponent(fmt))
 {
 	initGetSetFuncs();
 }
 
-mental::Bitmap::Bitmap(int w, int h, int d, int comp, eBitmapFormat fmt) :w_(w), h_(h), d_(d), comp_(comp), fmt_(fmt), data_(w* h* d* comp* getBytesPerComponent(fmt))
+mental::Bitmap::Bitmap(int w, int h, int d, int comp, eBitmapFormat fmt)
+	: w_(w), h_(h), d_(d), comp_(comp), fmt_(fmt), data_(w * h * d * comp * getBytesPerComponent(fmt))
 {
 	initGetSetFuncs();
 }
 
-mental::Bitmap::Bitmap(int w, int h, int comp, eBitmapFormat fmt, const void* ptr) :w_(w), h_(h), comp_(comp), fmt_(fmt), data_(w* h* comp* getBytesPerComponent(fmt))
+mental::Bitmap::Bitmap(int w, int h, int comp, eBitmapFormat fmt, const void* ptr)
+	: w_(w), h_(h), comp_(comp), fmt_(fmt), data_(w * h * comp * getBytesPerComponent(fmt))
 {
 	initGetSetFuncs();
 	memcpy(data_.data(), ptr, data_.size());
@@ -37,14 +40,14 @@ void mental::Bitmap::initGetSetFuncs()
 {
 	switch (fmt_)
 	{
-	case eBitmapFormat_UnsignedByte:
-		setPixelFunc = &Bitmap::setPixelUnsignedByte;
-		getPixelFunc = &Bitmap::getPixelUnsignedByte;
-		break;
-	case eBitmapFormat_Float:
-		setPixelFunc = &Bitmap::setPixelFloat;
-		getPixelFunc = &Bitmap::getPixelFloat;
-		break;
+		case eBitmapFormat_UnsignedByte:
+			setPixelFunc = &Bitmap::setPixelUnsignedByte;
+			getPixelFunc = &Bitmap::getPixelUnsignedByte;
+			break;
+		case eBitmapFormat_Float:
+			setPixelFunc = &Bitmap::setPixelFloat;
+			getPixelFunc = &Bitmap::getPixelFloat;
+			break;
 	}
 }
 
@@ -63,10 +66,7 @@ glm::vec4 mental::Bitmap::getPixelFloat(int x, int y) const
 	const int ofs = comp_ * (y * w_ + x);
 	const float* data = reinterpret_cast<const float*>(data_.data());
 	return glm::vec4(
-		comp_ > 0 ? data[ofs + 0] : 0.0f,
-		comp_ > 1 ? data[ofs + 1] : 0.0f,
-		comp_ > 2 ? data[ofs + 2] : 0.0f,
-		comp_ > 3 ? data[ofs + 3] : 0.0f);
+		comp_ > 0 ? data[ofs + 0] : 0.0f, comp_ > 1 ? data[ofs + 1] : 0.0f, comp_ > 2 ? data[ofs + 2] : 0.0f, comp_ > 3 ? data[ofs + 3] : 0.0f);
 }
 
 void mental::Bitmap::setPixelUnsignedByte(int x, int y, const glm::vec4& c)
@@ -81,9 +81,6 @@ void mental::Bitmap::setPixelUnsignedByte(int x, int y, const glm::vec4& c)
 glm::vec4 mental::Bitmap::getPixelUnsignedByte(int x, int y) const
 {
 	const int ofs = comp_ * (y * w_ + x);
-	return glm::vec4(
-		comp_ > 0 ? float(data_[ofs + 0]) / 255.0f : 0.0f,
-		comp_ > 1 ? float(data_[ofs + 1]) / 255.0f : 0.0f,
-		comp_ > 2 ? float(data_[ofs + 2]) / 255.0f : 0.0f,
-		comp_ > 3 ? float(data_[ofs + 3]) / 255.0f : 0.0f);
+	return glm::vec4(comp_ > 0 ? float(data_[ofs + 0]) / 255.0f : 0.0f, comp_ > 1 ? float(data_[ofs + 1]) / 255.0f : 0.0f,
+		comp_ > 2 ? float(data_[ofs + 2]) / 255.0f : 0.0f, comp_ > 3 ? float(data_[ofs + 3]) / 255.0f : 0.0f);
 }

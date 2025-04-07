@@ -12,7 +12,8 @@ mental::GLProgramPipeline::GLProgramPipeline(const GLShaderProgram* programs, si
 	GLint success;
 	glValidateProgramPipeline(handle_);
 	glGetProgramPipelineiv(handle_, GL_VALIDATE_STATUS, &success);
-	if (!success) {
+	if (!success)
+	{
 		GLchar infoLog[512];
 		glGetProgramPipelineInfoLog(handle_, 512, nullptr, infoLog);
 		printf("Pipeline validation failed:\n%s\n", infoLog);
