@@ -8,8 +8,7 @@ namespace
 {
 size_t compileShader(glslang_stage_t stage, const char* shaderSource, mental::ShaderModule& shaderModule)
 {
-	const glslang_resource_t defaultResource = {
-		.max_lights = 32,
+	const glslang_resource_t defaultResource = {.max_lights = 32,
 		.max_clip_planes = 6,
 		.max_texture_units = 32,
 		.max_texture_coords = 32,
@@ -40,12 +39,12 @@ size_t compileShader(glslang_stage_t stage, const char* shaderSource, mental::Sh
 		.max_compute_image_uniforms = 8,
 		.max_compute_atomic_counters = 8,
 		.max_compute_atomic_counter_buffers = 1,
-		.max_varying_components =  60,
+		.max_varying_components = 60,
 		.max_vertex_output_components = 64,
 		.max_geometry_input_components = 64,
 		.max_geometry_output_components = 128,
 		.max_fragment_input_components = 128,
-		.max_image_units =  8,
+		.max_image_units = 8,
 		.max_combined_image_units_and_fragment_outputs = 8,
 		.max_combined_shader_output_resources = 8,
 		.max_image_samples = 0,
@@ -84,7 +83,7 @@ size_t compileShader(glslang_stage_t stage, const char* shaderSource, mental::Sh
 		.max_tess_control_atomic_counter_buffers = 0,
 		.max_tess_evaluation_atomic_counter_buffers = 0,
 		.max_geometry_atomic_counter_buffers = 0,
-		.max_fragment_atomic_counter_buffers =  1,
+		.max_fragment_atomic_counter_buffers = 1,
 		.max_combined_atomic_counter_buffers = 1,
 		.max_atomic_counter_buffer_size = 16384,
 		.max_transform_feedback_buffers = 4,
@@ -103,8 +102,7 @@ size_t compileShader(glslang_stage_t stage, const char* shaderSource, mental::Sh
 		.max_mesh_view_count_nv = 4,
 		.maxDualSourceDrawBuffersEXT = 1,
 
-		.limits =
-		{
+		.limits = {
 			.non_inductive_for_loops = 1,
 			.while_loops = 1,
 			.do_while_loops = 1,
@@ -120,9 +118,9 @@ size_t compileShader(glslang_stage_t stage, const char* shaderSource, mental::Sh
 		.language = GLSLANG_SOURCE_GLSL,
 		.stage = stage,
 		.client = GLSLANG_CLIENT_VULKAN,
-		.client_version = GLSLANG_TARGET_VULKAN_1_2,
+		.client_version = GLSLANG_TARGET_VULKAN_1_4,
 		.target_language = GLSLANG_TARGET_SPV,
-		.target_language_version = GLSLANG_TARGET_SPV_1_5,
+		.target_language_version = GLSLANG_TARGET_SPV_1_6,
 		.code = shaderSource,
 		.default_version = 100,
 		.default_profile = GLSLANG_NO_PROFILE,
@@ -171,7 +169,10 @@ size_t compileShader(glslang_stage_t stage, const char* shaderSource, mental::Sh
 	{
 		const char* spirv_messages = glslang_program_SPIRV_get_messages(program);
 
-		if (spirv_messages) fprintf(stderr, "%s", spirv_messages);
+		if (spirv_messages)
+		{
+			fprintf(stderr, "%s", spirv_messages);
+		}
 	}
 
 	glslang_program_delete(program);

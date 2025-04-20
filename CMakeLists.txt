@@ -11,15 +11,19 @@ find_package(glm REQUIRED)
 find_package(glfw3 3.4 REQUIRED)
 find_package(stb REQUIRED)
 find_package(assimp REQUIRED)
-find_package(glslang REQUIRED)
-find_package(volk REQUIRED)
-# find_package(imgui REQUIRED)
-# find_package(easy_profiler REQUIRED)
-# find_package(Taskflow REQUIRED)
-# find_package(meshoptimizer REQUIRED)
+find_package(Vulkan REQUIRED COMPONENTS shaderc_combined)
 
-# add_subdirectory(deps/libs/optick)
-# add_subdirectory(deps/libs/etc2comp)
+if(WIN32)
+target_compile_definitions(MentalEngine PRIVATE VK_USE_PLATFORM_WIN32_KHR)
+elseif(LINUX)
+target_compile_definitions(MentalEngine PRIVATE VK_USE_PLATFORM_XCB_KHR)
+elseif(APPLE)
+target_compile_definitions(MentalEngine PRIVATE VK_USE_PLATFORM_METAL_EXT)
+else()
+message(FATAL_ERROR "Unsupported platform")
+endif()
+
+add_subdirectory(deps/libs/volk)
 
 target_link_libraries(
   MentalEngine PRIVATE
@@ -27,22 +31,8 @@ target_link_libraries(
   glfw
   stb::stb
   assimp::assimp
-  glslang::glslang
-  glslang::SPIRV
-  volk::volk
-  # imgui::imgui
-  # easy_profiler
-  # optick
-  # EtcTool
-  # Taskflow::Taskflow
-  # meshoptimizer::meshoptimizer
+  volk_headers
+  Vulkan::shaderc_combined
 )
 
-# target_compile_definitions(MentalEngine PRIVATE BUILD_WITH_EASY_PROFILER)
-# target_include_directories(
-  # ${PROJECT_NAME} PRIVATE
-  # deps/libs
-  # deps/libs/optick
-  # deps/libs/etc2comp/EtcLib/Etc
-  # deps/libs/etc2comp/EtcLib/EtcCodec
-# )
+target_compile_definitions(MentalEngine PRIVATE VK_NO_PROTOTYPES GLFW_INCLUDE_VULKAN)

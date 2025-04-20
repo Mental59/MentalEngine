@@ -1,6 +1,3 @@
-#define VK_NO_PROTOTYPES
-#define GLFW_INCLUDE_VULKAN
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

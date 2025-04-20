@@ -11,19 +11,11 @@ class MentalEngine(ConanFile):
         self.requires("glm/cci.20230113")
         self.requires("stb/cci.20230920")
         self.requires("assimp/5.4.3")
-        self.requires("glslang/11.7.0")
-        self.requires("volk/1.3.296.0")
-        # self.requires("imgui/1.91.8")
-        # self.requires("easy_profiler/2.1.0")
-        # self.requires("taskflow/3.9.0")
-        # self.requires("meshoptimizer/0.22")
 
     def configure(self):
         self.options['glfw'].shared = False
         self.options['glm'].shared = False
         self.options['stb'].shared = False
-        # self.options['imgui'].shared = False
-        # self.options['easy_profiler'].shared = False
         self.options["assimp"].shared = False
         self.options["assimp"].with_3d = False
         self.options["assimp"].with_3ds = False
