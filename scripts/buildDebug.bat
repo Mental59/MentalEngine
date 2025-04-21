@@ -1,2 +1,2 @@
-call ./scripts/generateDebug.bat
+call ./scripts/generate.bat
 cmake --build build --config Debug
