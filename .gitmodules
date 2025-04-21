@@ -1,0 +1,18 @@
+[submodule "deps/libs/volk"]
+	path = deps/libs/volk
+	url = https://github.com/zeux/volk.git
+[submodule "deps/libs/glfw"]
+	path = deps/libs/glfw
+	url = https://github.com/glfw/glfw.git
+[submodule "deps/libs/glm"]
+	path = deps/libs/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "deps/libs/stb"]
+	path = deps/libs/stb
+	url = https://github.com/nothings/stb.git
+[submodule "deps/libs/assimp"]
+	path = deps/libs/assimp
+	url = https://github.com/assimp/assimp.git
+[submodule "deps/libs/glslang"]
+	path = deps/libs/glslang
+	url = https://github.com/KhronosGroup/glslang.git
