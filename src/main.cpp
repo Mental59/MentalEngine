@@ -1,10 +1,6 @@
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <vector>
-
-#include "utils/utils.hpp"
-#include "vulkanFramework/vulkanUtils.hpp"
+#include "vulkanFramework/vulkanFramework.hpp"
 
 void saveSPIRVBinaryFile(const char* filename, unsigned int* code, size_t size)
 {
@@ -28,12 +24,27 @@ void testShaderCompilation(const char* sourceFilename, const char* destFilename)
 
 int main()
 {
+	volkInitialize();
+
+	VkInstance vulkanInstance = mental::createVulkanInstance();
+
+#if defined(_DEBUG)
+	VkDebugUtilsMessengerEXT messenger;
+	VkDebugReportCallbackEXT reportCallback;
+	mental::setupDebugCallbacks(vulkanInstance, &messenger, &reportCallback);
+#endif	// (_DEBUG)
+
 	glslang_initialize_process();
 
 	testShaderCompilation("data/shaders/chapter03/VK01.vert", "VK01.vert.bin");
 	testShaderCompilation("data/shaders/chapter03/VK01.frag", "VK01.frag.bin");
 
 	glslang_finalize_process();
+
+#if defined(_DEBUG)
+	mental::destroyDebugCallbacks(vulkanInstance, messenger, reportCallback);
+#endif
+	mental::destroyVulkanInstance(vulkanInstance);
 
 	return 0;
 }
