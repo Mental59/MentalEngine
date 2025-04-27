@@ -1,19 +1,17 @@
 #pragma once
-#include <glad/gl.h>
 #include "glFramework/glShaderProgram.hpp"
+#include <glad/gl.h>
 
-namespace mental
-{
-class GLProgramPipeline
-{
+namespace mental {
+class GLProgramPipeline {
 public:
-	GLProgramPipeline(const GLShaderProgram* programs, size_t numPrograms);
-	~GLProgramPipeline();
+  GLProgramPipeline(const GLShaderProgram* programs, size_t numPrograms);
+  ~GLProgramPipeline();
 
-	void use() const;
-	GLuint getHandle() const { return handle_; }
+  void use() const;
+  GLuint getHandle() const { return handle_; }
 
 private:
-	GLuint handle_;
+  GLuint handle_;
 };
-}  // namespace mental
+} // namespace mental

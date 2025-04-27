@@ -2,8 +2,7 @@
 
 #include <volk.h>
 
-namespace mental
-{
+namespace mental {
 VkInstance createVulkanInstance();
 void destroyVulkanInstance(VkInstance instance);
-}
+} // namespace mental
