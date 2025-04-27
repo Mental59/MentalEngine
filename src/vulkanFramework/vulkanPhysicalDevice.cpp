@@ -27,8 +27,8 @@ VkResult mental::findSuitablePhysicalDevice(
   return VK_ERROR_INITIALIZATION_FAILED;
 }
 
-uint32_t mental::findQueueFamilies(VkPhysicalDevice physicalDevice,
-                                   VkQueueFlags desiredFlags) {
+int mental::findQueueFamilies(VkPhysicalDevice physicalDevice,
+                              VkQueueFlags desiredFlags) {
   uint32_t familyCount = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &familyCount,
                                            nullptr);
@@ -37,19 +37,18 @@ uint32_t mental::findQueueFamilies(VkPhysicalDevice physicalDevice,
   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &familyCount,
                                            families.data());
 
-  for (uint32_t i = 0; i != families.size(); i++) {
+  for (int i = 0; i != families.size(); i++) {
     if (families[i].queueCount > 0 && families[i].queueFlags & desiredFlags) {
       return i;
     }
   }
 
-  return 0;
+  return -1;
 }
 
-uint32_t
-mental::findQueueFamiliesWithPresentSupport(VkPhysicalDevice physicalDevice,
-                                            VkQueueFlags desiredFlags,
-                                            VkSurfaceKHR surface) {
+int mental::findQueueFamiliesWithPresentSupport(VkPhysicalDevice physicalDevice,
+                                                VkQueueFlags desiredFlags,
+                                                VkSurfaceKHR surface) {
   uint32_t familyCount = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &familyCount,
                                            nullptr);
@@ -58,7 +57,7 @@ mental::findQueueFamiliesWithPresentSupport(VkPhysicalDevice physicalDevice,
   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &familyCount,
                                            families.data());
 
-  for (uint32_t i = 0; i != families.size(); i++) {
+  for (int i = 0; i != families.size(); i++) {
     VkBool32 presentSupport;
     vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface,
                                          &presentSupport);
@@ -69,5 +68,5 @@ mental::findQueueFamiliesWithPresentSupport(VkPhysicalDevice physicalDevice,
     }
   }
 
-  return 0;
+  return -1;
 }
