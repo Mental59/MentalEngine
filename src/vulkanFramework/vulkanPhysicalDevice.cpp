@@ -6,15 +6,14 @@ VkResult mental::findSuitablePhysicalDevice(
     VkInstance instance, std::function<bool(VkPhysicalDevice)> selector,
     VkPhysicalDevice* physicalDevice) {
   uint32_t deviceCount = 0;
-  MENTAL_VK_CHECK_RET(
-      vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
+  MENTAL_VK_CHECK(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
 
   if (!deviceCount) {
     return VK_ERROR_INITIALIZATION_FAILED;
   }
 
   std::vector<VkPhysicalDevice> devices(deviceCount);
-  MENTAL_VK_CHECK_RET(
+  MENTAL_VK_CHECK(
       vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data()));
 
   for (const VkPhysicalDevice device : devices) {
