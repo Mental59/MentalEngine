@@ -219,3 +219,10 @@ void mental::check(bool check, const char* fileName, int lineNumber) {
     exit(EXIT_FAILURE);
   }
 }
+
+VkResult mental::createSemaphore(VkDevice device, VkSemaphore* outSemaphore) {
+  const VkSemaphoreCreateInfo createInfo = {
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+
+  return vkCreateSemaphore(device, &createInfo, nullptr, outSemaphore);
+}

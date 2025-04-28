@@ -60,12 +60,6 @@ void setupDebugCallbacks(VkInstance instance,
       instance, &reportCallbackCreateInfo, nullptr, reportCallback));
 }
 
-void destroyDebugCallbacks(VkInstance instance,
-                           VkDebugUtilsMessengerEXT messenger,
-                           VkDebugReportCallbackEXT reportCallback) {
-  vkDestroyDebugUtilsMessengerEXT(instance, messenger, nullptr);
-  vkDestroyDebugReportCallbackEXT(instance, reportCallback, nullptr);
-}
 } // namespace mental
 
 namespace {

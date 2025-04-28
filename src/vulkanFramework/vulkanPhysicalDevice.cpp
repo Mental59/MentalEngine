@@ -2,9 +2,10 @@
 #include "vulkanUtils.hpp"
 #include <vector>
 
-VkResult mental::findSuitablePhysicalDevice(
-    VkInstance instance, std::function<bool(VkPhysicalDevice)> selector,
-    VkPhysicalDevice* physicalDevice) {
+VkResult
+mental::findSuitablePhysicalDevice(VkInstance instance,
+                                   PhysicalDeviceSelectorFunction selector,
+                                   VkPhysicalDevice* physicalDevice) {
   uint32_t deviceCount = 0;
   MENTAL_VK_CHECK(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
 

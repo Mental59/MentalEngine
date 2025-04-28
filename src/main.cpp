@@ -1,52 +1,28 @@
 #include "vulkanFramework/vulkanFramework.hpp"
-#include <cstdio>
-#include <vector>
-
-void saveSPIRVBinaryFile(const char* filename, unsigned int* code,
-                         size_t size) {
-  FILE* f = fopen(filename, "w");
-
-  if (!f)
-    return;
-
-  fwrite(code, sizeof(uint32_t), size, f);
-
-  fclose(f);
-}
-
-void testShaderCompilation(const char* sourceFilename,
-                           const char* destFilename) {
-  mental::ShaderModule shaderModule;
-
-  if (mental::compileShaderFile(sourceFilename, shaderModule) < 1)
-    return;
-
-  saveSPIRVBinaryFile(destFilename, shaderModule.SPIRV.data(),
-                      shaderModule.SPIRV.size());
-}
+#include <GLFW/glfw3.h>
 
 int main() {
   volkInitialize();
 
-  VkInstance vulkanInstance = mental::createVulkanInstance();
+  glfwInit();
 
-#if defined(_DEBUG)
-  VkDebugUtilsMessengerEXT messenger;
-  VkDebugReportCallbackEXT reportCallback;
-  mental::setupDebugCallbacks(vulkanInstance, &messenger, &reportCallback);
-#endif // (_DEBUG)
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
-  glslang_initialize_process();
+  GLFWwindow* window =
+      glfwCreateWindow(1280, 720, "Mental engine editor", nullptr, nullptr);
 
-  testShaderCompilation("data/shaders/chapter03/VK01.vert", "VK01.vert.bin");
-  testShaderCompilation("data/shaders/chapter03/VK01.frag", "VK01.frag.bin");
+  mental::VulkanInstance vkInstance;
+  mental::initVulkanInstanceGLFW(vkInstance, window);
 
-  glslang_finalize_process();
+  while (!glfwWindowShouldClose(window)) {
+    glfwPollEvents();
+  }
 
-#if defined(_DEBUG)
-  mental::destroyDebugCallbacks(vulkanInstance, messenger, reportCallback);
-#endif
-  mental::destroyVulkanInstance(vulkanInstance);
+  mental::destroyVulkanInstance(vkInstance);
+
+  glfwDestroyWindow(window);
+  glfwTerminate();
 
   return 0;
 }

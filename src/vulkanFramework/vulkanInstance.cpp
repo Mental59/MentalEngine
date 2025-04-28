@@ -59,9 +59,31 @@ VkInstance createVulkanInstance() {
   return instance;
 }
 
-void destroyVulkanInstance(VkInstance instance) {
-  vkDestroyInstance(instance, nullptr);
+void initVulkanInstanceGLFW(VulkanInstance& vulkanInstance,
+                            GLFWwindow* window) {
+  vulkanInstance.instance = mental::createVulkanInstance();
+
+#if defined(_DEBUG)
+  mental::setupDebugCallbacks(vulkanInstance.instance,
+                              &vulkanInstance.messenger,
+                              &vulkanInstance.reportCallback);
+#endif // (_DEBUG)
+
+  MENTAL_VK_CHECK(glfwCreateWindowSurface(vulkanInstance.instance, window,
+                                          nullptr, &vulkanInstance.surface));
 }
+
+void destroyVulkanInstance(VulkanInstance& vk) {
+  vkDestroySurfaceKHR(vk.instance, vk.surface, nullptr);
+
+#if defined(_DEBUG)
+  vkDestroyDebugReportCallbackEXT(vk.instance, vk.reportCallback, nullptr);
+  vkDestroyDebugUtilsMessengerEXT(vk.instance, vk.messenger, nullptr);
+#endif // (_DEBUG)
+
+  vkDestroyInstance(vk.instance, nullptr);
+}
+
 } // namespace mental
 
 namespace {

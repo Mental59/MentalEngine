@@ -4,5 +4,6 @@
 #include "vulkanImage.hpp"
 #include "vulkanInstance.hpp"
 #include "vulkanPhysicalDevice.hpp"
+#include "vulkanRenderDevice.hpp"
 #include "vulkanSwapChain.hpp"
 #include "vulkanUtils.hpp"

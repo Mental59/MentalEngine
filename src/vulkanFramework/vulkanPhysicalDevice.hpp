@@ -4,10 +4,11 @@
 #include <volk.h>
 
 namespace mental {
-VkResult
-findSuitablePhysicalDevice(VkInstance instance,
-                           std::function<bool(VkPhysicalDevice)> selector,
-                           VkPhysicalDevice* physicalDevice);
+using PhysicalDeviceSelectorFunction = std::function<bool(VkPhysicalDevice)>;
+
+VkResult findSuitablePhysicalDevice(VkInstance instance,
+                                    PhysicalDeviceSelectorFunction selector,
+                                    VkPhysicalDevice* physicalDevice);
 
 int findQueueFamilies(VkPhysicalDevice physicalDevice,
                       VkQueueFlags desiredFlags);
