@@ -1,28 +1,20 @@
 #include "vulkanFramework/vulkanFramework.hpp"
-#include <GLFW/glfw3.h>
+#include "window/window.hpp"
+#include <volk.h>
 
 int main() {
   volkInitialize();
 
-  glfwInit();
-
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-
-  GLFWwindow* window =
-      glfwCreateWindow(1280, 720, "Mental engine editor", nullptr, nullptr);
+  mental::Window window(1280, 720, "Mental engine editor");
 
   mental::VulkanInstance vkInstance;
-  mental::initVulkanInstanceGLFW(vkInstance, window);
+  mental::initVulkanInstance(vkInstance, &window);
 
-  while (!glfwWindowShouldClose(window)) {
-    glfwPollEvents();
+  while (!window.shouldClose()) {
+    window.pollEvents();
   }
 
   mental::destroyVulkanInstance(vkInstance);
-
-  glfwDestroyWindow(window);
-  glfwTerminate();
 
   return 0;
 }

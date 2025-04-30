@@ -1,6 +1,7 @@
 #include "vulkanInstance.hpp"
 #include "vulkanDebug.hpp"
 #include "vulkanUtils.hpp"
+#include "window/window.hpp"
 #include <cstdint>
 #include <cstring>
 #include <format>
@@ -59,8 +60,7 @@ VkInstance createVulkanInstance() {
   return instance;
 }
 
-void initVulkanInstanceGLFW(VulkanInstance& vulkanInstance,
-                            GLFWwindow* window) {
+void initVulkanInstance(VulkanInstance& vulkanInstance, Window* window) {
   vulkanInstance.instance = mental::createVulkanInstance();
 
 #if defined(_DEBUG)
@@ -69,8 +69,7 @@ void initVulkanInstanceGLFW(VulkanInstance& vulkanInstance,
                               &vulkanInstance.reportCallback);
 #endif // (_DEBUG)
 
-  MENTAL_VK_CHECK(glfwCreateWindowSurface(vulkanInstance.instance, window,
-                                          nullptr, &vulkanInstance.surface));
+  MENTAL_VK_CHECK(window->createVulkanWindowSurface(&vulkanInstance));
 }
 
 void destroyVulkanInstance(VulkanInstance& vk) {

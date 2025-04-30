@@ -5,6 +5,8 @@
 
 namespace mental {
 
+class Window;
+
 struct VulkanInstance final {
   VkInstance instance = VK_NULL_HANDLE;
   VkSurfaceKHR surface = VK_NULL_HANDLE;
@@ -14,7 +16,7 @@ struct VulkanInstance final {
 
 VkInstance createVulkanInstance();
 
-void initVulkanInstanceGLFW(VulkanInstance& vulkanInstance, GLFWwindow* window);
+void initVulkanInstance(VulkanInstance& vulkanInstance, Window* window);
 
 void destroyVulkanInstance(VulkanInstance& vk);
 } // namespace mental

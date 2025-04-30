@@ -1,4 +1,5 @@
 #include "vulkanRenderDevice.hpp"
+#include "vulkanCommand.hpp"
 #include "vulkanDevice.hpp"
 #include "vulkanSwapChain.hpp"
 #include "vulkanUtils.hpp"
@@ -47,27 +48,15 @@ bool mental::initVulkanRenderDevice(VulkanInstance& vulkanInstance,
   MENTAL_VK_CHECK(createSemaphore(vulkanRenderDevice.device,
                                   &vulkanRenderDevice.renderSemaphore));
 
-  const VkCommandPoolCreateInfo commanPoolCreateInfo = {
-      .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-      .flags = 0,
-      .queueFamilyIndex = vulkanRenderDevice.graphicsFamily};
+  MENTAL_VK_CHECK(createCommandPool(vulkanRenderDevice.device,
+                                    vulkanRenderDevice.graphicsFamily,
+                                    &vulkanRenderDevice.commandPool))
 
-  MENTAL_VK_CHECK(vkCreateCommandPool(vulkanRenderDevice.device,
-                                      &commanPoolCreateInfo, nullptr,
-                                      &vulkanRenderDevice.commandPool));
-
-  const VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
-      .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-      .pNext = nullptr,
-      .commandPool = vulkanRenderDevice.commandPool,
-      .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-      .commandBufferCount =
-          static_cast<uint32_t>(vulkanRenderDevice.swapchainImages.size()),
-  };
-
-  MENTAL_VK_CHECK(vkAllocateCommandBuffers(
-      vulkanRenderDevice.device, &commandBufferAllocateInfo,
-      &vulkanRenderDevice.commandBuffers[0]));
+  uint32_t commandBufferCount =
+      static_cast<uint32_t>(vulkanRenderDevice.swapchainImages.size());
+  MENTAL_VK_CHECK(allocateCommandBuffers(
+      vulkanRenderDevice.device, vulkanRenderDevice.commandPool,
+      commandBufferCount, vulkanRenderDevice.commandBuffers.data()));
 
   return true;
 }
