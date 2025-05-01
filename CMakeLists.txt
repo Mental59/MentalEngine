@@ -61,5 +61,5 @@ set_property(TARGET optick PROPERTY FOLDER "Optick")
 set_property(TARGET glm PROPERTY FOLDER "GLM")
 
 target_link_libraries(MentalEngine PRIVATE glm glfw assimp volk glslang SPIRV)
-target_compile_definitions(MentalEngine PRIVATE VK_NO_PROTOTYPES GLFW_INCLUDE_VULKAN)
+target_compile_definitions(MentalEngine PRIVATE VK_NO_PROTOTYPES GLFW_INCLUDE_VULKAN STB_IMAGE_IMPLEMENTATION NOMINMAX)
 target_include_directories(${PROJECT_NAME} PRIVATE deps/libs/stb)

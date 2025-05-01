@@ -3,8 +3,9 @@
 #include <vector>
 #include <volk.h>
 
-#define MENTAL_VK_CHECK(value) check(value == VK_SUCCESS, __FILE__, __LINE__);
-#define MENTAL_VK_CHECK_BOOL(value) check(value, __FILE__, __LINE__);
+#define MENTAL_VK_CHECK(value)                                                 \
+  mental::check(value == VK_SUCCESS, __FILE__, __LINE__);
+#define MENTAL_VK_CHECK_BOOL(value) mental::check(value, __FILE__, __LINE__);
 
 namespace mental {
 struct ShaderModule final {
@@ -19,4 +20,8 @@ size_t compileShaderFile(const char* file, ShaderModule& shaderModule);
 void check(bool check, const char* fileName, int lineNumber);
 
 VkResult createSemaphore(VkDevice device, VkSemaphore* outSemaphore);
+
+bool hasStencilComponent(VkFormat format);
+
+uint32_t bytesPerTexFormat(VkFormat fmt);
 } // namespace mental
