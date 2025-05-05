@@ -1,6 +1,7 @@
 #pragma once
 #include "vulkanCommand.hpp"
 #include "vulkanDebug.hpp"
+#include "vulkanDescriptor.hpp"
 #include "vulkanDevice.hpp"
 #include "vulkanImage.hpp"
 #include "vulkanInstance.hpp"
