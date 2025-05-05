@@ -7,6 +7,7 @@
 #include "vulkanInstance.hpp"
 #include "vulkanMemory.hpp"
 #include "vulkanPhysicalDevice.hpp"
+#include "vulkanPipeline.hpp"
 #include "vulkanRenderDevice.hpp"
 #include "vulkanShader.hpp"
 #include "vulkanSwapChain.hpp"
