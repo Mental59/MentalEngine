@@ -8,5 +8,6 @@
 #include "vulkanMemory.hpp"
 #include "vulkanPhysicalDevice.hpp"
 #include "vulkanRenderDevice.hpp"
+#include "vulkanShader.hpp"
 #include "vulkanSwapChain.hpp"
 #include "vulkanUtils.hpp"
