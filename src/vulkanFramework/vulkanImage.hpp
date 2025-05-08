@@ -6,9 +6,9 @@
 
 namespace mental {
 struct VulkanImage final {
-  VkImage image = nullptr;
-  VkDeviceMemory imageMemory = nullptr;
-  VkImageView imageView = nullptr;
+  VkImage image = VK_NULL_HANDLE;
+  VkDeviceMemory imageMemory = VK_NULL_HANDLE;
+  VkImageView imageView = VK_NULL_HANDLE;
 };
 
 VkResult createImageView(VkDevice device, VkImage image, VkFormat format,

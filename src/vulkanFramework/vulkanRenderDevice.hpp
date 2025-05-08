@@ -3,10 +3,12 @@
 #include "vulkanInstance.hpp"
 #include "vulkanPhysicalDevice.hpp"
 #include <cstdint>
+#include <functional>
 #include <vector>
 #include <volk.h>
 
 namespace mental {
+using QueueFamilySelectorFunction = std::function<int(VkPhysicalDevice)>;
 
 struct VulkanRenderDevice final {
   uint32_t framebufferWidth = 0;
@@ -29,11 +31,14 @@ struct VulkanRenderDevice final {
   std::vector<VkCommandBuffer> commandBuffers;
 };
 
-bool initVulkanRenderDevice(VulkanInstance& vulkanInstance,
-                            VulkanRenderDevice& vulkanRenderDevice,
-                            uint32_t width, uint32_t height,
+bool initVulkanRenderDevice(VulkanInstance& vulkanInstance, uint32_t width,
+                            uint32_t height,
                             PhysicalDeviceSelectorFunction selector,
-                            VkPhysicalDeviceFeatures deviceFeatures);
+                            QueueFamilySelectorFunction queueFamilySelector,
+                            VkPhysicalDeviceFeatures deviceFeatures,
+                            uint32_t enabledExtensionCount,
+                            const char* const* enabledExtensions,
+                            VulkanRenderDevice& vulkanRenderDevice);
 
 void destroyVulkanRenderDevice(VulkanRenderDevice& vkDev);
 } // namespace mental

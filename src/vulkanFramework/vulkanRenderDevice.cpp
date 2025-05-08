@@ -4,28 +4,29 @@
 #include "vulkanSwapChain.hpp"
 #include "vulkanUtils.hpp"
 
-bool mental::initVulkanRenderDevice(VulkanInstance& vulkanInstance,
-                                    VulkanRenderDevice& vulkanRenderDevice,
-                                    uint32_t width, uint32_t height,
-                                    PhysicalDeviceSelectorFunction selector,
-                                    VkPhysicalDeviceFeatures deviceFeatures) {
+bool mental::initVulkanRenderDevice(
+    VulkanInstance& vulkanInstance, uint32_t width, uint32_t height,
+    PhysicalDeviceSelectorFunction selector,
+    QueueFamilySelectorFunction queueFamilySelector,
+    VkPhysicalDeviceFeatures deviceFeatures, uint32_t enabledExtensionCount,
+    const char* const* enabledExtensions,
+    VulkanRenderDevice& vulkanRenderDevice) {
   vulkanRenderDevice.framebufferWidth = width;
   vulkanRenderDevice.framebufferHeight = height;
 
   MENTAL_VK_CHECK(findSuitablePhysicalDevice(
       vulkanInstance.instance, selector, &vulkanRenderDevice.physicalDevice));
 
-  int graphicsFamily = findQueueFamiliesWithPresentSupport(
-      vulkanRenderDevice.physicalDevice, VK_QUEUE_GRAPHICS_BIT,
-      vulkanInstance.surface);
+  int graphicsFamily = queueFamilySelector(vulkanRenderDevice.physicalDevice);
   if (graphicsFamily < 0) {
     MENTAL_VK_CHECK_BOOL(false);
   }
   vulkanRenderDevice.graphicsFamily = static_cast<uint32_t>(graphicsFamily);
 
-  MENTAL_VK_CHECK(createDevice(
-      vulkanRenderDevice.physicalDevice, deviceFeatures,
-      vulkanRenderDevice.graphicsFamily, &vulkanRenderDevice.device));
+  MENTAL_VK_CHECK(
+      createDevice(vulkanRenderDevice.physicalDevice, deviceFeatures,
+                   vulkanRenderDevice.graphicsFamily, enabledExtensionCount,
+                   enabledExtensions, &vulkanRenderDevice.device));
 
   vkGetDeviceQueue(vulkanRenderDevice.device, vulkanRenderDevice.graphicsFamily,
                    0, &vulkanRenderDevice.graphicsQueue);

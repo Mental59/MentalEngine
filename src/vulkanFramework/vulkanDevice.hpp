@@ -5,5 +5,7 @@
 namespace mental {
 VkResult createDevice(VkPhysicalDevice physicalDevice,
                       VkPhysicalDeviceFeatures deviceFeatures,
-                      uint32_t graphicsQueueFamily, VkDevice* device);
+                      uint32_t graphicsQueueFamily,
+                      uint32_t enabledExtensionCount,
+                      const char* const* enabledExtensions, VkDevice* device);
 }

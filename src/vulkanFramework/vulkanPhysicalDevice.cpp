@@ -1,5 +1,7 @@
 #include "vulkanPhysicalDevice.hpp"
 #include "vulkanUtils.hpp"
+#include <string>
+#include <unordered_set>
 #include <vector>
 
 VkResult
@@ -69,4 +71,25 @@ int mental::findQueueFamiliesWithPresentSupport(VkPhysicalDevice physicalDevice,
   }
 
   return -1;
+}
+
+bool mental::checkDeviceExtensionSupport(const VkPhysicalDevice device,
+                                         const char* const* extensions,
+                                         uint32_t numExtensions) {
+  uint32_t extensionCount;
+  vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                       nullptr);
+
+  std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+  vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                       availableExtensions.data());
+
+  std::unordered_set<std::string> requiredExtensions(
+      extensions, extensions + numExtensions);
+
+  for (const VkExtensionProperties& extension : availableExtensions) {
+    requiredExtensions.erase(extension.extensionName);
+  }
+
+  return requiredExtensions.empty();
 }

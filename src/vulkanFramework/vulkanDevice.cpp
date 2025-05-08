@@ -1,14 +1,12 @@
 #include "vulkanDevice.hpp"
 #include <vector>
 
-namespace {
-void setupExtensions(std::vector<const char*>* extenstions);
-} // namespace
-
 namespace mental {
 VkResult createDevice(VkPhysicalDevice physicalDevice,
                       VkPhysicalDeviceFeatures deviceFeatures,
-                      uint32_t graphicsQueueFamily, VkDevice* device) {
+                      uint32_t graphicsQueueFamily,
+                      uint32_t enabledExtensionCount,
+                      const char* const* enabledExtensions, VkDevice* device) {
   const float queuePriority = 1.0f;
   const VkDeviceQueueCreateInfo queueCreateInfo = {
       .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -18,9 +16,6 @@ VkResult createDevice(VkPhysicalDevice physicalDevice,
       .queueCount = 1,
       .pQueuePriorities = &queuePriority};
 
-  std::vector<const char*> extensions;
-  setupExtensions(&extensions);
-
   const VkDeviceCreateInfo deviceCreateInfo = {
       .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
       .pNext = nullptr,
@@ -29,16 +24,10 @@ VkResult createDevice(VkPhysicalDevice physicalDevice,
       .pQueueCreateInfos = &queueCreateInfo,
       .enabledLayerCount = 0,
       .ppEnabledLayerNames = nullptr,
-      .enabledExtensionCount = static_cast<uint32_t>(extensions.size()),
-      .ppEnabledExtensionNames = extensions.data(),
+      .enabledExtensionCount = enabledExtensionCount,
+      .ppEnabledExtensionNames = enabledExtensions,
       .pEnabledFeatures = &deviceFeatures};
 
   return vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, device);
 }
 } // namespace mental
-
-namespace {
-void setupExtensions(std::vector<const char*>* extenstions) {
-  extenstions->push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-}
-} // namespace

@@ -16,4 +16,8 @@ int findQueueFamilies(VkPhysicalDevice physicalDevice,
 int findQueueFamiliesWithPresentSupport(VkPhysicalDevice physicalDevice,
                                         VkQueueFlags desiredFlags,
                                         VkSurfaceKHR surface);
+
+bool checkDeviceExtensionSupport(const VkPhysicalDevice device,
+                                 const char* const* extensions,
+                                 uint32_t numExtensions);
 } // namespace mental
