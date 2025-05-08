@@ -222,6 +222,11 @@ VkShaderStageFlagBits mental::glslangShaderStageToVulkan(glslang_stage_t sh) {
   return VK_SHADER_STAGE_VERTEX_BIT;
 }
 
+VkShaderStageFlagBits
+mental::vulkanShaderStageFromFileName(const char* fileName) {
+  return glslangShaderStageToVulkan(glslangShaderStageFromFileName(fileName));
+}
+
 size_t mental::compileShaderFile(const char* file, ShaderModule& shaderModule) {
   std::string shaderSource = readShaderFile(file);
 
@@ -243,6 +248,7 @@ VkResult mental::createShaderModule(VkDevice device, ShaderModule* shader,
       .codeSize = shader->SPIRV.size() * sizeof(unsigned int),
       .pCode = shader->SPIRV.data(),
   };
+  shader->stage = vulkanShaderStageFromFileName(fileName);
 
   return vkCreateShaderModule(device, &createInfo, nullptr,
                               &shader->shaderModule);

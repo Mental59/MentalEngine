@@ -80,20 +80,6 @@ bool fillCommandBuffers(size_t i, uint32_t indexBufferCount) {
   vkCmdBindPipeline(VK_RENDER_DEVICE.commandBuffers[i],
                     VK_PIPELINE_BIND_POINT_GRAPHICS, VK_STATE.graphicsPipeline);
 
-  VkViewport viewport{};
-  viewport.x = 0.0f;
-  viewport.y = 0.0f;
-  viewport.width = static_cast<float>(SCREEN_WIDTH);
-  viewport.height = static_cast<float>(SCREEN_HEIGHT);
-  viewport.minDepth = 0.0f;
-  viewport.maxDepth = 1.0f;
-  vkCmdSetViewport(VK_RENDER_DEVICE.commandBuffers[i], 0, 1, &viewport);
-
-  VkRect2D scissor{};
-  scissor.offset = {0, 0};
-  scissor.extent = {.width = SCREEN_WIDTH, .height = SCREEN_HEIGHT};
-  vkCmdSetScissor(VK_RENDER_DEVICE.commandBuffers[i], 0, 1, &scissor);
-
   vkCmdBindDescriptorSets(VK_RENDER_DEVICE.commandBuffers[i],
                           VK_PIPELINE_BIND_POINT_GRAPHICS,
                           VK_STATE.pipelineLayout, 0, 1,
