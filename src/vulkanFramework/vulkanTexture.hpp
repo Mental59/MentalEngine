@@ -37,8 +37,12 @@ bool createTextureImageFromData(VulkanRenderDevice& vkDev,
                                 uint32_t layerCount = 1,
                                 VkImageCreateFlags flags = 0);
 
-bool createTextureImage(VulkanRenderDevice& vkDev, const char* filename,
-                        VkImage& textureImage,
-                        VkDeviceMemory& textureImageMemory,
-                        uint32_t* outTexWidth, uint32_t* outTexHeight);
+bool loadTextureFromFile(VulkanRenderDevice& vkDev, const char* filename,
+                         VkImage& textureImage, VkFormat imageFormat,
+                         VkDeviceMemory& textureImageMemory,
+                         uint32_t* outTexWidth = nullptr,
+                         uint32_t* outTexHeight = nullptr);
+
+bool createVulkanImage(VulkanRenderDevice& vkDev, const char* filename,
+                       VulkanImage& image);
 } // namespace mental

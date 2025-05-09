@@ -1,5 +1,8 @@
 #include "demoVulkanApp.hpp"
 #include <array>
+#include <cstdio>
+#include <glm/ext.hpp>
+#include <glm/glm.hpp>
 #include <volk.h>
 
 namespace {
@@ -29,6 +32,7 @@ mental::DemoVulkanApp::~DemoVulkanApp() {}
 
 void mental::DemoVulkanApp::run() {
   while (!mWindow.shouldClose()) {
+    render();
     mWindow.pollEvents();
   }
 }
@@ -42,7 +46,7 @@ void mental::DemoVulkanApp::initVulkan() {
   glslang_initialize_process();
 
   mental::initVulkanInstance(mVulkanInstance, &mWindow);
-  mental::initVulkanRenderDevice(
+  bool isRenderDeviceInitialized = mental::initVulkanRenderDevice(
       mVulkanInstance, SCREEN_WIDTH, SCREEN_HEIGHT,
       [this](VkPhysicalDevice physicalDevice) {
         return isDeviceSuitable(physicalDevice);
@@ -53,13 +57,165 @@ void mental::DemoVulkanApp::initVulkan() {
       VkPhysicalDeviceFeatures{.geometryShader = VK_TRUE},
       static_cast<uint32_t>(DEVICE_EXTENSIONS.size()), DEVICE_EXTENSIONS.data(),
       mVulkanRenderDevice);
+  if (!isRenderDeviceInitialized) {
+    exit(EXIT_FAILURE);
+  }
+
+  bool isTexturedBufferCreated = mental::createTexturedVertexBuffer(
+      mVulkanRenderDevice, "data/rubber_duck/scene.gltf",
+      &mVulkanState.storageBuffer, &mVulkanState.storageBufferMemory,
+      &mVulkanState.vertexBufferSize, &mVulkanState.indexBufferSize);
+  bool uniformBuffersCreated = createUniformBuffers();
+  if (!isTexturedBufferCreated || !uniformBuffersCreated) {
+    printf("FATAL ERROR: Failed to create buffers");
+    exit(EXIT_FAILURE);
+  }
+
+  if (!mental::createVulkanImage(mVulkanRenderDevice,
+                                 "data/rubber_duck/textures/Duck_baseColor.png",
+                                 mVulkanState.texture)) {
+    printf("FATAL ERROR: Failed to create model texture");
+    exit(EXIT_FAILURE);
+  }
+
+  if (!mental::createDepthResources(mVulkanRenderDevice, SCREEN_WIDTH,
+                                    SCREEN_HEIGHT, mVulkanState.depthTexture)) {
+    printf("FATAL ERROR: Failed to create depth resources");
+    exit(EXIT_FAILURE);
+  }
+
+  if (!mental::createDescriptorPool(mVulkanRenderDevice, 1, 2, 1,
+                                    &mVulkanState.descriptorPool) ||
+      !createDescriptorSet(mVulkanState.vertexBufferSize,
+                           mVulkanState.indexBufferSize) ||
+      !mental::createColorAndDepthRenderPass(
+          mVulkanRenderDevice, true, &mVulkanState.renderPass,
+          RenderPassCreateInfo{.clearColor_ = true,
+                               .clearDepth_ = true,
+                               .flags_ =
+                                   RenderPassBit_First | RenderPassBit_Last}) ||
+      !mental::createPipelineLayout(mVulkanRenderDevice.device,
+                                    mVulkanState.descriptorSetLayout,
+                                    &mVulkanState.pipelineLayout) ||
+      !mental::createGraphicsPipeline(mVulkanRenderDevice,
+                                      mVulkanState.renderPass,
+                                      mVulkanState.pipelineLayout,
+                                      {"data/shaders/chapter03/VK02.vert",
+                                       "data/shaders/chapter03/VK02.frag",
+                                       "data/shaders/chapter03/VK02.geom"},
+                                      &mVulkanState.graphicsPipeline)) {
+    printf("FATAL ERROR: Failed to create graphics pipeline");
+    exit(EXIT_FAILURE);
+  }
+
+  if (!mental::createColorAndDepthFramebuffers(
+          mVulkanRenderDevice, mVulkanState.renderPass,
+          mVulkanState.depthTexture.imageView,
+          mVulkanState.swapchainFramebuffers)) {
+    printf("FATAL ERROR: Failed to create framebuffers");
+    exit(EXIT_FAILURE);
+  }
 
   glslang_finalize_process();
 }
 
+void mental::DemoVulkanApp::render() {
+  uint32_t imageIndex = 0;
+  if (vkAcquireNextImageKHR(mVulkanRenderDevice.device,
+                            mVulkanRenderDevice.swapchain, UINT64_MAX,
+                            mVulkanRenderDevice.semaphore, VK_NULL_HANDLE,
+                            &imageIndex) != VK_SUCCESS) {
+    return;
+  }
+
+  MENTAL_VK_CHECK(vkResetCommandPool(mVulkanRenderDevice.device,
+                                     mVulkanRenderDevice.commandPool, 0));
+
+  const glm::mat4 m1 = glm::rotate(
+      glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 0.5f, -1.5f)) *
+          glm::rotate(glm::mat4(1.f), glm::pi<float>(), glm::vec3(1, 0, 0)),
+      (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+  const glm::mat4 p =
+      glm::perspective(45.0f, mWindow.getSize().ratio, 0.1f, 1000.0f);
+
+  const UniformBuffer ubo{.mvp = p * m1};
+
+  updateUniformBuffer(imageIndex, &ubo, sizeof(ubo));
+
+  uint32_t indexBufferCount = static_cast<uint32_t>(
+      mVulkanState.indexBufferSize / (sizeof(unsigned int)));
+  fillCommandBuffers(imageIndex, indexBufferCount);
+
+  const VkPipelineStageFlags waitStages[] = {
+      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT}; // or even
+                                                      // VERTEX_SHADER_STAGE
+
+  const VkSubmitInfo si = {
+      .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .pNext = nullptr,
+      .waitSemaphoreCount = 1,
+      .pWaitSemaphores = &mVulkanRenderDevice.semaphore,
+      .pWaitDstStageMask = waitStages,
+      .commandBufferCount = 1,
+      .pCommandBuffers = &mVulkanRenderDevice.commandBuffers[imageIndex],
+      .signalSemaphoreCount = 1,
+      .pSignalSemaphores = &mVulkanRenderDevice.renderSemaphore};
+
+  MENTAL_VK_CHECK(
+      vkQueueSubmit(mVulkanRenderDevice.graphicsQueue, 1, &si, nullptr));
+
+  const VkPresentInfoKHR pi = {.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+                               .pNext = nullptr,
+                               .waitSemaphoreCount = 1,
+                               .pWaitSemaphores =
+                                   &mVulkanRenderDevice.renderSemaphore,
+                               .swapchainCount = 1,
+                               .pSwapchains = &mVulkanRenderDevice.swapchain,
+                               .pImageIndices = &imageIndex};
+
+  MENTAL_VK_CHECK(vkQueuePresentKHR(mVulkanRenderDevice.graphicsQueue, &pi));
+  MENTAL_VK_CHECK(vkDeviceWaitIdle(mVulkanRenderDevice.device));
+}
+
 void mental::DemoVulkanApp::cleanup() {
+  destroyVulkanState();
   mental::destroyVulkanRenderDevice(mVulkanRenderDevice);
   mental::destroyVulkanInstance(mVulkanInstance);
+}
+
+void mental::DemoVulkanApp::destroyVulkanState() {
+  vkDestroyBuffer(mVulkanRenderDevice.device, mVulkanState.storageBuffer,
+                  nullptr);
+  vkFreeMemory(mVulkanRenderDevice.device, mVulkanState.storageBufferMemory,
+               nullptr);
+
+  for (size_t i = 0; i < mVulkanRenderDevice.swapchainImages.size(); i++) {
+    vkDestroyBuffer(mVulkanRenderDevice.device, mVulkanState.uniformBuffers[i],
+                    nullptr);
+    vkFreeMemory(mVulkanRenderDevice.device,
+                 mVulkanState.uniformBuffersMemory[i], nullptr);
+  }
+
+  vkDestroyDescriptorSetLayout(mVulkanRenderDevice.device,
+                               mVulkanState.descriptorSetLayout, nullptr);
+  vkDestroyDescriptorPool(mVulkanRenderDevice.device,
+                          mVulkanState.descriptorPool, nullptr);
+
+  for (auto framebuffer : mVulkanState.swapchainFramebuffers) {
+    vkDestroyFramebuffer(mVulkanRenderDevice.device, framebuffer, nullptr);
+  }
+
+  destroyVulkanImage(mVulkanRenderDevice.device, mVulkanState.texture);
+
+  destroyVulkanImage(mVulkanRenderDevice.device, mVulkanState.depthTexture);
+
+  vkDestroyRenderPass(mVulkanRenderDevice.device, mVulkanState.renderPass,
+                      nullptr);
+
+  vkDestroyPipelineLayout(mVulkanRenderDevice.device,
+                          mVulkanState.pipelineLayout, nullptr);
+  vkDestroyPipeline(mVulkanRenderDevice.device, mVulkanState.graphicsPipeline,
+                    nullptr);
 }
 
 bool mental::DemoVulkanApp::createUniformBuffers() {
@@ -152,7 +308,7 @@ bool mental::DemoVulkanApp::createDescriptorSet(size_t vertexBufferSize,
         .offset = vertexBufferSize,
         .range = indexBufferSize};
     const VkDescriptorImageInfo imageInfo = {
-        .sampler = mVulkanState.textureSampler,
+        .sampler = mVulkanState.texture.sampler,
         .imageView = mVulkanState.texture.imageView,
         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL};
 

@@ -14,52 +14,68 @@ bool mental::initVulkanRenderDevice(
   vulkanRenderDevice.framebufferWidth = width;
   vulkanRenderDevice.framebufferHeight = height;
 
-  MENTAL_VK_CHECK(findSuitablePhysicalDevice(
-      vulkanInstance.instance, selector, &vulkanRenderDevice.physicalDevice));
+  VkResult findSuitableDeviceRes = findSuitablePhysicalDevice(
+      vulkanInstance.instance, selector, &vulkanRenderDevice.physicalDevice);
+  if (findSuitableDeviceRes != VK_SUCCESS) {
+    return false;
+  }
 
   int graphicsFamily = queueFamilySelector(vulkanRenderDevice.physicalDevice);
   if (graphicsFamily < 0) {
-    MENTAL_VK_CHECK_BOOL(false);
+    return false;
   }
   vulkanRenderDevice.graphicsFamily = static_cast<uint32_t>(graphicsFamily);
 
-  MENTAL_VK_CHECK(
+  VkResult createDeviceRes =
       createDevice(vulkanRenderDevice.physicalDevice, deviceFeatures,
                    vulkanRenderDevice.graphicsFamily, enabledExtensionCount,
-                   enabledExtensions, &vulkanRenderDevice.device));
+                   enabledExtensions, &vulkanRenderDevice.device);
+  if (createDeviceRes != VK_SUCCESS) {
+    return false;
+  }
 
   vkGetDeviceQueue(vulkanRenderDevice.device, vulkanRenderDevice.graphicsFamily,
                    0, &vulkanRenderDevice.graphicsQueue);
   if (vulkanRenderDevice.graphicsQueue == nullptr) {
-    MENTAL_VK_CHECK_BOOL(false);
+    return false;
   }
 
-  MENTAL_VK_CHECK(createSwapchain(
+  VkResult crateSwapchainRes = createSwapchain(
       vulkanRenderDevice.device, vulkanRenderDevice.physicalDevice,
       vulkanInstance.surface, vulkanRenderDevice.graphicsFamily, width, height,
-      &vulkanRenderDevice.swapchain));
+      &vulkanRenderDevice.swapchain);
+  if (crateSwapchainRes != VK_SUCCESS) {
+    return false;
+  }
+
   const size_t imageCount = createSwapchainImages(
       vulkanRenderDevice.device, vulkanRenderDevice.swapchain,
       vulkanRenderDevice.swapchainImages,
       vulkanRenderDevice.swapchainImageViews);
   vulkanRenderDevice.commandBuffers.resize(imageCount);
 
-  MENTAL_VK_CHECK(createSemaphore(vulkanRenderDevice.device,
-                                  &vulkanRenderDevice.semaphore));
-  MENTAL_VK_CHECK(createSemaphore(vulkanRenderDevice.device,
-                                  &vulkanRenderDevice.renderSemaphore));
+  VkResult createSemaphoreRes =
+      createSemaphore(vulkanRenderDevice.device, &vulkanRenderDevice.semaphore);
+  VkResult createRenderSemaphore = createSemaphore(
+      vulkanRenderDevice.device, &vulkanRenderDevice.renderSemaphore);
+  if (createSemaphoreRes != VK_SUCCESS || createRenderSemaphore != VK_SUCCESS) {
+    return false;
+  }
 
-  MENTAL_VK_CHECK(createCommandPool(vulkanRenderDevice.device,
-                                    vulkanRenderDevice.graphicsFamily,
-                                    &vulkanRenderDevice.commandPool))
+  VkResult createCommandPoolRes = createCommandPool(
+      vulkanRenderDevice.device, vulkanRenderDevice.graphicsFamily,
+      &vulkanRenderDevice.commandPool);
+  if (createCommandPoolRes != VK_SUCCESS) {
+    return false;
+  }
 
   uint32_t commandBufferCount =
       static_cast<uint32_t>(vulkanRenderDevice.swapchainImages.size());
-  MENTAL_VK_CHECK(allocateCommandBuffers(
+  VkResult allocateCommandBuffersRes = allocateCommandBuffers(
       vulkanRenderDevice.device, vulkanRenderDevice.commandPool,
-      commandBufferCount, vulkanRenderDevice.commandBuffers.data()));
+      commandBufferCount, vulkanRenderDevice.commandBuffers.data());
 
-  return true;
+  return allocateCommandBuffersRes == VK_SUCCESS;
 }
 
 void mental::destroyVulkanRenderDevice(VulkanRenderDevice& vkDev) {

@@ -74,10 +74,12 @@ bool mental::createTextureImageFromData(VulkanRenderDevice& vkDev,
                             texHeight, texFormat, layerCount, imageData);
 }
 
-bool mental::createTextureImage(VulkanRenderDevice& vkDev, const char* filename,
-                                VkImage& textureImage,
-                                VkDeviceMemory& textureImageMemory,
-                                uint32_t* outTexWidth, uint32_t* outTexHeight) {
+bool mental::loadTextureFromFile(VulkanRenderDevice& vkDev,
+                                 const char* filename, VkImage& textureImage,
+                                 VkFormat imageFormat,
+                                 VkDeviceMemory& textureImageMemory,
+                                 uint32_t* outTexWidth,
+                                 uint32_t* outTexHeight) {
   int texWidth, texHeight, texChannels;
   stbi_uc* pixels =
       stbi_load(filename, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -86,9 +88,9 @@ bool mental::createTextureImage(VulkanRenderDevice& vkDev, const char* filename,
     return false;
   }
 
-  bool result = createTextureImageFromData(vkDev, textureImage,
-                                           textureImageMemory, pixels, texWidth,
-                                           texHeight, VK_FORMAT_R8G8B8A8_UNORM);
+  bool result =
+      createTextureImageFromData(vkDev, textureImage, textureImageMemory,
+                                 pixels, texWidth, texHeight, imageFormat);
 
   stbi_image_free(pixels);
 
@@ -98,4 +100,31 @@ bool mental::createTextureImage(VulkanRenderDevice& vkDev, const char* filename,
   }
 
   return result;
+}
+
+bool mental::createVulkanImage(VulkanRenderDevice& vkDev, const char* filename,
+                               VulkanImage& image) {
+  VkFormat imageFormat = VK_FORMAT_R8G8B8A8_UNORM;
+
+  if (!mental::loadTextureFromFile(vkDev, filename, image.image, imageFormat,
+                                   image.imageMemory, &image.width,
+                                   &image.height)) {
+    return false;
+  }
+
+  if (mental::createImageView(vkDev.device, image.image, imageFormat,
+                              VK_IMAGE_ASPECT_COLOR_BIT,
+                              &image.imageView) != VK_SUCCESS) {
+    return false;
+  }
+
+  bool isSamplerCreated =
+      mental::createTextureSampler(vkDev.device, &image.sampler);
+
+  if (!isSamplerCreated) {
+    destroyVulkanImage(vkDev.device, image);
+    return false;
+  }
+
+  return true;
 }

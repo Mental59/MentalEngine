@@ -30,6 +30,13 @@ void mental::Window::pollEvents() { glfwPollEvents(); }
 
 bool mental::Window::shouldClose() { return glfwWindowShouldClose(mWindow); }
 
+mental::Window::Size mental::Window::getSize() const {
+  int width, height;
+  glfwGetFramebufferSize(mWindow, &width, &height);
+  const float ratio = width / (float)height;
+  return Size{.width = width, .height = height, .ratio = ratio};
+}
+
 VkResult mental::Window::createVulkanWindowSurface(VulkanInstance* instance) {
   return glfwCreateWindowSurface(instance->instance, mWindow, nullptr,
                                  &instance->surface);

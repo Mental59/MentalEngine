@@ -2,6 +2,7 @@
 #include "vulkanCommand.hpp"
 #include "vulkanMemory.hpp"
 #include "vulkanUtils.hpp"
+#include <volk.h>
 
 VkResult mental::createImageView(VkDevice device, VkImage image,
                                  VkFormat format,
@@ -121,6 +122,7 @@ void mental::copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer,
 }
 
 void mental::destroyVulkanImage(VkDevice device, VulkanImage& image) {
+  vkDestroySampler(device, image.sampler, nullptr);
   vkDestroyImageView(device, image.imageView, nullptr);
   vkDestroyImage(device, image.image, nullptr);
   vkFreeMemory(device, image.imageMemory, nullptr);
@@ -321,15 +323,20 @@ bool mental::createDepthResources(VulkanRenderDevice& vkDev, uint32_t width,
 
   VkFormat depthFormat = findDepthFormat(vkDev.physicalDevice);
 
-  if (!createImage(
-          vkDev.device, vkDev.physicalDevice, width, height, depthFormat,
-          VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-          VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image, depth.imageMemory))
+  if (!createImage(vkDev.device, vkDev.physicalDevice, width, height,
+                   depthFormat, VK_IMAGE_TILING_OPTIMAL,
+                   VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image,
+                   depth.imageMemory)) {
     return false;
+  }
 
-  if (!createImageView(vkDev.device, depth.image, depthFormat,
-                       VK_IMAGE_ASPECT_DEPTH_BIT, &depth.imageView))
+  if (createImageView(vkDev.device, depth.image, depthFormat,
+                      VK_IMAGE_ASPECT_DEPTH_BIT,
+                      &depth.imageView) != VK_SUCCESS) {
+    destroyVulkanImage(vkDev.device, depth);
     return false;
+  }
 
   transitionImageLayout(vkDev, depth.image, depthFormat,
                         VK_IMAGE_LAYOUT_UNDEFINED,

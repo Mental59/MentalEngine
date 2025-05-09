@@ -3,6 +3,7 @@
 #include "vulkanDebug.hpp"
 #include "vulkanDescriptor.hpp"
 #include "vulkanDevice.hpp"
+#include "vulkanFramebuffer.hpp"
 #include "vulkanImage.hpp"
 #include "vulkanInstance.hpp"
 #include "vulkanMemory.hpp"
@@ -11,4 +12,5 @@
 #include "vulkanRenderDevice.hpp"
 #include "vulkanShader.hpp"
 #include "vulkanSwapChain.hpp"
+#include "vulkanTexture.hpp"
 #include "vulkanUtils.hpp"

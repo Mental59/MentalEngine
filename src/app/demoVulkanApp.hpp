@@ -31,11 +31,12 @@ public:
     // 5. Storage Buffer with index and vertex data
     VkBuffer storageBuffer = VK_NULL_HANDLE;
     VkDeviceMemory storageBufferMemory = VK_NULL_HANDLE;
+    size_t vertexBufferSize;
+    size_t indexBufferSize;
 
     // 6. Depth buffer
     mental::VulkanImage depthTexture;
 
-    VkSampler textureSampler = VK_NULL_HANDLE;
     mental::VulkanImage texture;
   };
 
@@ -48,7 +49,10 @@ private:
   void init();
   void initVulkan();
 
+  void render();
+
   void cleanup();
+  void destroyVulkanState();
 
   bool isDeviceSuitable(VkPhysicalDevice physicalDevice);
   int findQueueFamily(VkPhysicalDevice physicalDevice);

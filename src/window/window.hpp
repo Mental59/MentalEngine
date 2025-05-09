@@ -6,11 +6,18 @@
 namespace mental {
 class Window {
 public:
+  struct Size {
+    int width;
+    int height;
+    float ratio;
+  };
+
   Window(int width, int height, const char* title);
   ~Window();
 
   void pollEvents();
   bool shouldClose();
+  Size getSize() const;
 
   VkResult createVulkanWindowSurface(VulkanInstance* instance);
 

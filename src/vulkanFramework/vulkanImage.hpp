@@ -9,6 +9,9 @@ struct VulkanImage final {
   VkImage image = VK_NULL_HANDLE;
   VkDeviceMemory imageMemory = VK_NULL_HANDLE;
   VkImageView imageView = VK_NULL_HANDLE;
+  VkSampler sampler = VK_NULL_HANDLE;
+  uint32_t width = 0;
+  uint32_t height = 0;
 };
 
 VkResult createImageView(VkDevice device, VkImage image, VkFormat format,
