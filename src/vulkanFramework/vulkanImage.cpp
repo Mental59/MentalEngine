@@ -307,7 +307,7 @@ VkFormat mental::findSupportedFormat(
     }
   }
 
-  MENTAL_VK_CHECK_BOOL(false);
+  return VK_FORMAT_UNDEFINED;
 }
 
 VkFormat mental::findDepthFormat(VkPhysicalDevice device) {
@@ -322,6 +322,9 @@ bool mental::createDepthResources(VulkanRenderDevice& vkDev, uint32_t width,
                                   uint32_t height, VulkanImage& depth) {
 
   VkFormat depthFormat = findDepthFormat(vkDev.physicalDevice);
+  if (depthFormat == VK_FORMAT_UNDEFINED) {
+    return false;
+  }
 
   if (!createImage(vkDev.device, vkDev.physicalDevice, width, height,
                    depthFormat, VK_IMAGE_TILING_OPTIMAL,

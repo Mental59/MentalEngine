@@ -52,13 +52,14 @@ bool mental::initVulkanRenderDevice(
       vulkanRenderDevice.device, vulkanRenderDevice.swapchain,
       vulkanRenderDevice.swapchainImages,
       vulkanRenderDevice.swapchainImageViews);
-  vulkanRenderDevice.commandBuffers.resize(imageCount);
+  vulkanRenderDevice.swapchainImageCount = imageCount;
+  vulkanRenderDevice.maxFramesInFlight = imageCount - 1;
 
-  VkResult createSemaphoreRes =
-      createSemaphore(vulkanRenderDevice.device, &vulkanRenderDevice.semaphore);
-  VkResult createRenderSemaphore = createSemaphore(
-      vulkanRenderDevice.device, &vulkanRenderDevice.renderSemaphore);
-  if (createSemaphoreRes != VK_SUCCESS || createRenderSemaphore != VK_SUCCESS) {
+  vulkanRenderDevice.commandBuffers.resize(
+      vulkanRenderDevice.maxFramesInFlight);
+
+  VkResult createSyncObjectsRes = createSyncObjects(vulkanRenderDevice);
+  if (createSyncObjectsRes != VK_SUCCESS) {
     return false;
   }
 
@@ -69,11 +70,10 @@ bool mental::initVulkanRenderDevice(
     return false;
   }
 
-  uint32_t commandBufferCount =
-      static_cast<uint32_t>(vulkanRenderDevice.swapchainImages.size());
   VkResult allocateCommandBuffersRes = allocateCommandBuffers(
       vulkanRenderDevice.device, vulkanRenderDevice.commandPool,
-      commandBufferCount, vulkanRenderDevice.commandBuffers.data());
+      vulkanRenderDevice.maxFramesInFlight,
+      vulkanRenderDevice.commandBuffers.data());
 
   return allocateCommandBuffersRes == VK_SUCCESS;
 }
@@ -87,8 +87,18 @@ void mental::destroyVulkanRenderDevice(VulkanRenderDevice& vkDev) {
 
   vkDestroyCommandPool(vkDev.device, vkDev.commandPool, nullptr);
 
-  vkDestroySemaphore(vkDev.device, vkDev.semaphore, nullptr);
-  vkDestroySemaphore(vkDev.device, vkDev.renderSemaphore, nullptr);
+  for (size_t i = 0; i < vkDev.swapchainImageSemaphores.size(); i++) {
+    vkDestroySemaphore(vkDev.device, vkDev.swapchainImageSemaphores[i],
+                       nullptr);
+  }
+
+  for (size_t i = 0; i < vkDev.renderSemaphores.size(); i++) {
+    vkDestroySemaphore(vkDev.device, vkDev.renderSemaphores[i], nullptr);
+  }
+
+  for (size_t i = 0; i < vkDev.inflightFences.size(); i++) {
+    vkDestroyFence(vkDev.device, vkDev.inflightFences[i], nullptr);
+  }
 
   vkDestroyDevice(vkDev.device, nullptr);
 }

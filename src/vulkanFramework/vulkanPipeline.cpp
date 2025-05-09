@@ -52,10 +52,18 @@ bool mental::createColorAndDepthRenderPass(VulkanRenderDevice& device,
   const VkAttachmentReference colorAttachmentRef = {
       .attachment = 0, .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
 
+  VkFormat depthFormat = VK_FORMAT_D32_SFLOAT;
+  if (useDepth) {
+    depthFormat = findDepthFormat(device.physicalDevice);
+  }
+
+  if (depthFormat == VK_FORMAT_UNDEFINED) {
+    return false;
+  }
+
   VkAttachmentDescription depthAttachment = {
       .flags = 0,
-      .format = useDepth ? findDepthFormat(device.physicalDevice)
-                         : VK_FORMAT_D32_SFLOAT,
+      .format = depthFormat,
       .samples = VK_SAMPLE_COUNT_1_BIT,
       .loadOp = offscreenInternal
                     ? VK_ATTACHMENT_LOAD_OP_LOAD

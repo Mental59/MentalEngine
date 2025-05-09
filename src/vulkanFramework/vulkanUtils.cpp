@@ -1,5 +1,6 @@
 #include "vulkanUtils.hpp"
 #include "utils/utils.hpp"
+#include "vulkanRenderDevice.hpp"
 #include <cassert>
 #include <cstdlib>
 #include <string>
@@ -12,11 +13,31 @@ void mental::check(bool check, const char* fileName, int lineNumber) {
   }
 }
 
-VkResult mental::createSemaphore(VkDevice device, VkSemaphore* outSemaphore) {
-  const VkSemaphoreCreateInfo createInfo = {
-      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+VkResult mental::createSyncObjects(VulkanRenderDevice& renderDevice) {
+  VkSemaphoreCreateInfo semaphoreInfo{};
+  semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-  return vkCreateSemaphore(device, &createInfo, nullptr, outSemaphore);
+  VkFenceCreateInfo fenceInfo{};
+  fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+  fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+  renderDevice.swapchainImageSemaphores.resize(renderDevice.maxFramesInFlight);
+  renderDevice.renderSemaphores.resize(renderDevice.maxFramesInFlight);
+  renderDevice.inflightFences.resize(renderDevice.maxFramesInFlight);
+
+  for (size_t i = 0; i < renderDevice.maxFramesInFlight; i++) {
+    if (vkCreateSemaphore(renderDevice.device, &semaphoreInfo, nullptr,
+                          &renderDevice.swapchainImageSemaphores[i]) !=
+            VK_SUCCESS ||
+        vkCreateSemaphore(renderDevice.device, &semaphoreInfo, nullptr,
+                          &renderDevice.renderSemaphores[i]) != VK_SUCCESS ||
+        vkCreateFence(renderDevice.device, &fenceInfo, nullptr,
+                      &renderDevice.inflightFences[i]) != VK_SUCCESS) {
+      return VK_ERROR_INITIALIZATION_FAILED;
+    }
+  }
+
+  return VK_SUCCESS;
 }
 
 bool mental::hasStencilComponent(VkFormat format) {

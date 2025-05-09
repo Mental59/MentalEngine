@@ -1,4 +1,5 @@
 #pragma once
+#include "vulkanRenderDevice.hpp"
 #include <volk.h>
 
 #define MENTAL_VK_CHECK(value)                                                 \
@@ -8,7 +9,7 @@
 namespace mental {
 void check(bool check, const char* fileName, int lineNumber);
 
-VkResult createSemaphore(VkDevice device, VkSemaphore* outSemaphore);
+VkResult createSyncObjects(VulkanRenderDevice& renderDevice);
 
 bool hasStencilComponent(VkFormat format);
 

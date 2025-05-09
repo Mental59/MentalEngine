@@ -1,12 +1,15 @@
 #include "window.hpp"
 
-mental::Window::Window(int width, int height, const char* title) {
+mental::Window::Window(int width, int height, const char* title,
+                       bool fullScreen) {
   glfwInit();
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-  mWindow = glfwCreateWindow(width, height, title, nullptr, nullptr);
+  mWindow =
+      glfwCreateWindow(width, height, title,
+                       fullScreen ? glfwGetPrimaryMonitor() : nullptr, nullptr);
 
   if (!mWindow) {
     glfwTerminate();

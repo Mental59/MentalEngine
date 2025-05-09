@@ -49,16 +49,17 @@ private:
   void init();
   void initVulkan();
 
-  void render();
+  void render(uint32_t currentFrame);
 
   void cleanup();
   void destroyVulkanState();
 
   bool isDeviceSuitable(VkPhysicalDevice physicalDevice);
   int findQueueFamily(VkPhysicalDevice physicalDevice);
-  bool fillCommandBuffers(size_t i, uint32_t indexBufferCount);
+  bool fillCommandBuffers(size_t imageIndex, uint32_t frameIndex,
+                          uint32_t indexBufferCount);
   bool createUniformBuffers();
-  void updateUniformBuffer(uint32_t currentImage, const void* uboData,
+  void updateUniformBuffer(uint32_t frameIndex, const void* uboData,
                            size_t uboSize);
   bool createDescriptorSet(size_t vertexBufferSize, size_t indexBufferSize);
 

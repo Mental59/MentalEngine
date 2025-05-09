@@ -14,6 +14,9 @@ struct VulkanRenderDevice final {
   uint32_t framebufferWidth = 0;
   uint32_t framebufferHeight = 0;
 
+  uint32_t swapchainImageCount = 0;
+  uint32_t maxFramesInFlight = 0;
+
   VkDevice device = VK_NULL_HANDLE;
   VkQueue graphicsQueue = VK_NULL_HANDLE;
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -21,8 +24,10 @@ struct VulkanRenderDevice final {
   uint32_t graphicsFamily = 0;
 
   VkSwapchainKHR swapchain = VK_NULL_HANDLE;
-  VkSemaphore semaphore = VK_NULL_HANDLE;
-  VkSemaphore renderSemaphore = VK_NULL_HANDLE;
+
+  std::vector<VkSemaphore> swapchainImageSemaphores;
+  std::vector<VkSemaphore> renderSemaphores;
+  std::vector<VkFence> inflightFences;
 
   std::vector<VkImage> swapchainImages;
   std::vector<VkImageView> swapchainImageViews;

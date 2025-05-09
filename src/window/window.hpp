@@ -12,7 +12,7 @@ public:
     float ratio;
   };
 
-  Window(int width, int height, const char* title);
+  Window(int width, int height, const char* title, bool fullScreen = false);
   ~Window();
 
   void pollEvents();

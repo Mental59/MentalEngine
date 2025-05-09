@@ -6,9 +6,13 @@ bool mental::createColorAndDepthFramebuffers(
     VulkanRenderDevice& vkDev, VkRenderPass renderPass,
     VkImageView depthImageView,
     std::vector<VkFramebuffer>& swapchainFramebuffers) {
-  swapchainFramebuffers.resize(vkDev.swapchainImageViews.size());
 
-  for (size_t i = 0; i < vkDev.swapchainImages.size(); i++) {
+  uint32_t numSwapchainImages =
+      static_cast<uint32_t>(vkDev.swapchainImageViews.size());
+
+  swapchainFramebuffers.resize(numSwapchainImages);
+
+  for (size_t i = 0; i < swapchainFramebuffers.size(); i++) {
     std::array<VkImageView, 2> attachments = {vkDev.swapchainImageViews[i],
                                               depthImageView};
 
@@ -25,7 +29,7 @@ bool mental::createColorAndDepthFramebuffers(
         .layers = 1};
 
     MENTAL_VK_CHECK(vkCreateFramebuffer(vkDev.device, &framebufferInfo, nullptr,
-                                 &swapchainFramebuffers[i]));
+                                        &swapchainFramebuffers[i]));
   }
 
   return true;
