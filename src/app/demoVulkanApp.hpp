@@ -50,10 +50,10 @@ private:
   void render(uint32_t currentFrame);
 
   void cleanup();
-  void cleanupSwapchain();
+  void cleanupSwapchain(VkSwapchainKHR swapchain);
   void destroyVulkanState();
 
-  void recreateSwapchain();
+  void recreateSwapchain(uint32_t currentFrame);
 
   bool isDeviceSuitable(VkPhysicalDevice physicalDevice);
   int findQueueFamily(VkPhysicalDevice physicalDevice);

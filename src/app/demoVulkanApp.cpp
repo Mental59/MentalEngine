@@ -137,8 +137,9 @@ void mental::DemoVulkanApp::render(uint32_t currentFrame) {
       mVulkanRenderDevice.device, mVulkanRenderDevice.swapchain, UINT64_MAX,
       mVulkanRenderDevice.swapchainImageSemaphores[currentFrame],
       VK_NULL_HANDLE, &imageIndex);
-  if (acquireNextImageRes == VK_ERROR_OUT_OF_DATE_KHR) {
-    recreateSwapchain();
+  if (acquireNextImageRes == VK_ERROR_OUT_OF_DATE_KHR || mFramebufferResized) {
+    mFramebufferResized = false;
+    recreateSwapchain(currentFrame);
     return;
   } else if (acquireNextImageRes != VK_SUCCESS &&
              acquireNextImageRes != VK_SUBOPTIMAL_KHR) {
@@ -201,7 +202,7 @@ void mental::DemoVulkanApp::render(uint32_t currentFrame) {
   if (presentRes == VK_ERROR_OUT_OF_DATE_KHR ||
       presentRes == VK_SUBOPTIMAL_KHR || mFramebufferResized) {
     mFramebufferResized = false;
-    recreateSwapchain();
+    recreateSwapchain(currentFrame);
   } else if (presentRes != VK_SUCCESS) {
     MENTAL_CHECK_BOOL(false);
   }
@@ -213,7 +214,7 @@ void mental::DemoVulkanApp::cleanup() {
   mental::destroyVulkanInstance(mVulkanInstance);
 }
 
-void mental::DemoVulkanApp::cleanupSwapchain() {
+void mental::DemoVulkanApp::cleanupSwapchain(VkSwapchainKHR swapchain) {
   mental::destroyVulkanImage(mVulkanRenderDevice.device,
                              mVulkanState.depthTexture);
 
@@ -225,8 +226,7 @@ void mental::DemoVulkanApp::cleanupSwapchain() {
     vkDestroyImageView(mVulkanRenderDevice.device, imageView, nullptr);
   }
 
-  vkDestroySwapchainKHR(mVulkanRenderDevice.device,
-                        mVulkanRenderDevice.swapchain, nullptr);
+  vkDestroySwapchainKHR(mVulkanRenderDevice.device, swapchain, nullptr);
 }
 
 void mental::DemoVulkanApp::destroyVulkanState() {
@@ -267,23 +267,27 @@ void mental::DemoVulkanApp::destroyVulkanState() {
                     nullptr);
 }
 
-void mental::DemoVulkanApp::recreateSwapchain() {
+void mental::DemoVulkanApp::recreateSwapchain(uint32_t currentFrame) {
   mental::Window::Size framebufferSize{};
   do {
     framebufferSize = mWindow.getSize();
     mWindow.waitEvents();
   } while (framebufferSize.width == 0 || framebufferSize.height == 0);
 
-  vkDeviceWaitIdle(mVulkanRenderDevice.device);
-
-  cleanupSwapchain();
+  vkWaitForFences(mVulkanRenderDevice.device, 1,
+                  &mVulkanRenderDevice.inflightFences[currentFrame], VK_TRUE,
+                  UINT64_MAX);
 
   uint32_t newWidth = static_cast<uint32_t>(framebufferSize.width);
   uint32_t newHeight = static_cast<uint32_t>(framebufferSize.height);
+
+  VkSwapchainKHR oldSwapchain = mVulkanRenderDevice.swapchain;
   MENTAL_VK_CHECK(
       mental::createSwapchain(mVulkanRenderDevice, mVulkanInstance.surface,
                               mVulkanRenderDevice.graphicsFamily, newWidth,
                               newHeight, &mVulkanRenderDevice.swapchain));
+
+  cleanupSwapchain(oldSwapchain);
 
   size_t imageCount = mental::createSwapchainImages(
       mVulkanRenderDevice.device, mVulkanRenderDevice.swapchain,

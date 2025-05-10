@@ -98,6 +98,7 @@ VkResult createSwapchain(VulkanRenderDevice& device, VkSurfaceKHR surface,
       chooseSwapExtent(swapchainSupport.capabilities, width, height);
   uint32_t minImageCount = chooseSwapImageCount(swapchainSupport.capabilities);
 
+  VkSwapchainKHR oldSwapchain = device.swapchain;
   const VkSwapchainCreateInfoKHR createSwapchainInfo = {
       .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
       .flags = 0,
@@ -116,7 +117,7 @@ VkResult createSwapchain(VulkanRenderDevice& device, VkSurfaceKHR surface,
       .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
       .presentMode = presentMode,
       .clipped = VK_TRUE,
-      .oldSwapchain = VK_NULL_HANDLE};
+      .oldSwapchain = oldSwapchain};
 
   VkResult result = vkCreateSwapchainKHR(device.device, &createSwapchainInfo,
                                          nullptr, swapchain);
