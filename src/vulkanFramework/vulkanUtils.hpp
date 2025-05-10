@@ -4,7 +4,7 @@
 
 #define MENTAL_VK_CHECK(value)                                                 \
   mental::check(value == VK_SUCCESS, __FILE__, __LINE__);
-#define MENTAL_VK_CHECK_BOOL(value) mental::check(value, __FILE__, __LINE__);
+#define MENTAL_CHECK_BOOL(value) mental::check(value, __FILE__, __LINE__);
 
 namespace mental {
 void check(bool check, const char* fileName, int lineNumber);

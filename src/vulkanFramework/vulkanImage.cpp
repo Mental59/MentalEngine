@@ -284,7 +284,7 @@ void mental::transitionImageLayoutCmd(VkCommandBuffer commandBuffer,
     sourceStage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
     destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
   } else {
-    MENTAL_VK_CHECK_BOOL(false);
+    MENTAL_CHECK_BOOL(false);
   }
 
   vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0,

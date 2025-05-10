@@ -4,8 +4,10 @@
 #include <volk.h>
 
 namespace mental {
+struct VulkanRenderDevice;
+
 struct SwapChainSupportDetails {
-  VkSurfaceCapabilitiesKHR capabilities;
+  VkSurfaceCapabilitiesKHR capabilities{};
   std::vector<VkSurfaceFormatKHR> formats;
   std::vector<VkPresentModeKHR> presentModes;
 };
@@ -23,10 +25,9 @@ uint32_t chooseSwapImageCount(const VkSurfaceCapabilitiesKHR& capabilities);
 VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
                             int pixelWidth, int pixelHeight);
 
-VkResult createSwapchain(VkDevice device, VkPhysicalDevice physicalDevice,
-                         VkSurfaceKHR surface, uint32_t graphicsFamily,
-                         uint32_t width, uint32_t height,
-                         VkSwapchainKHR* swapchain);
+VkResult createSwapchain(VulkanRenderDevice& device, VkSurfaceKHR surface,
+                         uint32_t graphicsFamily, uint32_t width,
+                         uint32_t height, VkSwapchainKHR* swapchain);
 size_t createSwapchainImages(VkDevice device, VkSwapchainKHR swapchain,
                              std::vector<VkImage>& swapchainImages,
                              std::vector<VkImageView>& swapchainImageViews);

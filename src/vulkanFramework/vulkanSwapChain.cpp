@@ -1,5 +1,6 @@
 #include "vulkanSwapChain.hpp"
 #include "vulkanImage.hpp"
+#include "vulkanRenderDevice.hpp"
 #include "vulkanUtils.hpp"
 #include <algorithm>
 
@@ -84,12 +85,11 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities,
     return actualExtent;
   }
 }
-VkResult createSwapchain(VkDevice device, VkPhysicalDevice physicalDevice,
-                         VkSurfaceKHR surface, uint32_t graphicsFamily,
-                         uint32_t width, uint32_t height,
-                         VkSwapchainKHR* swapchain) {
+VkResult createSwapchain(VulkanRenderDevice& device, VkSurfaceKHR surface,
+                         uint32_t graphicsFamily, uint32_t width,
+                         uint32_t height, VkSwapchainKHR* swapchain) {
   SwapChainSupportDetails swapchainSupport =
-      querySwapChainSupport(physicalDevice, surface);
+      querySwapChainSupport(device.physicalDevice, surface);
   VkSurfaceFormatKHR surfaceFormat =
       chooseSwapSurfaceFormat(swapchainSupport.formats);
   VkPresentModeKHR presentMode =
@@ -118,7 +118,12 @@ VkResult createSwapchain(VkDevice device, VkPhysicalDevice physicalDevice,
       .clipped = VK_TRUE,
       .oldSwapchain = VK_NULL_HANDLE};
 
-  return vkCreateSwapchainKHR(device, &createSwapchainInfo, nullptr, swapchain);
+  VkResult result = vkCreateSwapchainKHR(device.device, &createSwapchainInfo,
+                                         nullptr, swapchain);
+
+  device.swapchainExtent = extent;
+
+  return result;
 }
 size_t createSwapchainImages(VkDevice device, VkSwapchainKHR swapchain,
                              std::vector<VkImage>& swapchainImages,

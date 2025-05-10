@@ -189,17 +189,18 @@ bool mental::createGraphicsPipeline(
   const VkViewport viewport = {
       .x = 0.0f,
       .y = 0.0f,
-      .width = static_cast<float>(customWidth > 0 ? customWidth
-                                                  : vkDev.framebufferWidth),
-      .height = static_cast<float>(customHeight > 0 ? customHeight
-                                                    : vkDev.framebufferHeight),
+      .width = static_cast<float>(
+          customWidth > 0 ? customWidth : vkDev.swapchainExtent.width),
+      .height = static_cast<float>(
+          customHeight > 0 ? customHeight : vkDev.swapchainExtent.height),
       .minDepth = 0.0f,
       .maxDepth = 1.0f};
 
   const VkRect2D scissor = {
       .offset = {0, 0},
-      .extent = {customWidth > 0 ? customWidth : vkDev.framebufferWidth,
-                 customHeight > 0 ? customHeight : vkDev.framebufferHeight}};
+      .extent = {customWidth > 0 ? customWidth : vkDev.swapchainExtent.width,
+                 customHeight > 0 ? customHeight
+                                  : vkDev.swapchainExtent.height}};
 
   const VkPipelineViewportStateCreateInfo viewportState = {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,

@@ -24,8 +24,8 @@ bool mental::createColorAndDepthFramebuffers(
         .attachmentCount =
             static_cast<uint32_t>((depthImageView == VK_NULL_HANDLE) ? 1 : 2),
         .pAttachments = attachments.data(),
-        .width = vkDev.framebufferWidth,
-        .height = vkDev.framebufferHeight,
+        .width = vkDev.swapchainExtent.width,
+        .height = vkDev.swapchainExtent.height,
         .layers = 1};
 
     MENTAL_VK_CHECK(vkCreateFramebuffer(vkDev.device, &framebufferInfo, nullptr,

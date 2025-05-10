@@ -8,7 +8,7 @@ namespace mental {
 struct ShaderModule final {
   std::vector<unsigned int> SPIRV;
   VkShaderModule shaderModule = VK_NULL_HANDLE;
-  VkShaderStageFlagBits stage;
+  VkShaderStageFlagBits stage = VK_SHADER_STAGE_VERTEX_BIT;
 };
 
 glslang_stage_t glslangShaderStageFromFileName(const char* fileName);

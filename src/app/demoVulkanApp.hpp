@@ -1,5 +1,6 @@
 #pragma once
 
+#include "baseApp.hpp"
 #include "vulkanFramework/vulkanFramework.hpp"
 #include "window/window.hpp"
 #include <vector>
@@ -7,7 +8,7 @@
 
 namespace mental {
 
-class DemoVulkanApp {
+class DemoVulkanApp : public BaseApp {
 public:
   struct VulkanState {
     // 1. Descriptor set (layout + pool + sets) -> uses uniform buffers,
@@ -16,28 +17,25 @@ public:
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> descriptorSets;
 
-    // 2.
-    std::vector<VkFramebuffer> swapchainFramebuffers;
-
-    // 3. Pipeline & render pass (using DescriptorSets & pipeline state options)
+    // 2. Pipeline & render pass (using DescriptorSets & pipeline state options)
     VkRenderPass renderPass = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline graphicsPipeline = VK_NULL_HANDLE;
 
-    // 4. Uniform buffer
+    // 3. Uniform buffer
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
 
-    // 5. Storage Buffer with index and vertex data
+    // 4. Storage Buffer with index and vertex data
     VkBuffer storageBuffer = VK_NULL_HANDLE;
     VkDeviceMemory storageBufferMemory = VK_NULL_HANDLE;
-    size_t vertexBufferSize;
-    size_t indexBufferSize;
+    size_t vertexBufferSize = 0;
+    size_t indexBufferSize = 0;
 
-    // 6. Depth buffer
-    mental::VulkanImage depthTexture;
+    // 5. Depth buffer
+    mental::VulkanImage depthTexture{};
 
-    mental::VulkanImage texture;
+    mental::VulkanImage texture{};
   };
 
   DemoVulkanApp();
@@ -52,7 +50,10 @@ private:
   void render(uint32_t currentFrame);
 
   void cleanup();
+  void cleanupSwapchain();
   void destroyVulkanState();
+
+  void recreateSwapchain();
 
   bool isDeviceSuitable(VkPhysicalDevice physicalDevice);
   int findQueueFamily(VkPhysicalDevice physicalDevice);

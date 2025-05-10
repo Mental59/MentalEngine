@@ -11,9 +11,6 @@ bool mental::initVulkanRenderDevice(
     VkPhysicalDeviceFeatures deviceFeatures, uint32_t enabledExtensionCount,
     const char* const* enabledExtensions,
     VulkanRenderDevice& vulkanRenderDevice) {
-  vulkanRenderDevice.framebufferWidth = width;
-  vulkanRenderDevice.framebufferHeight = height;
-
   VkResult findSuitableDeviceRes = findSuitablePhysicalDevice(
       vulkanInstance.instance, selector, &vulkanRenderDevice.physicalDevice);
   if (findSuitableDeviceRes != VK_SUCCESS) {
@@ -40,10 +37,10 @@ bool mental::initVulkanRenderDevice(
     return false;
   }
 
-  VkResult crateSwapchainRes = createSwapchain(
-      vulkanRenderDevice.device, vulkanRenderDevice.physicalDevice,
-      vulkanInstance.surface, vulkanRenderDevice.graphicsFamily, width, height,
-      &vulkanRenderDevice.swapchain);
+  VkResult crateSwapchainRes =
+      createSwapchain(vulkanRenderDevice, vulkanInstance.surface,
+                      vulkanRenderDevice.graphicsFamily, width, height,
+                      &vulkanRenderDevice.swapchain);
   if (crateSwapchainRes != VK_SUCCESS) {
     return false;
   }

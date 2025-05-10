@@ -11,9 +11,6 @@ namespace mental {
 using QueueFamilySelectorFunction = std::function<int(VkPhysicalDevice)>;
 
 struct VulkanRenderDevice final {
-  uint32_t framebufferWidth = 0;
-  uint32_t framebufferHeight = 0;
-
   uint32_t swapchainImageCount = 0;
   uint32_t maxFramesInFlight = 0;
 
@@ -31,9 +28,12 @@ struct VulkanRenderDevice final {
 
   std::vector<VkImage> swapchainImages;
   std::vector<VkImageView> swapchainImageViews;
+  std::vector<VkFramebuffer> swapchainFramebuffers;
 
   VkCommandPool commandPool = VK_NULL_HANDLE;
   std::vector<VkCommandBuffer> commandBuffers;
+
+  VkExtent2D swapchainExtent;
 };
 
 bool initVulkanRenderDevice(VulkanInstance& vulkanInstance, uint32_t width,

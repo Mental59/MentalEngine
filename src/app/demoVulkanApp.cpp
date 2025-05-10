@@ -84,8 +84,10 @@ void mental::DemoVulkanApp::initVulkan() {
     exit(EXIT_FAILURE);
   }
 
-  if (!mental::createDepthResources(mVulkanRenderDevice, SCREEN_WIDTH,
-                                    SCREEN_HEIGHT, mVulkanState.depthTexture)) {
+  if (!mental::createDepthResources(mVulkanRenderDevice,
+                                    mVulkanRenderDevice.swapchainExtent.width,
+                                    mVulkanRenderDevice.swapchainExtent.height,
+                                    mVulkanState.depthTexture)) {
     printf("FATAL ERROR: Failed to create depth resources");
     exit(EXIT_FAILURE);
   }
@@ -117,7 +119,7 @@ void mental::DemoVulkanApp::initVulkan() {
   if (!mental::createColorAndDepthFramebuffers(
           mVulkanRenderDevice, mVulkanState.renderPass,
           mVulkanState.depthTexture.imageView,
-          mVulkanState.swapchainFramebuffers)) {
+          mVulkanRenderDevice.swapchainFramebuffers)) {
     printf("FATAL ERROR: Failed to create framebuffers");
     exit(EXIT_FAILURE);
   }
@@ -131,25 +133,32 @@ void mental::DemoVulkanApp::render(uint32_t currentFrame) {
                   UINT64_MAX);
 
   uint32_t imageIndex = 0;
-  if (vkAcquireNextImageKHR(
-          mVulkanRenderDevice.device, mVulkanRenderDevice.swapchain, UINT64_MAX,
-          mVulkanRenderDevice.swapchainImageSemaphores[currentFrame],
-          VK_NULL_HANDLE, &imageIndex) != VK_SUCCESS) {
+  VkResult acquireNextImageRes = vkAcquireNextImageKHR(
+      mVulkanRenderDevice.device, mVulkanRenderDevice.swapchain, UINT64_MAX,
+      mVulkanRenderDevice.swapchainImageSemaphores[currentFrame],
+      VK_NULL_HANDLE, &imageIndex);
+  if (acquireNextImageRes == VK_ERROR_OUT_OF_DATE_KHR) {
+    recreateSwapchain();
     return;
+  } else if (acquireNextImageRes != VK_SUCCESS &&
+             acquireNextImageRes != VK_SUBOPTIMAL_KHR) {
+    MENTAL_CHECK_BOOL(false);
   }
 
   vkResetFences(mVulkanRenderDevice.device, 1,
                 &mVulkanRenderDevice.inflightFences[currentFrame]);
 
-  MENTAL_VK_CHECK(vkResetCommandPool(mVulkanRenderDevice.device,
-                                     mVulkanRenderDevice.commandPool, 0));
+  MENTAL_VK_CHECK(vkResetCommandBuffer(
+      mVulkanRenderDevice.commandBuffers[currentFrame], 0));
 
+  float aspectRatio =
+      static_cast<float>(mVulkanRenderDevice.swapchainExtent.width) /
+      static_cast<float>(mVulkanRenderDevice.swapchainExtent.height);
   const glm::mat4 m1 = glm::rotate(
       glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 0.5f, -1.5f)) *
           glm::rotate(glm::mat4(1.f), glm::pi<float>(), glm::vec3(1, 0, 0)),
       (float)glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
-  const glm::mat4 p =
-      glm::perspective(45.0f, mWindow.getSize().ratio, 0.1f, 1000.0f);
+  const glm::mat4 p = glm::perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
 
   const UniformBuffer ubo{.mvp = p * m1};
 
@@ -187,13 +196,37 @@ void mental::DemoVulkanApp::render(uint32_t currentFrame) {
       .pSwapchains = &mVulkanRenderDevice.swapchain,
       .pImageIndices = &imageIndex};
 
-  MENTAL_VK_CHECK(vkQueuePresentKHR(mVulkanRenderDevice.graphicsQueue, &pi));
+  VkResult presentRes =
+      vkQueuePresentKHR(mVulkanRenderDevice.graphicsQueue, &pi);
+  if (presentRes == VK_ERROR_OUT_OF_DATE_KHR ||
+      presentRes == VK_SUBOPTIMAL_KHR || mFramebufferResized) {
+    mFramebufferResized = false;
+    recreateSwapchain();
+  } else if (presentRes != VK_SUCCESS) {
+    MENTAL_CHECK_BOOL(false);
+  }
 }
 
 void mental::DemoVulkanApp::cleanup() {
   destroyVulkanState();
   mental::destroyVulkanRenderDevice(mVulkanRenderDevice);
   mental::destroyVulkanInstance(mVulkanInstance);
+}
+
+void mental::DemoVulkanApp::cleanupSwapchain() {
+  mental::destroyVulkanImage(mVulkanRenderDevice.device,
+                             mVulkanState.depthTexture);
+
+  for (VkFramebuffer framebuffer : mVulkanRenderDevice.swapchainFramebuffers) {
+    vkDestroyFramebuffer(mVulkanRenderDevice.device, framebuffer, nullptr);
+  }
+
+  for (VkImageView imageView : mVulkanRenderDevice.swapchainImageViews) {
+    vkDestroyImageView(mVulkanRenderDevice.device, imageView, nullptr);
+  }
+
+  vkDestroySwapchainKHR(mVulkanRenderDevice.device,
+                        mVulkanRenderDevice.swapchain, nullptr);
 }
 
 void mental::DemoVulkanApp::destroyVulkanState() {
@@ -217,7 +250,7 @@ void mental::DemoVulkanApp::destroyVulkanState() {
   vkDestroyDescriptorPool(mVulkanRenderDevice.device,
                           mVulkanState.descriptorPool, nullptr);
 
-  for (VkFramebuffer framebuffer : mVulkanState.swapchainFramebuffers) {
+  for (VkFramebuffer framebuffer : mVulkanRenderDevice.swapchainFramebuffers) {
     vkDestroyFramebuffer(mVulkanRenderDevice.device, framebuffer, nullptr);
   }
 
@@ -232,6 +265,41 @@ void mental::DemoVulkanApp::destroyVulkanState() {
                           mVulkanState.pipelineLayout, nullptr);
   vkDestroyPipeline(mVulkanRenderDevice.device, mVulkanState.graphicsPipeline,
                     nullptr);
+}
+
+void mental::DemoVulkanApp::recreateSwapchain() {
+  mental::Window::Size framebufferSize{};
+  do {
+    framebufferSize = mWindow.getSize();
+    mWindow.waitEvents();
+  } while (framebufferSize.width == 0 || framebufferSize.height == 0);
+
+  vkDeviceWaitIdle(mVulkanRenderDevice.device);
+
+  cleanupSwapchain();
+
+  uint32_t newWidth = static_cast<uint32_t>(framebufferSize.width);
+  uint32_t newHeight = static_cast<uint32_t>(framebufferSize.height);
+  MENTAL_VK_CHECK(
+      mental::createSwapchain(mVulkanRenderDevice, mVulkanInstance.surface,
+                              mVulkanRenderDevice.graphicsFamily, newWidth,
+                              newHeight, &mVulkanRenderDevice.swapchain));
+
+  size_t imageCount = mental::createSwapchainImages(
+      mVulkanRenderDevice.device, mVulkanRenderDevice.swapchain,
+      mVulkanRenderDevice.swapchainImages,
+      mVulkanRenderDevice.swapchainImageViews);
+  MENTAL_CHECK_BOOL(static_cast<uint32_t>(imageCount) ==
+                    mVulkanRenderDevice.swapchainImageCount);
+
+  MENTAL_CHECK_BOOL(mental::createDepthResources(
+      mVulkanRenderDevice, mVulkanRenderDevice.swapchainExtent.width,
+      mVulkanRenderDevice.swapchainExtent.height, mVulkanState.depthTexture));
+
+  MENTAL_CHECK_BOOL(mental::createColorAndDepthFramebuffers(
+      mVulkanRenderDevice, mVulkanState.renderPass,
+      mVulkanState.depthTexture.imageView,
+      mVulkanRenderDevice.swapchainFramebuffers));
 }
 
 bool mental::DemoVulkanApp::createUniformBuffers() {
@@ -417,9 +485,8 @@ bool mental::DemoVulkanApp::fillCommandBuffers(size_t imageIndex,
       VkClearValue{.color = CLEAR_VALUE_COLOR},
       VkClearValue{.depthStencil = {1.0f, 0}}};
 
-  const VkRect2D screenRect = {
-      .offset = {0, 0},
-      .extent = {.width = SCREEN_WIDTH, .height = SCREEN_HEIGHT}};
+  const VkRect2D screenRect = {.offset = {0, 0},
+                               .extent = mVulkanRenderDevice.swapchainExtent};
 
   MENTAL_VK_CHECK(vkBeginCommandBuffer(
       mVulkanRenderDevice.commandBuffers[frameIndex], &bufferBeginInfo));
@@ -428,7 +495,7 @@ bool mental::DemoVulkanApp::fillCommandBuffers(size_t imageIndex,
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
       .pNext = nullptr,
       .renderPass = mVulkanState.renderPass,
-      .framebuffer = mVulkanState.swapchainFramebuffers[imageIndex],
+      .framebuffer = mVulkanRenderDevice.swapchainFramebuffers[imageIndex],
       .renderArea = screenRect,
       .clearValueCount = static_cast<uint32_t>(clearValues.size()),
       .pClearValues = clearValues.data()};
@@ -439,6 +506,24 @@ bool mental::DemoVulkanApp::fillCommandBuffers(size_t imageIndex,
   vkCmdBindPipeline(mVulkanRenderDevice.commandBuffers[frameIndex],
                     VK_PIPELINE_BIND_POINT_GRAPHICS,
                     mVulkanState.graphicsPipeline);
+
+  VkViewport viewport{};
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.width =
+      static_cast<float>(mVulkanRenderDevice.swapchainExtent.width);
+  viewport.height =
+      static_cast<float>(mVulkanRenderDevice.swapchainExtent.height);
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  vkCmdSetViewport(mVulkanRenderDevice.commandBuffers[frameIndex], 0, 1,
+                   &viewport);
+
+  VkRect2D scissor{};
+  scissor.offset = {0, 0};
+  scissor.extent = mVulkanRenderDevice.swapchainExtent;
+  vkCmdSetScissor(mVulkanRenderDevice.commandBuffers[frameIndex], 0, 1,
+                  &scissor);
 
   vkCmdBindDescriptorSets(mVulkanRenderDevice.commandBuffers[frameIndex],
                           VK_PIPELINE_BIND_POINT_GRAPHICS,
