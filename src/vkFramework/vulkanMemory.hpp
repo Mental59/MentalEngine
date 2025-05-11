@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 struct VertexData {
   glm::vec3 pos;
   glm::vec2 tc;
@@ -31,4 +31,4 @@ size_t allocateVertexBuffer(VulkanRenderDevice& vkDev, VkBuffer* storageBuffer,
                             VkDeviceMemory* storageBufferMemory,
                             size_t vertexDataSize, const void* vertexData,
                             size_t indexDataSize, const void* indexData);
-} // namespace mental
+} // namespace vkFramework

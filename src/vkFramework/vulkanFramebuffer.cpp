@@ -2,7 +2,7 @@
 #include "vulkanUtils.hpp"
 #include <array>
 
-bool mental::createColorAndDepthFramebuffers(
+bool vkFramework::createColorAndDepthFramebuffers(
     VulkanRenderDevice& vkDev, VkRenderPass renderPass,
     VkImageView depthImageView,
     std::vector<VkFramebuffer>& swapchainFramebuffers) {

@@ -3,7 +3,7 @@
 
 namespace {
 size_t compileShader(glslang_stage_t stage, const char* shaderSource,
-                     mental::ShaderModule& shaderModule) {
+                     vkFramework::ShaderModule& shaderModule) {
   const glslang_resource_t defaultResource = {
       .max_lights = 32,
       .max_clip_planes = 6,
@@ -133,7 +133,7 @@ size_t compileShader(glslang_stage_t stage, const char* shaderSource,
     fprintf(stderr, "GLSL preprocessing failed\n");
     fprintf(stderr, "\n%s", glslang_shader_get_info_log(shader));
     fprintf(stderr, "\n%s", glslang_shader_get_info_debug_log(shader));
-    mental::printShaderSource(input.code);
+    utils::printShaderSource(input.code);
     return 0;
   }
 
@@ -141,7 +141,7 @@ size_t compileShader(glslang_stage_t stage, const char* shaderSource,
     fprintf(stderr, "GLSL parsing failed\n");
     fprintf(stderr, "\n%s", glslang_shader_get_info_log(shader));
     fprintf(stderr, "\n%s", glslang_shader_get_info_debug_log(shader));
-    mental::printShaderSource(glslang_shader_get_preprocessed_code(shader));
+    utils::printShaderSource(glslang_shader_get_preprocessed_code(shader));
     return 0;
   }
 
@@ -176,29 +176,31 @@ size_t compileShader(glslang_stage_t stage, const char* shaderSource,
 }
 } // namespace
 
-glslang_stage_t mental::glslangShaderStageFromFileName(const char* fileName) {
-  if (endsWith(fileName, ".vert"))
+glslang_stage_t
+vkFramework::glslangShaderStageFromFileName(const char* fileName) {
+  if (utils::endsWith(fileName, ".vert"))
     return GLSLANG_STAGE_VERTEX;
 
-  if (endsWith(fileName, ".frag"))
+  if (utils::endsWith(fileName, ".frag"))
     return GLSLANG_STAGE_FRAGMENT;
 
-  if (endsWith(fileName, ".geom"))
+  if (utils::endsWith(fileName, ".geom"))
     return GLSLANG_STAGE_GEOMETRY;
 
-  if (endsWith(fileName, ".comp"))
+  if (utils::endsWith(fileName, ".comp"))
     return GLSLANG_STAGE_COMPUTE;
 
-  if (endsWith(fileName, ".tesc"))
+  if (utils::endsWith(fileName, ".tesc"))
     return GLSLANG_STAGE_TESSCONTROL;
 
-  if (endsWith(fileName, ".tese"))
+  if (utils::endsWith(fileName, ".tese"))
     return GLSLANG_STAGE_TESSEVALUATION;
 
   return GLSLANG_STAGE_VERTEX;
 }
 
-VkShaderStageFlagBits mental::glslangShaderStageToVulkan(glslang_stage_t sh) {
+VkShaderStageFlagBits
+vkFramework::glslangShaderStageToVulkan(glslang_stage_t sh) {
   switch (sh) {
   case GLSLANG_STAGE_VERTEX:
     return VK_SHADER_STAGE_VERTEX_BIT;
@@ -223,12 +225,13 @@ VkShaderStageFlagBits mental::glslangShaderStageToVulkan(glslang_stage_t sh) {
 }
 
 VkShaderStageFlagBits
-mental::vulkanShaderStageFromFileName(const char* fileName) {
+vkFramework::vulkanShaderStageFromFileName(const char* fileName) {
   return glslangShaderStageToVulkan(glslangShaderStageFromFileName(fileName));
 }
 
-size_t mental::compileShaderFile(const char* file, ShaderModule& shaderModule) {
-  std::string shaderSource = readShaderFile(file);
+size_t vkFramework::compileShaderFile(const char* file,
+                                      ShaderModule& shaderModule) {
+  std::string shaderSource = utils::readShaderFile(file);
 
   if (shaderSource.empty()) {
     return 0;
@@ -238,8 +241,8 @@ size_t mental::compileShaderFile(const char* file, ShaderModule& shaderModule) {
                        shaderSource.c_str(), shaderModule);
 }
 
-VkResult mental::createShaderModule(VkDevice device, ShaderModule* shader,
-                                    const char* fileName) {
+VkResult vkFramework::createShaderModule(VkDevice device, ShaderModule* shader,
+                                         const char* fileName) {
   if (compileShaderFile(fileName, *shader) < 1)
     return VK_NOT_READY;
 

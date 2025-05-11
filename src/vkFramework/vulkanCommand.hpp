@@ -3,7 +3,7 @@
 #include "vulkanRenderDevice.hpp"
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 VkResult createCommandPool(VkDevice device, uint32_t queueFamilyIndex,
                            VkCommandPool* commandPool);
 
@@ -15,4 +15,4 @@ VkCommandBuffer beginSingleTimeCommands(VulkanRenderDevice& vkDev);
 
 void endSingleTimeCommands(VulkanRenderDevice& vkDev,
                            VkCommandBuffer commandBuffer);
-} // namespace mental
+} // namespace vkFramework

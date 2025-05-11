@@ -4,7 +4,7 @@
 #include <initializer_list>
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 struct VulkanImage final {
   VkImage image = VK_NULL_HANDLE;
   VkDeviceMemory imageMemory = VK_NULL_HANDLE;
@@ -53,4 +53,4 @@ VkFormat findDepthFormat(VkPhysicalDevice device);
 
 bool createDepthResources(VulkanRenderDevice& vkDev, uint32_t width,
                           uint32_t height, VulkanImage& depth);
-} // namespace mental
+} // namespace vkFramework

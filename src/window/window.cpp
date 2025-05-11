@@ -1,7 +1,7 @@
 #include "window.hpp"
 #include "app/baseApp.hpp"
 
-mental::Window::Window(int width, int height, const char* title,
+window::Window::Window(int width, int height, const char* title,
                        bool fullScreen, BaseApp* pApp) {
   glfwInit();
 
@@ -30,33 +30,33 @@ mental::Window::Window(int width, int height, const char* title,
     }
   });
 
-  glfwSetFramebufferSizeCallback(
-      mWindow, [](GLFWwindow* window, int width, int height) {
-        if (BaseApp* app =
-                reinterpret_cast<BaseApp*>(glfwGetWindowUserPointer(window))) {
-          app->setFramebufferResized(true);
-        }
-      });
+  glfwSetFramebufferSizeCallback(mWindow, [](GLFWwindow* window, int width,
+                                             int height) {
+    if (app::BaseApp* app =
+            reinterpret_cast<app::BaseApp*>(glfwGetWindowUserPointer(window))) {
+      app->setFramebufferResized(true);
+    }
+  });
 }
 
-mental::Window::~Window() {
+window::Window::~Window() {
   glfwDestroyWindow(mWindow);
   glfwTerminate();
 }
 
-void mental::Window::pollEvents() { glfwPollEvents(); }
-void mental::Window::waitEvents() { glfwWaitEvents(); }
+void window::Window::pollEvents() { glfwPollEvents(); }
+void window::Window::waitEvents() { glfwWaitEvents(); }
 
-bool mental::Window::shouldClose() { return glfwWindowShouldClose(mWindow); }
+bool window::Window::shouldClose() { return glfwWindowShouldClose(mWindow); }
 
-mental::Window::Size mental::Window::getSize() const {
+window::Window::Size window::Window::getSize() const {
   int width, height;
   glfwGetFramebufferSize(mWindow, &width, &height);
   const float ratio = width / (float)height;
   return Size{.width = width, .height = height, .ratio = ratio};
 }
 
-void mental::Window::toggleFullscreen(GLFWwindow* window) {
+void window::Window::toggleFullscreen(GLFWwindow* window) {
   static int savedWidth, savedHeight;
   static int savedPosX, savedPosY;
 
@@ -75,7 +75,8 @@ void mental::Window::toggleFullscreen(GLFWwindow* window) {
   }
 }
 
-VkResult mental::Window::createVulkanWindowSurface(VulkanInstance* instance) {
+VkResult window::Window::createVulkanWindowSurface(
+    vkFramework::VulkanInstance* instance) {
   return glfwCreateWindowSurface(instance->instance, mWindow, nullptr,
                                  &instance->surface);
 }

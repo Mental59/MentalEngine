@@ -1,6 +1,6 @@
 #include "app/demoVulkanApp.hpp"
 
 int main() {
-  mental::DemoVulkanApp app;
+  app::DemoVulkanApp app;
   app.run();
 }

@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <string>
 
-void mental::check(bool check, const char* fileName, int lineNumber) {
+void vkFramework::check(bool check, const char* fileName, int lineNumber) {
   if (!check) {
     printf("CHECK() failed at %s:%i\n", fileName, lineNumber);
     assert(false);
@@ -13,7 +13,7 @@ void mental::check(bool check, const char* fileName, int lineNumber) {
   }
 }
 
-VkResult mental::createSyncObjects(VulkanRenderDevice& renderDevice) {
+VkResult vkFramework::createSyncObjects(VulkanRenderDevice& renderDevice) {
   VkSemaphoreCreateInfo semaphoreInfo{};
   semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
@@ -40,12 +40,12 @@ VkResult mental::createSyncObjects(VulkanRenderDevice& renderDevice) {
   return VK_SUCCESS;
 }
 
-bool mental::hasStencilComponent(VkFormat format) {
+bool vkFramework::hasStencilComponent(VkFormat format) {
   return format == VK_FORMAT_D32_SFLOAT_S8_UINT ||
          format == VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
-uint32_t mental::bytesPerTexFormat(VkFormat fmt) {
+uint32_t vkFramework::bytesPerTexFormat(VkFormat fmt) {
   switch (fmt) {
   case VK_FORMAT_R8_SINT:
   case VK_FORMAT_R8_UNORM:

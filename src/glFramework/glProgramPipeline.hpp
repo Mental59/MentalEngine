@@ -2,7 +2,7 @@
 #include "glFramework/glShaderProgram.hpp"
 #include <glad/gl.h>
 
-namespace mental {
+namespace glFramework {
 class GLProgramPipeline {
 public:
   GLProgramPipeline(const GLShaderProgram* programs, size_t numPrograms);
@@ -14,4 +14,4 @@ public:
 private:
   GLuint handle_;
 };
-} // namespace mental
+} // namespace glFramework

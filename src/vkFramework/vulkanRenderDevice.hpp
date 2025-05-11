@@ -7,7 +7,7 @@
 #include <vector>
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 using QueueFamilySelectorFunction = std::function<int(VkPhysicalDevice)>;
 
 struct VulkanRenderDevice final {
@@ -46,4 +46,4 @@ bool initVulkanRenderDevice(VulkanInstance& vulkanInstance, uint32_t width,
                             VulkanRenderDevice& vulkanRenderDevice);
 
 void destroyVulkanRenderDevice(VulkanRenderDevice& vkDev);
-} // namespace mental
+} // namespace vkFramework

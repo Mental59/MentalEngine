@@ -3,7 +3,7 @@
 #include "vulkanImage.hpp"
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 struct VulkanTexture final {
   uint32_t width;
   uint32_t height;
@@ -45,4 +45,4 @@ bool loadTextureFromFile(VulkanRenderDevice& vkDev, const char* filename,
 
 bool createVulkanImage(VulkanRenderDevice& vkDev, const char* filename,
                        VulkanImage& image);
-} // namespace mental
+} // namespace vkFramework

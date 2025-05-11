@@ -3,7 +3,7 @@
 #include <functional>
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 using PhysicalDeviceSelectorFunction = std::function<bool(VkPhysicalDevice)>;
 
 VkResult findSuitablePhysicalDevice(VkInstance instance,
@@ -20,4 +20,4 @@ int findQueueFamiliesWithPresentSupport(VkPhysicalDevice physicalDevice,
 bool checkDeviceExtensionSupport(const VkPhysicalDevice device,
                                  const char* const* extensions,
                                  uint32_t numExtensions);
-} // namespace mental
+} // namespace vkFramework

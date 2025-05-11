@@ -7,7 +7,7 @@ using glm::ivec2;
 using glm::vec3;
 using glm::vec4;
 
-vec3 mental::faceCoordsToXYZ(int i, int j, int faceID, int faceSize) {
+vec3 image::faceCoordsToXYZ(int i, int j, int faceID, int faceSize) {
   const float A = 2.0f * float(i) / faceSize;
   const float B = 2.0f * float(j) / faceSize;
 
@@ -27,8 +27,7 @@ vec3 mental::faceCoordsToXYZ(int i, int j, int faceID, int faceSize) {
   return vec3();
 }
 
-mental::Bitmap
-mental::convertEquirectangularMapToVerticalCross(const Bitmap& b) {
+image::Bitmap image::convertEquirectangularMapToVerticalCross(const Bitmap& b) {
   if (b.type_ != eBitmapType_2D)
     return Bitmap();
 
@@ -84,7 +83,7 @@ mental::convertEquirectangularMapToVerticalCross(const Bitmap& b) {
   return result;
 }
 
-mental::Bitmap mental::convertVerticalCrossToCubeMapFaces(const Bitmap& b) {
+image::Bitmap image::convertVerticalCrossToCubeMapFaces(const Bitmap& b) {
   const int faceWidth = b.w_ / 3;
   const int faceHeight = b.h_ / 4;
 

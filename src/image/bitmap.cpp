@@ -1,26 +1,26 @@
 #include "bitmap.hpp"
 
-mental::Bitmap::Bitmap(int w, int h, int comp, eBitmapFormat fmt)
+image::Bitmap::Bitmap(int w, int h, int comp, eBitmapFormat fmt)
     : w_(w), h_(h), comp_(comp), fmt_(fmt),
       data_(w * h * comp * getBytesPerComponent(fmt)) {
   initGetSetFuncs();
 }
 
-mental::Bitmap::Bitmap(int w, int h, int d, int comp, eBitmapFormat fmt)
+image::Bitmap::Bitmap(int w, int h, int d, int comp, eBitmapFormat fmt)
     : w_(w), h_(h), d_(d), comp_(comp), fmt_(fmt),
       data_(w * h * d * comp * getBytesPerComponent(fmt)) {
   initGetSetFuncs();
 }
 
-mental::Bitmap::Bitmap(int w, int h, int comp, eBitmapFormat fmt,
-                       const void* ptr)
+image::Bitmap::Bitmap(int w, int h, int comp, eBitmapFormat fmt,
+                      const void* ptr)
     : w_(w), h_(h), comp_(comp), fmt_(fmt),
       data_(w * h * comp * getBytesPerComponent(fmt)) {
   initGetSetFuncs();
   memcpy(data_.data(), ptr, data_.size());
 }
 
-int mental::Bitmap::getBytesPerComponent(eBitmapFormat fmt) {
+int image::Bitmap::getBytesPerComponent(eBitmapFormat fmt) {
   if (fmt == eBitmapFormat_UnsignedByte)
     return 1;
   if (fmt == eBitmapFormat_Float)
@@ -28,15 +28,15 @@ int mental::Bitmap::getBytesPerComponent(eBitmapFormat fmt) {
   return 0;
 }
 
-void mental::Bitmap::setPixel(int x, int y, const glm::vec4& c) {
+void image::Bitmap::setPixel(int x, int y, const glm::vec4& c) {
   (*this.*setPixelFunc)(x, y, c);
 }
 
-glm::vec4 mental::Bitmap::getPixel(int x, int y) const {
+glm::vec4 image::Bitmap::getPixel(int x, int y) const {
   return (*this.*getPixelFunc)(x, y);
 }
 
-void mental::Bitmap::initGetSetFuncs() {
+void image::Bitmap::initGetSetFuncs() {
   switch (fmt_) {
   case eBitmapFormat_UnsignedByte:
     setPixelFunc = &Bitmap::setPixelUnsignedByte;
@@ -49,7 +49,7 @@ void mental::Bitmap::initGetSetFuncs() {
   }
 }
 
-void mental::Bitmap::setPixelFloat(int x, int y, const glm::vec4& c) {
+void image::Bitmap::setPixelFloat(int x, int y, const glm::vec4& c) {
   const int ofs = comp_ * (y * w_ + x);
   float* data = reinterpret_cast<float*>(data_.data());
   if (comp_ > 0)
@@ -62,7 +62,7 @@ void mental::Bitmap::setPixelFloat(int x, int y, const glm::vec4& c) {
     data[ofs + 3] = c.w;
 }
 
-glm::vec4 mental::Bitmap::getPixelFloat(int x, int y) const {
+glm::vec4 image::Bitmap::getPixelFloat(int x, int y) const {
   const int ofs = comp_ * (y * w_ + x);
   const float* data = reinterpret_cast<const float*>(data_.data());
   return glm::vec4(
@@ -70,7 +70,7 @@ glm::vec4 mental::Bitmap::getPixelFloat(int x, int y) const {
       comp_ > 2 ? data[ofs + 2] : 0.0f, comp_ > 3 ? data[ofs + 3] : 0.0f);
 }
 
-void mental::Bitmap::setPixelUnsignedByte(int x, int y, const glm::vec4& c) {
+void image::Bitmap::setPixelUnsignedByte(int x, int y, const glm::vec4& c) {
   const int ofs = comp_ * (y * w_ + x);
   if (comp_ > 0)
     data_[ofs + 0] = uint8_t(c.x * 255.0f);
@@ -82,7 +82,7 @@ void mental::Bitmap::setPixelUnsignedByte(int x, int y, const glm::vec4& c) {
     data_[ofs + 3] = uint8_t(c.w * 255.0f);
 }
 
-glm::vec4 mental::Bitmap::getPixelUnsignedByte(int x, int y) const {
+glm::vec4 image::Bitmap::getPixelUnsignedByte(int x, int y) const {
   const int ofs = comp_ * (y * w_ + x);
   return glm::vec4(comp_ > 0 ? float(data_[ofs + 0]) / 255.0f : 0.0f,
                    comp_ > 1 ? float(data_[ofs + 1]) / 255.0f : 0.0f,

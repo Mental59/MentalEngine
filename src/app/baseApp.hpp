@@ -1,6 +1,6 @@
 #pragma once
 
-namespace mental {
+namespace app {
 class BaseApp {
 public:
   BaseApp() = default;
@@ -13,4 +13,4 @@ public:
 protected:
   bool mFramebufferResized = false;
 };
-} // namespace mental
+} // namespace app

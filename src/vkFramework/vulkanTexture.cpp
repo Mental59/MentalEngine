@@ -5,13 +5,13 @@
 #include <stb_image.h>
 #include <volk.h>
 
-bool mental::updateTextureImage(VulkanRenderDevice& vkDev,
-                                VkImage& textureImage,
-                                VkDeviceMemory& textureImageMemory,
-                                uint32_t texWidth, uint32_t texHeight,
-                                VkFormat texFormat, uint32_t layerCount,
-                                const void* imageData,
-                                VkImageLayout sourceImageLayout) {
+bool vkFramework::updateTextureImage(VulkanRenderDevice& vkDev,
+                                     VkImage& textureImage,
+                                     VkDeviceMemory& textureImageMemory,
+                                     uint32_t texWidth, uint32_t texHeight,
+                                     VkFormat texFormat, uint32_t layerCount,
+                                     const void* imageData,
+                                     VkImageLayout sourceImageLayout) {
   uint32_t bytesPerPixel = bytesPerTexFormat(texFormat);
 
   VkDeviceSize layerSize = texWidth * texHeight * bytesPerPixel;
@@ -44,10 +44,10 @@ bool mental::updateTextureImage(VulkanRenderDevice& vkDev,
   return true;
 }
 
-void mental::uploadBufferData(VulkanRenderDevice& vkDev,
-                              const VkDeviceMemory& bufferMemory,
-                              VkDeviceSize deviceOffset, const void* data,
-                              const size_t dataSize) {
+void vkFramework::uploadBufferData(VulkanRenderDevice& vkDev,
+                                   const VkDeviceMemory& bufferMemory,
+                                   VkDeviceSize deviceOffset, const void* data,
+                                   const size_t dataSize) {
   void* mappedData = nullptr;
   vkMapMemory(vkDev.device, bufferMemory, deviceOffset, dataSize, 0,
               &mappedData);
@@ -55,13 +55,11 @@ void mental::uploadBufferData(VulkanRenderDevice& vkDev,
   vkUnmapMemory(vkDev.device, bufferMemory);
 }
 
-bool mental::createTextureImageFromData(VulkanRenderDevice& vkDev,
-                                        VkImage& textureImage,
-                                        VkDeviceMemory& textureImageMemory,
-                                        void* imageData, uint32_t texWidth,
-                                        uint32_t texHeight, VkFormat texFormat,
-                                        uint32_t layerCount,
-                                        VkImageCreateFlags flags) {
+bool vkFramework::createTextureImageFromData(
+    VulkanRenderDevice& vkDev, VkImage& textureImage,
+    VkDeviceMemory& textureImageMemory, void* imageData, uint32_t texWidth,
+    uint32_t texHeight, VkFormat texFormat, uint32_t layerCount,
+    VkImageCreateFlags flags) {
   if (!createImage(vkDev.device, vkDev.physicalDevice, texWidth, texHeight,
                    texFormat, VK_IMAGE_TILING_OPTIMAL,
                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
@@ -74,12 +72,10 @@ bool mental::createTextureImageFromData(VulkanRenderDevice& vkDev,
                             texHeight, texFormat, layerCount, imageData);
 }
 
-bool mental::loadTextureFromFile(VulkanRenderDevice& vkDev,
-                                 const char* filename, VkImage& textureImage,
-                                 VkFormat imageFormat,
-                                 VkDeviceMemory& textureImageMemory,
-                                 uint32_t* outTexWidth,
-                                 uint32_t* outTexHeight) {
+bool vkFramework::loadTextureFromFile(
+    VulkanRenderDevice& vkDev, const char* filename, VkImage& textureImage,
+    VkFormat imageFormat, VkDeviceMemory& textureImageMemory,
+    uint32_t* outTexWidth, uint32_t* outTexHeight) {
   int texWidth, texHeight, texChannels;
   stbi_uc* pixels =
       stbi_load(filename, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -102,24 +98,24 @@ bool mental::loadTextureFromFile(VulkanRenderDevice& vkDev,
   return result;
 }
 
-bool mental::createVulkanImage(VulkanRenderDevice& vkDev, const char* filename,
-                               VulkanImage& image) {
+bool vkFramework::createVulkanImage(VulkanRenderDevice& vkDev,
+                                    const char* filename, VulkanImage& image) {
   VkFormat imageFormat = VK_FORMAT_R8G8B8A8_UNORM;
 
-  if (!mental::loadTextureFromFile(vkDev, filename, image.image, imageFormat,
-                                   image.imageMemory, &image.width,
-                                   &image.height)) {
+  if (!vkFramework::loadTextureFromFile(vkDev, filename, image.image,
+                                        imageFormat, image.imageMemory,
+                                        &image.width, &image.height)) {
     return false;
   }
 
-  if (mental::createImageView(vkDev.device, image.image, imageFormat,
-                              VK_IMAGE_ASPECT_COLOR_BIT,
-                              &image.imageView) != VK_SUCCESS) {
+  if (vkFramework::createImageView(vkDev.device, image.image, imageFormat,
+                                   VK_IMAGE_ASPECT_COLOR_BIT,
+                                   &image.imageView) != VK_SUCCESS) {
     return false;
   }
 
   bool isSamplerCreated =
-      mental::createTextureSampler(vkDev.device, &image.sampler);
+      vkFramework::createTextureSampler(vkDev.device, &image.sampler);
 
   if (!isSamplerCreated) {
     destroyVulkanImage(vkDev.device, image);

@@ -22,7 +22,7 @@ void addPlatformSpecificExtensions(std::vector<const char*>* extensions);
 void checkExtensionsSupport(const char** extensions, uint32_t size);
 } // namespace
 
-namespace mental {
+namespace vkFramework {
 VkInstance createVulkanInstance() {
   VkInstance instance;
 
@@ -49,7 +49,7 @@ VkInstance createVulkanInstance() {
 
 #if defined(_DEBUG)
   VkDebugUtilsMessengerCreateInfoEXT createInfo =
-      mental::debugUtilsMessengerCreateInfo();
+      vkFramework::debugUtilsMessengerCreateInfo();
   instanceCreateInfo.pNext = &createInfo;
 #endif
 
@@ -60,13 +60,14 @@ VkInstance createVulkanInstance() {
   return instance;
 }
 
-void initVulkanInstance(VulkanInstance& vulkanInstance, Window* window) {
-  vulkanInstance.instance = mental::createVulkanInstance();
+void initVulkanInstance(VulkanInstance& vulkanInstance,
+                        window::Window* window) {
+  vulkanInstance.instance = vkFramework::createVulkanInstance();
 
 #if defined(_DEBUG)
-  mental::setupDebugCallbacks(vulkanInstance.instance,
-                              &vulkanInstance.messenger,
-                              &vulkanInstance.reportCallback);
+  vkFramework::setupDebugCallbacks(vulkanInstance.instance,
+                                   &vulkanInstance.messenger,
+                                   &vulkanInstance.reportCallback);
 #endif // (_DEBUG)
 
   MENTAL_VK_CHECK(window->createVulkanWindowSurface(&vulkanInstance));
@@ -83,7 +84,7 @@ void destroyVulkanInstance(VulkanInstance& vk) {
   vkDestroyInstance(vk.instance, nullptr);
 }
 
-} // namespace mental
+} // namespace vkFramework
 
 namespace {
 void setupLayers(std::vector<const char*>* layers,

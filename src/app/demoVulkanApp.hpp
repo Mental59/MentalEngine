@@ -1,12 +1,12 @@
 #pragma once
 
 #include "baseApp.hpp"
-#include "vulkanFramework/vulkanFramework.hpp"
+#include "vkFramework/includes.hpp"
 #include "window/window.hpp"
 #include <vector>
 #include <volk.h>
 
-namespace mental {
+namespace app {
 
 class DemoVulkanApp : public BaseApp {
 public:
@@ -33,9 +33,9 @@ public:
     size_t indexBufferSize = 0;
 
     // 5. Depth buffer
-    mental::VulkanImage depthTexture{};
+    vkFramework::VulkanImage depthTexture{};
 
-    mental::VulkanImage texture{};
+    vkFramework::VulkanImage texture{};
   };
 
   DemoVulkanApp();
@@ -64,11 +64,11 @@ private:
                            size_t uboSize);
   bool createDescriptorSet(size_t vertexBufferSize, size_t indexBufferSize);
 
-  mental::VulkanInstance mVulkanInstance;
-  mental::VulkanRenderDevice mVulkanRenderDevice;
+  vkFramework::VulkanInstance mVulkanInstance;
+  vkFramework::VulkanRenderDevice mVulkanRenderDevice;
   VulkanState mVulkanState;
 
-  mental::Window mWindow;
+  window::Window mWindow;
 };
 
-} // namespace mental
+} // namespace app

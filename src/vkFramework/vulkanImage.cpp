@@ -4,12 +4,12 @@
 #include "vulkanUtils.hpp"
 #include <volk.h>
 
-VkResult mental::createImageView(VkDevice device, VkImage image,
-                                 VkFormat format,
-                                 VkImageAspectFlags aspectFlags,
-                                 VkImageView* imageView,
-                                 VkImageViewType viewType, uint32_t layerCount,
-                                 uint32_t mipLevels) {
+VkResult vkFramework::createImageView(VkDevice device, VkImage image,
+                                      VkFormat format,
+                                      VkImageAspectFlags aspectFlags,
+                                      VkImageView* imageView,
+                                      VkImageViewType viewType,
+                                      uint32_t layerCount, uint32_t mipLevels) {
   const VkImageViewCreateInfo viewInfo = {
       .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
       .pNext = nullptr,
@@ -26,12 +26,12 @@ VkResult mental::createImageView(VkDevice device, VkImage image,
   return vkCreateImageView(device, &viewInfo, nullptr, imageView);
 }
 
-bool mental::createImage(VkDevice device, VkPhysicalDevice physicalDevice,
-                         uint32_t width, uint32_t height, VkFormat format,
-                         VkImageTiling tiling, VkImageUsageFlags usage,
-                         VkMemoryPropertyFlags properties, VkImage& image,
-                         VkDeviceMemory& imageMemory, VkImageCreateFlags flags,
-                         uint32_t mipLevels) {
+bool vkFramework::createImage(VkDevice device, VkPhysicalDevice physicalDevice,
+                              uint32_t width, uint32_t height, VkFormat format,
+                              VkImageTiling tiling, VkImageUsageFlags usage,
+                              VkMemoryPropertyFlags properties, VkImage& image,
+                              VkDeviceMemory& imageMemory,
+                              VkImageCreateFlags flags, uint32_t mipLevels) {
   const VkImageCreateInfo imageInfo = {
       .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
       .pNext = nullptr,
@@ -73,7 +73,7 @@ bool mental::createImage(VkDevice device, VkPhysicalDevice physicalDevice,
   return true;
 }
 
-bool mental::createTextureSampler(VkDevice device, VkSampler* sampler) {
+bool vkFramework::createTextureSampler(VkDevice device, VkSampler* sampler) {
   const VkSamplerCreateInfo samplerInfo = {
       .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
       .pNext = nullptr,
@@ -98,9 +98,9 @@ bool mental::createTextureSampler(VkDevice device, VkSampler* sampler) {
           VK_SUCCESS);
 }
 
-void mental::copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer,
-                               VkImage image, uint32_t width, uint32_t height,
-                               uint32_t layerCount) {
+void vkFramework::copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer,
+                                    VkImage image, uint32_t width,
+                                    uint32_t height, uint32_t layerCount) {
   VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 
   const VkBufferImageCopy region = {
@@ -121,28 +121,31 @@ void mental::copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer,
   endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-void mental::destroyVulkanImage(VkDevice device, VulkanImage& image) {
+void vkFramework::destroyVulkanImage(VkDevice device, VulkanImage& image) {
   vkDestroySampler(device, image.sampler, nullptr);
   vkDestroyImageView(device, image.imageView, nullptr);
   vkDestroyImage(device, image.image, nullptr);
   vkFreeMemory(device, image.imageMemory, nullptr);
 }
 
-void mental::transitionImageLayout(VulkanRenderDevice& vkDev, VkImage image,
-                                   VkFormat format, VkImageLayout oldLayout,
-                                   VkImageLayout newLayout, uint32_t layerCount,
-                                   uint32_t mipLevels) {
+void vkFramework::transitionImageLayout(VulkanRenderDevice& vkDev,
+                                        VkImage image, VkFormat format,
+                                        VkImageLayout oldLayout,
+                                        VkImageLayout newLayout,
+                                        uint32_t layerCount,
+                                        uint32_t mipLevels) {
   VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
   transitionImageLayoutCmd(commandBuffer, image, format, oldLayout, newLayout,
                            layerCount, mipLevels);
   endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-void mental::transitionImageLayoutCmd(VkCommandBuffer commandBuffer,
-                                      VkImage image, VkFormat format,
-                                      VkImageLayout oldLayout,
-                                      VkImageLayout newLayout,
-                                      uint32_t layerCount, uint32_t mipLevels) {
+void vkFramework::transitionImageLayoutCmd(VkCommandBuffer commandBuffer,
+                                           VkImage image, VkFormat format,
+                                           VkImageLayout oldLayout,
+                                           VkImageLayout newLayout,
+                                           uint32_t layerCount,
+                                           uint32_t mipLevels) {
   VkImageMemoryBarrier barrier = {
       .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
       .pNext = nullptr,
@@ -291,7 +294,7 @@ void mental::transitionImageLayoutCmd(VkCommandBuffer commandBuffer,
                        nullptr, 0, nullptr, 1, &barrier);
 }
 
-VkFormat mental::findSupportedFormat(
+VkFormat vkFramework::findSupportedFormat(
     VkPhysicalDevice device, const std::initializer_list<VkFormat>& candidates,
     VkImageTiling tiling, VkFormatFeatureFlags features) {
   for (VkFormat format : candidates) {
@@ -310,7 +313,7 @@ VkFormat mental::findSupportedFormat(
   return VK_FORMAT_UNDEFINED;
 }
 
-VkFormat mental::findDepthFormat(VkPhysicalDevice device) {
+VkFormat vkFramework::findDepthFormat(VkPhysicalDevice device) {
   return findSupportedFormat(
       device,
       {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT,
@@ -318,8 +321,9 @@ VkFormat mental::findDepthFormat(VkPhysicalDevice device) {
       VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-bool mental::createDepthResources(VulkanRenderDevice& vkDev, uint32_t width,
-                                  uint32_t height, VulkanImage& depth) {
+bool vkFramework::createDepthResources(VulkanRenderDevice& vkDev,
+                                       uint32_t width, uint32_t height,
+                                       VulkanImage& depth) {
 
   VkFormat depthFormat = findDepthFormat(vkDev.physicalDevice);
   if (depthFormat == VK_FORMAT_UNDEFINED) {

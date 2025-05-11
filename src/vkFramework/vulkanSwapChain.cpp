@@ -4,9 +4,10 @@
 #include "vulkanUtils.hpp"
 #include <algorithm>
 
-namespace mental {
-SwapChainSupportDetails mental::querySwapChainSupport(VkPhysicalDevice device,
-                                                      VkSurfaceKHR surface) {
+namespace vkFramework {
+SwapChainSupportDetails
+vkFramework::querySwapChainSupport(VkPhysicalDevice device,
+                                   VkSurfaceKHR surface) {
   SwapChainSupportDetails details;
 
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface,
@@ -147,4 +148,4 @@ size_t createSwapchainImages(VkDevice device, VkSwapchainKHR swapchain,
 
   return static_cast<size_t>(imageCount);
 }
-} // namespace mental
+} // namespace vkFramework

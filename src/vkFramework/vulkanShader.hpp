@@ -4,7 +4,7 @@
 #include <vector>
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 struct ShaderModule final {
   std::vector<unsigned int> SPIRV;
   VkShaderModule shaderModule = VK_NULL_HANDLE;
@@ -21,4 +21,4 @@ size_t compileShaderFile(const char* file, ShaderModule& shaderModule);
 
 VkResult createShaderModule(VkDevice device, ShaderModule* shader,
                             const char* fileName);
-} // namespace mental
+} // namespace vkFramework

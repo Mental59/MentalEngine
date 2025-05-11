@@ -23,15 +23,15 @@ struct UniformBuffer {
 
 } // namespace
 
-mental::DemoVulkanApp::DemoVulkanApp()
+app::DemoVulkanApp::DemoVulkanApp()
     : mVulkanInstance(), mVulkanRenderDevice(), mVulkanState(),
       mWindow(SCREEN_WIDTH, SCREEN_HEIGHT, WINDOW_TITLE, FULLSCREEN_MODE) {
   init();
 }
 
-mental::DemoVulkanApp::~DemoVulkanApp() {}
+app::DemoVulkanApp::~DemoVulkanApp() {}
 
-void mental::DemoVulkanApp::run() {
+void app::DemoVulkanApp::run() {
 
   uint32_t currentFrame = 0;
   while (!mWindow.shouldClose()) {
@@ -43,16 +43,16 @@ void mental::DemoVulkanApp::run() {
   }
 }
 
-void mental::DemoVulkanApp::init() {
+void app::DemoVulkanApp::init() {
   volkInitialize();
   initVulkan();
 }
 
-void mental::DemoVulkanApp::initVulkan() {
+void app::DemoVulkanApp::initVulkan() {
   glslang_initialize_process();
 
-  mental::initVulkanInstance(mVulkanInstance, &mWindow);
-  bool isRenderDeviceInitialized = mental::initVulkanRenderDevice(
+  vkFramework::initVulkanInstance(mVulkanInstance, &mWindow);
+  bool isRenderDeviceInitialized = vkFramework::initVulkanRenderDevice(
       mVulkanInstance, SCREEN_WIDTH, SCREEN_HEIGHT,
       [this](VkPhysicalDevice physicalDevice) {
         return isDeviceSuitable(physicalDevice);
@@ -67,7 +67,7 @@ void mental::DemoVulkanApp::initVulkan() {
     exit(EXIT_FAILURE);
   }
 
-  bool isTexturedBufferCreated = mental::createTexturedVertexBuffer(
+  bool isTexturedBufferCreated = vkFramework::createTexturedVertexBuffer(
       mVulkanRenderDevice, "data/rubber_duck/scene.gltf",
       &mVulkanState.storageBuffer, &mVulkanState.storageBufferMemory,
       &mVulkanState.vertexBufferSize, &mVulkanState.indexBufferSize);
@@ -77,46 +77,47 @@ void mental::DemoVulkanApp::initVulkan() {
     exit(EXIT_FAILURE);
   }
 
-  if (!mental::createVulkanImage(mVulkanRenderDevice,
-                                 "data/rubber_duck/textures/Duck_baseColor.png",
-                                 mVulkanState.texture)) {
+  if (!vkFramework::createVulkanImage(
+          mVulkanRenderDevice, "data/rubber_duck/textures/Duck_baseColor.png",
+          mVulkanState.texture)) {
     printf("FATAL ERROR: Failed to create model texture");
     exit(EXIT_FAILURE);
   }
 
-  if (!mental::createDepthResources(mVulkanRenderDevice,
-                                    mVulkanRenderDevice.swapchainExtent.width,
-                                    mVulkanRenderDevice.swapchainExtent.height,
-                                    mVulkanState.depthTexture)) {
+  if (!vkFramework::createDepthResources(
+          mVulkanRenderDevice, mVulkanRenderDevice.swapchainExtent.width,
+          mVulkanRenderDevice.swapchainExtent.height,
+          mVulkanState.depthTexture)) {
     printf("FATAL ERROR: Failed to create depth resources");
     exit(EXIT_FAILURE);
   }
 
-  if (!mental::createDescriptorPool(mVulkanRenderDevice, 1, 2, 1,
-                                    &mVulkanState.descriptorPool) ||
+  if (!vkFramework::createDescriptorPool(mVulkanRenderDevice, 1, 2, 1,
+                                         &mVulkanState.descriptorPool) ||
       !createDescriptorSet(mVulkanState.vertexBufferSize,
                            mVulkanState.indexBufferSize) ||
-      !mental::createColorAndDepthRenderPass(
+      !vkFramework::createColorAndDepthRenderPass(
           mVulkanRenderDevice, true, &mVulkanState.renderPass,
-          RenderPassCreateInfo{.clearColor_ = true,
-                               .clearDepth_ = true,
-                               .flags_ =
-                                   RenderPassBit_First | RenderPassBit_Last}) ||
-      !mental::createPipelineLayout(mVulkanRenderDevice.device,
-                                    mVulkanState.descriptorSetLayout,
-                                    &mVulkanState.pipelineLayout) ||
-      !mental::createGraphicsPipeline(mVulkanRenderDevice,
-                                      mVulkanState.renderPass,
-                                      mVulkanState.pipelineLayout,
-                                      {"data/shaders/chapter03/VK02.vert",
-                                       "data/shaders/chapter03/VK02.frag",
-                                       "data/shaders/chapter03/VK02.geom"},
-                                      &mVulkanState.graphicsPipeline)) {
+          vkFramework::RenderPassCreateInfo{
+              .clearColor_ = true,
+              .clearDepth_ = true,
+              .flags_ = vkFramework::RenderPassBit_First |
+                        vkFramework::RenderPassBit_Last}) ||
+      !vkFramework::createPipelineLayout(mVulkanRenderDevice.device,
+                                         mVulkanState.descriptorSetLayout,
+                                         &mVulkanState.pipelineLayout) ||
+      !vkFramework::createGraphicsPipeline(mVulkanRenderDevice,
+                                           mVulkanState.renderPass,
+                                           mVulkanState.pipelineLayout,
+                                           {"data/shaders/chapter03/VK02.vert",
+                                            "data/shaders/chapter03/VK02.frag",
+                                            "data/shaders/chapter03/VK02.geom"},
+                                           &mVulkanState.graphicsPipeline)) {
     printf("FATAL ERROR: Failed to create graphics pipeline");
     exit(EXIT_FAILURE);
   }
 
-  if (!mental::createColorAndDepthFramebuffers(
+  if (!vkFramework::createColorAndDepthFramebuffers(
           mVulkanRenderDevice, mVulkanState.renderPass,
           mVulkanState.depthTexture.imageView,
           mVulkanRenderDevice.swapchainFramebuffers)) {
@@ -127,7 +128,7 @@ void mental::DemoVulkanApp::initVulkan() {
   glslang_finalize_process();
 }
 
-void mental::DemoVulkanApp::render(uint32_t currentFrame) {
+void app::DemoVulkanApp::render(uint32_t currentFrame) {
   vkWaitForFences(mVulkanRenderDevice.device, 1,
                   &mVulkanRenderDevice.inflightFences[currentFrame], VK_TRUE,
                   UINT64_MAX);
@@ -208,15 +209,15 @@ void mental::DemoVulkanApp::render(uint32_t currentFrame) {
   }
 }
 
-void mental::DemoVulkanApp::cleanup() {
+void app::DemoVulkanApp::cleanup() {
   destroyVulkanState();
-  mental::destroyVulkanRenderDevice(mVulkanRenderDevice);
-  mental::destroyVulkanInstance(mVulkanInstance);
+  vkFramework::destroyVulkanRenderDevice(mVulkanRenderDevice);
+  vkFramework::destroyVulkanInstance(mVulkanInstance);
 }
 
-void mental::DemoVulkanApp::cleanupSwapchain(VkSwapchainKHR swapchain) {
-  mental::destroyVulkanImage(mVulkanRenderDevice.device,
-                             mVulkanState.depthTexture);
+void app::DemoVulkanApp::cleanupSwapchain(VkSwapchainKHR swapchain) {
+  vkFramework::destroyVulkanImage(mVulkanRenderDevice.device,
+                                  mVulkanState.depthTexture);
 
   for (VkFramebuffer framebuffer : mVulkanRenderDevice.swapchainFramebuffers) {
     vkDestroyFramebuffer(mVulkanRenderDevice.device, framebuffer, nullptr);
@@ -229,7 +230,7 @@ void mental::DemoVulkanApp::cleanupSwapchain(VkSwapchainKHR swapchain) {
   vkDestroySwapchainKHR(mVulkanRenderDevice.device, swapchain, nullptr);
 }
 
-void mental::DemoVulkanApp::destroyVulkanState() {
+void app::DemoVulkanApp::destroyVulkanState() {
   vkDestroyBuffer(mVulkanRenderDevice.device, mVulkanState.storageBuffer,
                   nullptr);
   vkFreeMemory(mVulkanRenderDevice.device, mVulkanState.storageBufferMemory,
@@ -267,8 +268,8 @@ void mental::DemoVulkanApp::destroyVulkanState() {
                     nullptr);
 }
 
-void mental::DemoVulkanApp::recreateSwapchain(uint32_t currentFrame) {
-  mental::Window::Size framebufferSize{};
+void app::DemoVulkanApp::recreateSwapchain(uint32_t currentFrame) {
+  window::Window::Size framebufferSize{};
   do {
     framebufferSize = mWindow.getSize();
     mWindow.waitEvents();
@@ -283,30 +284,30 @@ void mental::DemoVulkanApp::recreateSwapchain(uint32_t currentFrame) {
 
   VkSwapchainKHR oldSwapchain = mVulkanRenderDevice.swapchain;
   MENTAL_VK_CHECK(
-      mental::createSwapchain(mVulkanRenderDevice, mVulkanInstance.surface,
-                              mVulkanRenderDevice.graphicsFamily, newWidth,
-                              newHeight, &mVulkanRenderDevice.swapchain));
+      vkFramework::createSwapchain(mVulkanRenderDevice, mVulkanInstance.surface,
+                                   mVulkanRenderDevice.graphicsFamily, newWidth,
+                                   newHeight, &mVulkanRenderDevice.swapchain));
 
   cleanupSwapchain(oldSwapchain);
 
-  size_t imageCount = mental::createSwapchainImages(
+  size_t imageCount = vkFramework::createSwapchainImages(
       mVulkanRenderDevice.device, mVulkanRenderDevice.swapchain,
       mVulkanRenderDevice.swapchainImages,
       mVulkanRenderDevice.swapchainImageViews);
   MENTAL_CHECK_BOOL(static_cast<uint32_t>(imageCount) ==
                     mVulkanRenderDevice.swapchainImageCount);
 
-  MENTAL_CHECK_BOOL(mental::createDepthResources(
+  MENTAL_CHECK_BOOL(vkFramework::createDepthResources(
       mVulkanRenderDevice, mVulkanRenderDevice.swapchainExtent.width,
       mVulkanRenderDevice.swapchainExtent.height, mVulkanState.depthTexture));
 
-  MENTAL_CHECK_BOOL(mental::createColorAndDepthFramebuffers(
+  MENTAL_CHECK_BOOL(vkFramework::createColorAndDepthFramebuffers(
       mVulkanRenderDevice, mVulkanState.renderPass,
       mVulkanState.depthTexture.imageView,
       mVulkanRenderDevice.swapchainFramebuffers));
 }
 
-bool mental::DemoVulkanApp::createUniformBuffers() {
+bool app::DemoVulkanApp::createUniformBuffers() {
   VkDeviceSize bufferSize = sizeof(UniformBuffer);
 
   mVulkanState.uniformBuffers.resize(mVulkanRenderDevice.maxFramesInFlight);
@@ -314,7 +315,7 @@ bool mental::DemoVulkanApp::createUniformBuffers() {
       mVulkanRenderDevice.maxFramesInFlight);
 
   for (size_t i = 0; i < mVulkanState.uniformBuffers.size(); i++) {
-    bool isBufferCreated = mental::createBuffer(
+    bool isBufferCreated = vkFramework::createBuffer(
         mVulkanRenderDevice.device, mVulkanRenderDevice.physicalDevice,
         bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
@@ -329,9 +330,9 @@ bool mental::DemoVulkanApp::createUniformBuffers() {
   return true;
 }
 
-void mental::DemoVulkanApp::updateUniformBuffer(uint32_t frameIndex,
-                                                const void* uboData,
-                                                size_t uboSize) {
+void app::DemoVulkanApp::updateUniformBuffer(uint32_t frameIndex,
+                                             const void* uboData,
+                                             size_t uboSize) {
   void* data = nullptr;
   vkMapMemory(mVulkanRenderDevice.device,
               mVulkanState.uniformBuffersMemory[frameIndex], 0, uboSize, 0,
@@ -341,16 +342,16 @@ void mental::DemoVulkanApp::updateUniformBuffer(uint32_t frameIndex,
                 mVulkanState.uniformBuffersMemory[frameIndex]);
 }
 
-bool mental::DemoVulkanApp::createDescriptorSet(size_t vertexBufferSize,
-                                                size_t indexBufferSize) {
+bool app::DemoVulkanApp::createDescriptorSet(size_t vertexBufferSize,
+                                             size_t indexBufferSize) {
   const std::array<VkDescriptorSetLayoutBinding, 4> bindings = {
-      mental::descriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-                                         VK_SHADER_STAGE_VERTEX_BIT),
-      mental::descriptorSetLayoutBinding(1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                         VK_SHADER_STAGE_VERTEX_BIT),
-      mental::descriptorSetLayoutBinding(2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-                                         VK_SHADER_STAGE_VERTEX_BIT),
-      mental::descriptorSetLayoutBinding(
+      vkFramework::descriptorSetLayoutBinding(
+          0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_VERTEX_BIT),
+      vkFramework::descriptorSetLayoutBinding(
+          1, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT),
+      vkFramework::descriptorSetLayoutBinding(
+          2, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT),
+      vkFramework::descriptorSetLayoutBinding(
           3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
           VK_SHADER_STAGE_FRAGMENT_BIT)};
 
@@ -440,8 +441,8 @@ bool mental::DemoVulkanApp::createDescriptorSet(size_t vertexBufferSize,
   return true;
 }
 
-bool mental::DemoVulkanApp::isDeviceSuitable(VkPhysicalDevice physicalDevice) {
-  bool extensionsSupported = checkDeviceExtensionSupport(
+bool app::DemoVulkanApp::isDeviceSuitable(VkPhysicalDevice physicalDevice) {
+  bool extensionsSupported = vkFramework::checkDeviceExtensionSupport(
       physicalDevice, DEVICE_EXTENSIONS.data(),
       static_cast<uint32_t>(DEVICE_EXTENSIONS.size()));
   if (!extensionsSupported) {
@@ -462,8 +463,9 @@ bool mental::DemoVulkanApp::isDeviceSuitable(VkPhysicalDevice physicalDevice) {
 
   int queueFamilies = findQueueFamily(physicalDevice);
 
-  SwapChainSupportDetails swapChainSupport =
-      querySwapChainSupport(physicalDevice, mVulkanInstance.surface);
+  vkFramework::SwapChainSupportDetails swapChainSupport =
+      vkFramework::querySwapChainSupport(physicalDevice,
+                                         mVulkanInstance.surface);
   bool swapchainCompatible = !swapChainSupport.formats.empty() &&
                              !swapChainSupport.presentModes.empty();
 
@@ -471,14 +473,14 @@ bool mental::DemoVulkanApp::isDeviceSuitable(VkPhysicalDevice physicalDevice) {
          swapchainCompatible;
 }
 
-int mental::DemoVulkanApp::findQueueFamily(VkPhysicalDevice physicalDevice) {
-  return findQueueFamiliesWithPresentSupport(
+int app::DemoVulkanApp::findQueueFamily(VkPhysicalDevice physicalDevice) {
+  return vkFramework::findQueueFamiliesWithPresentSupport(
       physicalDevice, VK_QUEUE_GRAPHICS_BIT, mVulkanInstance.surface);
 }
 
-bool mental::DemoVulkanApp::fillCommandBuffers(size_t imageIndex,
-                                               uint32_t frameIndex,
-                                               uint32_t indexBufferCount) {
+bool app::DemoVulkanApp::fillCommandBuffers(size_t imageIndex,
+                                            uint32_t frameIndex,
+                                            uint32_t indexBufferCount) {
   const VkCommandBufferBeginInfo bufferBeginInfo = {
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
       .pNext = nullptr,

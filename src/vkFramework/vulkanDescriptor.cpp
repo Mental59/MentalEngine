@@ -1,10 +1,10 @@
 #include "vulkanDescriptor.hpp"
 
-bool mental::createDescriptorPool(VulkanRenderDevice& vkDev,
-                                  uint32_t uniformBufferCount,
-                                  uint32_t storageBufferCount,
-                                  uint32_t samplerCount,
-                                  VkDescriptorPool* descriptorPool) {
+bool vkFramework::createDescriptorPool(VulkanRenderDevice& vkDev,
+                                       uint32_t uniformBufferCount,
+                                       uint32_t storageBufferCount,
+                                       uint32_t samplerCount,
+                                       VkDescriptorPool* descriptorPool) {
   std::vector<VkDescriptorPoolSize> poolSizes;
   poolSizes.reserve(3);
 
@@ -38,7 +38,7 @@ bool mental::createDescriptorPool(VulkanRenderDevice& vkDev,
                                  descriptorPool) == VK_SUCCESS);
 }
 
-VkDescriptorSetLayoutBinding mental::descriptorSetLayoutBinding(
+VkDescriptorSetLayoutBinding vkFramework::descriptorSetLayoutBinding(
     uint32_t binding, VkDescriptorType descriptorType,
     VkShaderStageFlags stageFlags, uint32_t descriptorCount) {
   return VkDescriptorSetLayoutBinding{.binding = binding,

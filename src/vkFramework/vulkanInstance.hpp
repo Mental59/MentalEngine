@@ -3,9 +3,11 @@
 #include <glfw/glfw3.h>
 #include <volk.h>
 
-namespace mental {
-
+namespace window {
 class Window;
+}
+
+namespace vkFramework {
 
 struct VulkanInstance final {
   VkInstance instance = VK_NULL_HANDLE;
@@ -16,7 +18,7 @@ struct VulkanInstance final {
 
 VkInstance createVulkanInstance();
 
-void initVulkanInstance(VulkanInstance& vulkanInstance, Window* window);
+void initVulkanInstance(VulkanInstance& vulkanInstance, window::Window* window);
 
 void destroyVulkanInstance(VulkanInstance& vk);
-} // namespace mental
+} // namespace vkFramework

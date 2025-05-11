@@ -6,7 +6,7 @@
 
 #include <glm/glm.hpp>
 
-namespace mental {
+namespace image {
 enum eBitmapType { eBitmapType_2D, eBitmapType_Cube };
 
 enum eBitmapFormat {
@@ -47,4 +47,4 @@ private:
   void setPixelUnsignedByte(int x, int y, const glm::vec4& c);
   glm::vec4 getPixelUnsignedByte(int x, int y) const;
 };
-} // namespace mental
+} // namespace image

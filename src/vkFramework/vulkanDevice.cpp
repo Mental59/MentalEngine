@@ -1,7 +1,7 @@
 #include "vulkanDevice.hpp"
 #include <vector>
 
-namespace mental {
+namespace vkFramework {
 VkResult createDevice(VkPhysicalDevice physicalDevice,
                       VkPhysicalDeviceFeatures deviceFeatures,
                       uint32_t graphicsQueueFamily,
@@ -30,4 +30,4 @@ VkResult createDevice(VkPhysicalDevice physicalDevice,
 
   return vkCreateDevice(physicalDevice, &deviceCreateInfo, nullptr, device);
 }
-} // namespace mental
+} // namespace vkFramework

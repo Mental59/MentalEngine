@@ -1,10 +1,10 @@
 #pragma once
 #include <string>
 
-namespace mental {
+namespace utils {
 bool endsWith(const char* s, const char* part);
 
 std::string readShaderFile(const char* fileName);
 
 void printShaderSource(const char* text);
-} // namespace mental
+} // namespace utils

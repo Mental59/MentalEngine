@@ -1,9 +1,9 @@
 #pragma once
-#include "vulkanFramework/vulkanInstance.hpp"
+#include "vkFramework/includes.hpp"
 #include <GLFW/glfw3.h>
 #include <volk.h>
 
-namespace mental {
+namespace window {
 class BaseApp;
 
 class Window {
@@ -26,9 +26,9 @@ public:
 
   static void toggleFullscreen(GLFWwindow* window);
 
-  VkResult createVulkanWindowSurface(VulkanInstance* instance);
+  VkResult createVulkanWindowSurface(vkFramework::VulkanInstance* instance);
 
 private:
   GLFWwindow* mWindow = nullptr;
 };
-} // namespace mental
+} // namespace window

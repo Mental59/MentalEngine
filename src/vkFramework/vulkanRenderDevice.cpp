@@ -4,7 +4,7 @@
 #include "vulkanSwapChain.hpp"
 #include "vulkanUtils.hpp"
 
-bool mental::initVulkanRenderDevice(
+bool vkFramework::initVulkanRenderDevice(
     VulkanInstance& vulkanInstance, uint32_t width, uint32_t height,
     PhysicalDeviceSelectorFunction selector,
     QueueFamilySelectorFunction queueFamilySelector,
@@ -75,7 +75,7 @@ bool mental::initVulkanRenderDevice(
   return allocateCommandBuffersRes == VK_SUCCESS;
 }
 
-void mental::destroyVulkanRenderDevice(VulkanRenderDevice& vkDev) {
+void vkFramework::destroyVulkanRenderDevice(VulkanRenderDevice& vkDev) {
   for (size_t i = 0; i < vkDev.swapchainImages.size(); i++) {
     vkDestroyImageView(vkDev.device, vkDev.swapchainImageViews[i], nullptr);
   }

@@ -2,7 +2,7 @@
 
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 VkResult createDevice(VkPhysicalDevice physicalDevice,
                       VkPhysicalDeviceFeatures deviceFeatures,
                       uint32_t graphicsQueueFamily,

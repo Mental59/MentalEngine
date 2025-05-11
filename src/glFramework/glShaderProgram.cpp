@@ -2,12 +2,12 @@
 #include "utils/utils.hpp"
 #include <cassert>
 
-mental::GLShaderProgram::GLShaderProgram(const char* fileName)
+glFramework::GLShaderProgram::GLShaderProgram(const char* fileName)
     : GLShaderProgram(glShaderTypeFromFilename(fileName),
-                      readShaderFile(fileName).c_str(), fileName) {}
+                      utils::readShaderFile(fileName).c_str(), fileName) {}
 
-mental::GLShaderProgram::GLShaderProgram(GLenum type, const char* text,
-                                         const char* fileName)
+glFramework::GLShaderProgram::GLShaderProgram(GLenum type, const char* text,
+                                              const char* fileName)
     : type_(type), typeBit_(glShaderTypeBitFromType(type_)),
       handle_(glCreateProgram()) {
   GLuint shaderHandle = createShader(text, fileName);
@@ -36,10 +36,10 @@ mental::GLShaderProgram::GLShaderProgram(GLenum type, const char* text,
   glDeleteShader(shaderHandle);
 }
 
-mental::GLShaderProgram::~GLShaderProgram() { glDeleteProgram(handle_); }
+glFramework::GLShaderProgram::~GLShaderProgram() { glDeleteProgram(handle_); }
 
-GLuint mental::GLShaderProgram::createShader(const char* text,
-                                             const char* fileName) {
+GLuint glFramework::GLShaderProgram::createShader(const char* text,
+                                                  const char* fileName) {
   GLuint shaderHandle = glCreateShader(type_);
   glShaderSource(shaderHandle, 1, &text, nullptr);
   glCompileShader(shaderHandle);
@@ -53,7 +53,7 @@ GLuint mental::GLShaderProgram::createShader(const char* text,
 
     if (length) {
       printf("%s (File: %s)\n", buffer, fileName);
-      printShaderSource(text);
+      utils::printShaderSource(text);
     }
 
     assert(false);
@@ -61,23 +61,23 @@ GLuint mental::GLShaderProgram::createShader(const char* text,
   return shaderHandle;
 }
 
-GLenum mental::glShaderTypeFromFilename(const char* fileName) {
-  if (endsWith(fileName, ".vert"))
+GLenum glFramework::glShaderTypeFromFilename(const char* fileName) {
+  if (utils::endsWith(fileName, ".vert"))
     return GL_VERTEX_SHADER;
 
-  if (endsWith(fileName, ".frag"))
+  if (utils::endsWith(fileName, ".frag"))
     return GL_FRAGMENT_SHADER;
 
-  if (endsWith(fileName, ".geom"))
+  if (utils::endsWith(fileName, ".geom"))
     return GL_GEOMETRY_SHADER;
 
-  if (endsWith(fileName, ".tesc"))
+  if (utils::endsWith(fileName, ".tesc"))
     return GL_TESS_CONTROL_SHADER;
 
-  if (endsWith(fileName, ".tese"))
+  if (utils::endsWith(fileName, ".tese"))
     return GL_TESS_EVALUATION_SHADER;
 
-  if (endsWith(fileName, ".comp"))
+  if (utils::endsWith(fileName, ".comp"))
     return GL_COMPUTE_SHADER;
 
   assert(false);
@@ -85,7 +85,7 @@ GLenum mental::glShaderTypeFromFilename(const char* fileName) {
   return 0;
 }
 
-GLbitfield mental::glShaderTypeBitFromType(GLenum type) {
+GLbitfield glFramework::glShaderTypeBitFromType(GLenum type) {
   if (type == GL_VERTEX_SHADER)
     return GL_VERTEX_SHADER_BIT;
 

@@ -2,7 +2,7 @@
 
 #include "volk.h"
 
-namespace mental {
+namespace vkFramework {
 VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCreateInfo();
 
 VkDebugReportCallbackCreateInfoEXT debugReportCallbackCreateInfo();
@@ -10,4 +10,4 @@ VkDebugReportCallbackCreateInfoEXT debugReportCallbackCreateInfo();
 void setupDebugCallbacks(VkInstance instance,
                          VkDebugUtilsMessengerEXT* messenger,
                          VkDebugReportCallbackEXT* reportCallback);
-} // namespace mental
+} // namespace vkFramework

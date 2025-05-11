@@ -7,8 +7,9 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-uint32_t mental::findMemoryType(VkPhysicalDevice device, uint32_t typeFilter,
-                                VkMemoryPropertyFlags properties) {
+uint32_t vkFramework::findMemoryType(VkPhysicalDevice device,
+                                     uint32_t typeFilter,
+                                     VkMemoryPropertyFlags properties) {
   VkPhysicalDeviceMemoryProperties memProperties;
   vkGetPhysicalDeviceMemoryProperties(device, &memProperties);
 
@@ -22,10 +23,10 @@ uint32_t mental::findMemoryType(VkPhysicalDevice device, uint32_t typeFilter,
   return 0xFFFFFFFF;
 }
 
-bool mental::createBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
-                          VkDeviceSize size, VkBufferUsageFlags usage,
-                          VkMemoryPropertyFlags properties, VkBuffer& buffer,
-                          VkDeviceMemory& bufferMemory) {
+bool vkFramework::createBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
+                               VkDeviceSize size, VkBufferUsageFlags usage,
+                               VkMemoryPropertyFlags properties,
+                               VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
   const VkBufferCreateInfo bufferInfo = {
       .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
       .pNext = nullptr,
@@ -61,8 +62,8 @@ bool mental::createBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
   return true;
 }
 
-void mental::copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer,
-                        VkBuffer dstBuffer, VkDeviceSize size) {
+void vkFramework::copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer,
+                             VkBuffer dstBuffer, VkDeviceSize size) {
   VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 
   const VkBufferCopy copyRegion = {
@@ -73,12 +74,10 @@ void mental::copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer,
   endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-bool mental::createTexturedVertexBuffer(VulkanRenderDevice& vkDev,
-                                        const char* filename,
-                                        VkBuffer* storageBuffer,
-                                        VkDeviceMemory* storageBufferMemory,
-                                        size_t* vertexBufferSize,
-                                        size_t* indexBufferSize) {
+bool vkFramework::createTexturedVertexBuffer(
+    VulkanRenderDevice& vkDev, const char* filename, VkBuffer* storageBuffer,
+    VkDeviceMemory* storageBufferMemory, size_t* vertexBufferSize,
+    size_t* indexBufferSize) {
   const aiScene* scene = aiImportFile(filename, aiProcess_Triangulate);
 
   if (!scene || !scene->HasMeshes()) {
@@ -115,11 +114,10 @@ bool mental::createTexturedVertexBuffer(VulkanRenderDevice& vkDev,
   return allocationSize != 0;
 }
 
-size_t
-mental::allocateVertexBuffer(VulkanRenderDevice& vkDev, VkBuffer* storageBuffer,
-                             VkDeviceMemory* storageBufferMemory,
-                             size_t vertexDataSize, const void* vertexData,
-                             size_t indexDataSize, const void* indexData) {
+size_t vkFramework::allocateVertexBuffer(
+    VulkanRenderDevice& vkDev, VkBuffer* storageBuffer,
+    VkDeviceMemory* storageBufferMemory, size_t vertexDataSize,
+    const void* vertexData, size_t indexDataSize, const void* indexData) {
   VkDeviceSize bufferSize = vertexDataSize + indexDataSize;
 
   VkBuffer stagingBuffer;

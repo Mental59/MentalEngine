@@ -3,7 +3,7 @@
 #include "vulkanRenderDevice.hpp"
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 struct RenderPassCreateInfo final {
   bool clearColor_ = false;
   bool clearDepth_ = false;
@@ -34,4 +34,4 @@ bool createGraphicsPipeline(
     bool dynamicScissorState = true, bool dynamicViewportState = true,
     int32_t customWidth = -1, int32_t customHeight = -1,
     uint32_t numPatchControlPoints = 0);
-} // namespace mental
+} // namespace vkFramework

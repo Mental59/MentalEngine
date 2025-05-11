@@ -5,9 +5,9 @@
 #include <vector>
 
 VkResult
-mental::findSuitablePhysicalDevice(VkInstance instance,
-                                   PhysicalDeviceSelectorFunction selector,
-                                   VkPhysicalDevice* physicalDevice) {
+vkFramework::findSuitablePhysicalDevice(VkInstance instance,
+                                        PhysicalDeviceSelectorFunction selector,
+                                        VkPhysicalDevice* physicalDevice) {
   uint32_t deviceCount = 0;
   MENTAL_VK_CHECK(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
 
@@ -29,8 +29,8 @@ mental::findSuitablePhysicalDevice(VkInstance instance,
   return VK_ERROR_INITIALIZATION_FAILED;
 }
 
-int mental::findQueueFamilies(VkPhysicalDevice physicalDevice,
-                              VkQueueFlags desiredFlags) {
+int vkFramework::findQueueFamilies(VkPhysicalDevice physicalDevice,
+                                   VkQueueFlags desiredFlags) {
   uint32_t familyCount = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &familyCount,
                                            nullptr);
@@ -48,9 +48,9 @@ int mental::findQueueFamilies(VkPhysicalDevice physicalDevice,
   return -1;
 }
 
-int mental::findQueueFamiliesWithPresentSupport(VkPhysicalDevice physicalDevice,
-                                                VkQueueFlags desiredFlags,
-                                                VkSurfaceKHR surface) {
+int vkFramework::findQueueFamiliesWithPresentSupport(
+    VkPhysicalDevice physicalDevice, VkQueueFlags desiredFlags,
+    VkSurfaceKHR surface) {
   uint32_t familyCount = 0;
   vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &familyCount,
                                            nullptr);
@@ -73,9 +73,9 @@ int mental::findQueueFamiliesWithPresentSupport(VkPhysicalDevice physicalDevice,
   return -1;
 }
 
-bool mental::checkDeviceExtensionSupport(const VkPhysicalDevice device,
-                                         const char* const* extensions,
-                                         uint32_t numExtensions) {
+bool vkFramework::checkDeviceExtensionSupport(const VkPhysicalDevice device,
+                                              const char* const* extensions,
+                                              uint32_t numExtensions) {
   uint32_t extensionCount;
   vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
                                        nullptr);

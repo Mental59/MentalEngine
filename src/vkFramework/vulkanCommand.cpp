@@ -1,8 +1,9 @@
 #include "vulkanCommand.hpp"
 #include "vulkanRenderDevice.hpp"
 
-VkResult mental::createCommandPool(VkDevice device, uint32_t queueFamilyIndex,
-                                   VkCommandPool* commandPool) {
+VkResult vkFramework::createCommandPool(VkDevice device,
+                                        uint32_t queueFamilyIndex,
+                                        VkCommandPool* commandPool) {
   const VkCommandPoolCreateInfo commanPoolCreateInfo = {
       .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
       .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
@@ -12,10 +13,10 @@ VkResult mental::createCommandPool(VkDevice device, uint32_t queueFamilyIndex,
                              commandPool);
 }
 
-VkResult mental::allocateCommandBuffers(VkDevice device,
-                                        VkCommandPool commandPool,
-                                        uint32_t commandBufferCount,
-                                        VkCommandBuffer* commandBuffers) {
+VkResult vkFramework::allocateCommandBuffers(VkDevice device,
+                                             VkCommandPool commandPool,
+                                             uint32_t commandBufferCount,
+                                             VkCommandBuffer* commandBuffers) {
   const VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
       .pNext = nullptr,
@@ -28,7 +29,8 @@ VkResult mental::allocateCommandBuffers(VkDevice device,
                                   commandBuffers);
 }
 
-VkCommandBuffer mental::beginSingleTimeCommands(VulkanRenderDevice& vkDev) {
+VkCommandBuffer
+vkFramework::beginSingleTimeCommands(VulkanRenderDevice& vkDev) {
   const VkCommandBufferAllocateInfo allocInfo = {
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
       .pNext = nullptr,
@@ -50,8 +52,8 @@ VkCommandBuffer mental::beginSingleTimeCommands(VulkanRenderDevice& vkDev) {
   return commandBuffer;
 }
 
-void mental::endSingleTimeCommands(VulkanRenderDevice& vkDev,
-                                   VkCommandBuffer commandBuffer) {
+void vkFramework::endSingleTimeCommands(VulkanRenderDevice& vkDev,
+                                        VkCommandBuffer commandBuffer) {
   vkEndCommandBuffer(commandBuffer);
 
   const VkSubmitInfo submitInfo = {.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,

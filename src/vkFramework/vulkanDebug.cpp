@@ -18,7 +18,7 @@ VKAPI_ATTR VkBool32 VKAPI_CALL reportCallback(
     const char* pLayerPrefix, const char* pMessage, void* UserData);
 } // namespace
 
-namespace mental {
+namespace vkFramework {
 VkDebugUtilsMessengerCreateInfoEXT debugUtilsMessengerCreateInfo() {
   VkDebugUtilsMessengerCreateInfoEXT createInfo{
       .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
@@ -60,7 +60,7 @@ void setupDebugCallbacks(VkInstance instance,
       instance, &reportCallbackCreateInfo, nullptr, reportCallback));
 }
 
-} // namespace mental
+} // namespace vkFramework
 
 namespace {
 VKAPI_ATTR VkBool32 VKAPI_CALL

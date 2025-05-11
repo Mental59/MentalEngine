@@ -1,8 +1,8 @@
 #include "glProgramPipeline.hpp"
 #include "cstdio"
 
-mental::GLProgramPipeline::GLProgramPipeline(const GLShaderProgram* programs,
-                                             size_t numPrograms) {
+glFramework::GLProgramPipeline::GLProgramPipeline(
+    const GLShaderProgram* programs, size_t numPrograms) {
   glCreateProgramPipelines(1, &handle_);
   for (size_t i = 0; i < numPrograms; i++) {
     glUseProgramStages(handle_, programs[i].getTypeBit(),
@@ -19,8 +19,10 @@ mental::GLProgramPipeline::GLProgramPipeline(const GLShaderProgram* programs,
   }
 }
 
-mental::GLProgramPipeline::~GLProgramPipeline() {
+glFramework::GLProgramPipeline::~GLProgramPipeline() {
   glDeleteProgramPipelines(1, &handle_);
 }
 
-void mental::GLProgramPipeline::use() const { glBindProgramPipeline(handle_); }
+void glFramework::GLProgramPipeline::use() const {
+  glBindProgramPipeline(handle_);
+}

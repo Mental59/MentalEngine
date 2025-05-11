@@ -1,7 +1,7 @@
 #pragma once
 #include <glad/gl.h>
 
-namespace mental {
+namespace glFramework {
 class GLShaderProgram {
 public:
   explicit GLShaderProgram(const char* fileName);
@@ -23,4 +23,4 @@ private:
 GLenum glShaderTypeFromFilename(const char* fileName);
 GLbitfield glShaderTypeBitFromType(GLenum type);
 
-} // namespace mental
+} // namespace glFramework

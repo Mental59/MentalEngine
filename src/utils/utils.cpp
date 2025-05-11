@@ -4,7 +4,7 @@
 
 #include "utils.hpp"
 
-void mental::printShaderSource(const char* text) {
+void utils::printShaderSource(const char* text) {
   int line = 1;
 
   printf("\n(%3i) ", line);
@@ -21,7 +21,7 @@ void mental::printShaderSource(const char* text) {
   printf("\n");
 }
 
-bool mental::endsWith(const char* s, const char* part) {
+bool utils::endsWith(const char* s, const char* part) {
   const size_t sLength = strlen(s);
   const size_t partLength = strlen(part);
   if (sLength < partLength)
@@ -29,7 +29,7 @@ bool mental::endsWith(const char* s, const char* part) {
   return strcmp(s + sLength - partLength, part) == 0;
 }
 
-std::string mental::readShaderFile(const char* fileName) {
+std::string utils::readShaderFile(const char* fileName) {
   FILE* file = fopen(fileName, "r");
 
   if (!file) {

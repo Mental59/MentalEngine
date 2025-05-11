@@ -3,7 +3,7 @@
 #include <vector>
 #include <volk.h>
 
-namespace mental {
+namespace vkFramework {
 struct VulkanRenderDevice;
 
 struct SwapChainSupportDetails {
@@ -32,4 +32,4 @@ size_t createSwapchainImages(VkDevice device, VkSwapchainKHR swapchain,
                              std::vector<VkImage>& swapchainImages,
                              std::vector<VkImageView>& swapchainImageViews);
 
-} // namespace mental
+} // namespace vkFramework

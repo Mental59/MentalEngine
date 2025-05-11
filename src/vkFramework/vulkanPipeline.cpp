@@ -5,9 +5,9 @@
 #include <array>
 #include <vector>
 
-bool mental::createPipelineLayout(VkDevice device,
-                                  VkDescriptorSetLayout dsLayout,
-                                  VkPipelineLayout* pipelineLayout) {
+bool vkFramework::createPipelineLayout(VkDevice device,
+                                       VkDescriptorSetLayout dsLayout,
+                                       VkPipelineLayout* pipelineLayout) {
   const VkPipelineLayoutCreateInfo pipelineLayoutInfo = {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
       .pNext = nullptr,
@@ -21,11 +21,11 @@ bool mental::createPipelineLayout(VkDevice device,
                                  pipelineLayout) == VK_SUCCESS);
 }
 
-bool mental::createColorAndDepthRenderPass(VulkanRenderDevice& device,
-                                           bool useDepth,
-                                           VkRenderPass* renderPass,
-                                           const RenderPassCreateInfo& ci,
-                                           VkFormat colorFormat) {
+bool vkFramework::createColorAndDepthRenderPass(VulkanRenderDevice& device,
+                                                bool useDepth,
+                                                VkRenderPass* renderPass,
+                                                const RenderPassCreateInfo& ci,
+                                                VkFormat colorFormat) {
   const bool offscreenInternal = ci.flags_ & RenderPassBit_OffscreenInternal;
   const bool offscreen = ci.flags_ & RenderPassBit_Offscreen;
   const bool first = ci.flags_ & RenderPassBit_First;
@@ -154,7 +154,7 @@ bool mental::createColorAndDepthRenderPass(VulkanRenderDevice& device,
                              renderPass) == VK_SUCCESS);
 }
 
-bool mental::createGraphicsPipeline(
+bool vkFramework::createGraphicsPipeline(
     VulkanRenderDevice& vkDev, VkRenderPass renderPass,
     VkPipelineLayout pipelineLayout,
     const std::vector<const char*>& shaderFiles, VkPipeline* pipeline,

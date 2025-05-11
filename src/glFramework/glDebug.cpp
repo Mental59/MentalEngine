@@ -1,9 +1,10 @@
 #include "glDebug.hpp"
 #include "cstdio"
 
-void mental::messageCallback(GLenum source, GLenum type, GLuint id,
-                             GLenum severity, GLsizei length,
-                             GLchar const* message, void const* user_param) {
+void glFramework::messageCallback(GLenum source, GLenum type, GLuint id,
+                                  GLenum severity, GLsizei length,
+                                  GLchar const* message,
+                                  void const* user_param) {
   auto const srcStr = [source]() {
     switch (source) {
     case GL_DEBUG_SOURCE_API:
@@ -59,7 +60,7 @@ void mental::messageCallback(GLenum source, GLenum type, GLuint id,
   printf("%s, %s, %s, %i: %s\n\n", srcStr, typeStr, severityStr, id, message);
 }
 
-void mental::initDebug() {
+void glFramework::initDebug() {
   glDebugMessageCallback(messageCallback, nullptr);
   glEnable(GL_DEBUG_OUTPUT);
   glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
