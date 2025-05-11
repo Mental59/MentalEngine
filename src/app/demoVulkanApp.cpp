@@ -144,13 +144,13 @@ void app::DemoVulkanApp::render(uint32_t currentFrame) {
     return;
   } else if (acquireNextImageRes != VK_SUCCESS &&
              acquireNextImageRes != VK_SUBOPTIMAL_KHR) {
-    MENTAL_CHECK_BOOL(false);
+    CHECK_BOOL(false);
   }
 
   vkResetFences(mVulkanRenderDevice.device, 1,
                 &mVulkanRenderDevice.inflightFences[currentFrame]);
 
-  MENTAL_VK_CHECK(vkResetCommandBuffer(
+  VK_CHECK(vkResetCommandBuffer(
       mVulkanRenderDevice.commandBuffers[currentFrame], 0));
 
   float aspectRatio =
@@ -185,9 +185,8 @@ void app::DemoVulkanApp::render(uint32_t currentFrame) {
       .signalSemaphoreCount = 1,
       .pSignalSemaphores = &mVulkanRenderDevice.renderSemaphores[currentFrame]};
 
-  MENTAL_VK_CHECK(
-      vkQueueSubmit(mVulkanRenderDevice.graphicsQueue, 1, &si,
-                    mVulkanRenderDevice.inflightFences[currentFrame]));
+  VK_CHECK(vkQueueSubmit(mVulkanRenderDevice.graphicsQueue, 1, &si,
+                         mVulkanRenderDevice.inflightFences[currentFrame]));
 
   const VkPresentInfoKHR pi = {
       .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
@@ -205,7 +204,7 @@ void app::DemoVulkanApp::render(uint32_t currentFrame) {
     mFramebufferResized = false;
     recreateSwapchain(currentFrame);
   } else if (presentRes != VK_SUCCESS) {
-    MENTAL_CHECK_BOOL(false);
+    CHECK_BOOL(false);
   }
 }
 
@@ -283,7 +282,7 @@ void app::DemoVulkanApp::recreateSwapchain(uint32_t currentFrame) {
   uint32_t newHeight = static_cast<uint32_t>(framebufferSize.height);
 
   VkSwapchainKHR oldSwapchain = mVulkanRenderDevice.swapchain;
-  MENTAL_VK_CHECK(
+  VK_CHECK(
       vkFramework::createSwapchain(mVulkanRenderDevice, mVulkanInstance.surface,
                                    mVulkanRenderDevice.graphicsFamily, newWidth,
                                    newHeight, &mVulkanRenderDevice.swapchain));
@@ -294,14 +293,14 @@ void app::DemoVulkanApp::recreateSwapchain(uint32_t currentFrame) {
       mVulkanRenderDevice.device, mVulkanRenderDevice.swapchain,
       mVulkanRenderDevice.swapchainImages,
       mVulkanRenderDevice.swapchainImageViews);
-  MENTAL_CHECK_BOOL(static_cast<uint32_t>(imageCount) ==
-                    mVulkanRenderDevice.swapchainImageCount);
+  CHECK_BOOL(static_cast<uint32_t>(imageCount) ==
+             mVulkanRenderDevice.swapchainImageCount);
 
-  MENTAL_CHECK_BOOL(vkFramework::createDepthResources(
+  CHECK_BOOL(vkFramework::createDepthResources(
       mVulkanRenderDevice, mVulkanRenderDevice.swapchainExtent.width,
       mVulkanRenderDevice.swapchainExtent.height, mVulkanState.depthTexture));
 
-  MENTAL_CHECK_BOOL(vkFramework::createColorAndDepthFramebuffers(
+  CHECK_BOOL(vkFramework::createColorAndDepthFramebuffers(
       mVulkanRenderDevice, mVulkanState.renderPass,
       mVulkanState.depthTexture.imageView,
       mVulkanRenderDevice.swapchainFramebuffers));
@@ -362,9 +361,9 @@ bool app::DemoVulkanApp::createDescriptorSet(size_t vertexBufferSize,
       .bindingCount = static_cast<uint32_t>(bindings.size()),
       .pBindings = bindings.data()};
 
-  MENTAL_VK_CHECK(
-      vkCreateDescriptorSetLayout(mVulkanRenderDevice.device, &layoutInfo,
-                                  nullptr, &mVulkanState.descriptorSetLayout));
+  VK_CHECK(vkCreateDescriptorSetLayout(mVulkanRenderDevice.device, &layoutInfo,
+                                       nullptr,
+                                       &mVulkanState.descriptorSetLayout));
   std::vector<VkDescriptorSetLayout> layouts(
       mVulkanRenderDevice.maxFramesInFlight, mVulkanState.descriptorSetLayout);
 
@@ -376,9 +375,8 @@ bool app::DemoVulkanApp::createDescriptorSet(size_t vertexBufferSize,
       .pSetLayouts = layouts.data()};
 
   mVulkanState.descriptorSets.resize(mVulkanRenderDevice.maxFramesInFlight);
-  MENTAL_VK_CHECK(vkAllocateDescriptorSets(mVulkanRenderDevice.device,
-                                           &allocInfo,
-                                           mVulkanState.descriptorSets.data()));
+  VK_CHECK(vkAllocateDescriptorSets(mVulkanRenderDevice.device, &allocInfo,
+                                    mVulkanState.descriptorSets.data()));
 
   for (uint32_t i = 0; i < mVulkanRenderDevice.maxFramesInFlight; i++) {
     const VkDescriptorBufferInfo uniformBufferInfo = {
@@ -494,8 +492,8 @@ bool app::DemoVulkanApp::fillCommandBuffers(size_t imageIndex,
   const VkRect2D screenRect = {.offset = {0, 0},
                                .extent = mVulkanRenderDevice.swapchainExtent};
 
-  MENTAL_VK_CHECK(vkBeginCommandBuffer(
-      mVulkanRenderDevice.commandBuffers[frameIndex], &bufferBeginInfo));
+  VK_CHECK(vkBeginCommandBuffer(mVulkanRenderDevice.commandBuffers[frameIndex],
+                                &bufferBeginInfo));
 
   const VkRenderPassBeginInfo renderPassInfo = {
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -540,8 +538,7 @@ bool app::DemoVulkanApp::fillCommandBuffers(size_t imageIndex,
 
   vkCmdEndRenderPass(mVulkanRenderDevice.commandBuffers[frameIndex]);
 
-  MENTAL_VK_CHECK(
-      vkEndCommandBuffer(mVulkanRenderDevice.commandBuffers[frameIndex]));
+  VK_CHECK(vkEndCommandBuffer(mVulkanRenderDevice.commandBuffers[frameIndex]));
 
   return true;
 }

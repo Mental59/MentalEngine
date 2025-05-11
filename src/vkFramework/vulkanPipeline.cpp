@@ -167,7 +167,7 @@ bool vkFramework::createGraphicsPipeline(
 
   for (size_t i = 0; i < numShaderFiles; i++) {
     const char* file = shaderFiles[i];
-    MENTAL_VK_CHECK(createShaderModule(vkDev.device, &shaderModules[i], file));
+    VK_CHECK(createShaderModule(vkDev.device, &shaderModules[i], file));
     shaderStages[i] = VkPipelineShaderStageCreateInfo{
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .pNext = nullptr,
@@ -296,8 +296,8 @@ bool vkFramework::createGraphicsPipeline(
       .basePipelineHandle = VK_NULL_HANDLE,
       .basePipelineIndex = -1};
 
-  MENTAL_VK_CHECK(vkCreateGraphicsPipelines(vkDev.device, VK_NULL_HANDLE, 1,
-                                            &pipelineInfo, nullptr, pipeline));
+  VK_CHECK(vkCreateGraphicsPipelines(vkDev.device, VK_NULL_HANDLE, 1,
+                                     &pipelineInfo, nullptr, pipeline));
 
   for (const ShaderModule& m : shaderModules) {
     vkDestroyShaderModule(vkDev.device, m.shaderModule, nullptr);

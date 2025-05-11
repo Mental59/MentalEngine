@@ -51,13 +51,13 @@ void setupDebugCallbacks(VkInstance instance,
                          VkDebugReportCallbackEXT* reportCallback) {
   const VkDebugUtilsMessengerCreateInfoEXT messengerCreateInfo =
       debugUtilsMessengerCreateInfo();
-  MENTAL_VK_CHECK(vkCreateDebugUtilsMessengerEXT(instance, &messengerCreateInfo,
-                                                 nullptr, messenger));
+  VK_CHECK(vkCreateDebugUtilsMessengerEXT(instance, &messengerCreateInfo,
+                                          nullptr, messenger));
 
   const VkDebugReportCallbackCreateInfoEXT reportCallbackCreateInfo =
       debugReportCallbackCreateInfo();
-  MENTAL_VK_CHECK(vkCreateDebugReportCallbackEXT(
-      instance, &reportCallbackCreateInfo, nullptr, reportCallback));
+  VK_CHECK(vkCreateDebugReportCallbackEXT(instance, &reportCallbackCreateInfo,
+                                          nullptr, reportCallback));
 }
 
 } // namespace vkFramework

@@ -131,17 +131,16 @@ size_t createSwapchainImages(VkDevice device, VkSwapchainKHR swapchain,
                              std::vector<VkImage>& swapchainImages,
                              std::vector<VkImageView>& swapchainImageViews) {
   uint32_t imageCount = 0;
-  MENTAL_VK_CHECK(
-      vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr));
+  VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr));
 
   swapchainImages.resize(imageCount);
   swapchainImageViews.resize(imageCount);
 
-  MENTAL_VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount,
-                                          swapchainImages.data()));
+  VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount,
+                                   swapchainImages.data()));
 
   for (unsigned i = 0; i < imageCount; i++) {
-    MENTAL_VK_CHECK(
+    VK_CHECK(
         createImageView(device, swapchainImages[i], VK_FORMAT_B8G8R8A8_UNORM,
                         VK_IMAGE_ASPECT_COLOR_BIT, &swapchainImageViews[i]));
   }

@@ -28,8 +28,8 @@ bool vkFramework::createColorAndDepthFramebuffers(
         .height = vkDev.swapchainExtent.height,
         .layers = 1};
 
-    MENTAL_VK_CHECK(vkCreateFramebuffer(vkDev.device, &framebufferInfo, nullptr,
-                                        &swapchainFramebuffers[i]));
+    VK_CHECK(vkCreateFramebuffer(vkDev.device, &framebufferInfo, nullptr,
+                                 &swapchainFramebuffers[i]));
   }
 
   return true;

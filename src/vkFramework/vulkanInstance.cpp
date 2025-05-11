@@ -53,7 +53,7 @@ VkInstance createVulkanInstance() {
   instanceCreateInfo.pNext = &createInfo;
 #endif
 
-  MENTAL_VK_CHECK(vkCreateInstance(&instanceCreateInfo, nullptr, &instance));
+  VK_CHECK(vkCreateInstance(&instanceCreateInfo, nullptr, &instance));
 
   volkLoadInstance(instance);
 
@@ -70,7 +70,7 @@ void initVulkanInstance(VulkanInstance& vulkanInstance,
                                    &vulkanInstance.reportCallback);
 #endif // (_DEBUG)
 
-  MENTAL_VK_CHECK(window->createVulkanWindowSurface(&vulkanInstance));
+  VK_CHECK(window->createVulkanWindowSurface(&vulkanInstance));
 }
 
 void destroyVulkanInstance(VulkanInstance& vk) {

@@ -9,15 +9,14 @@ vkFramework::findSuitablePhysicalDevice(VkInstance instance,
                                         PhysicalDeviceSelectorFunction selector,
                                         VkPhysicalDevice* physicalDevice) {
   uint32_t deviceCount = 0;
-  MENTAL_VK_CHECK(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
+  VK_CHECK(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr));
 
   if (!deviceCount) {
     return VK_ERROR_INITIALIZATION_FAILED;
   }
 
   std::vector<VkPhysicalDevice> devices(deviceCount);
-  MENTAL_VK_CHECK(
-      vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data()));
+  VK_CHECK(vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data()));
 
   for (const VkPhysicalDevice device : devices) {
     if (selector(device)) {
