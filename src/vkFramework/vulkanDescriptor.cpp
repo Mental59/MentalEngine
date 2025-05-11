@@ -47,3 +47,33 @@ VkDescriptorSetLayoutBinding vkFramework::descriptorSetLayoutBinding(
                                       .stageFlags = stageFlags,
                                       .pImmutableSamplers = nullptr};
 }
+
+VkWriteDescriptorSet vkFramework::bufferWriteDescriptorSet(
+    VkDescriptorSet ds, const VkDescriptorBufferInfo* bi, uint32_t bindIdx,
+    VkDescriptorType dType) {
+  return VkWriteDescriptorSet{.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                              .pNext = nullptr,
+                              .dstSet = ds,
+                              .dstBinding = bindIdx,
+                              .dstArrayElement = 0,
+                              .descriptorCount = 1,
+                              .descriptorType = dType,
+                              .pImageInfo = nullptr,
+                              .pBufferInfo = bi,
+                              .pTexelBufferView = nullptr};
+}
+
+VkWriteDescriptorSet vkFramework::imageWriteDescriptorSet(
+    VkDescriptorSet ds, const VkDescriptorImageInfo* ii, uint32_t bindIdx) {
+  return VkWriteDescriptorSet{.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                              .pNext = nullptr,
+                              .dstSet = ds,
+                              .dstBinding = bindIdx,
+                              .dstArrayElement = 0,
+                              .descriptorCount = 1,
+                              .descriptorType =
+                                  VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                              .pImageInfo = ii,
+                              .pBufferInfo = nullptr,
+                              .pTexelBufferView = nullptr};
+}

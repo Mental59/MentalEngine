@@ -99,10 +99,10 @@ void app::DemoVulkanApp::initVulkan() {
       !vkFramework::createColorAndDepthRenderPass(
           mVulkanRenderDevice, true, &mVulkanState.renderPass,
           vkFramework::RenderPassCreateInfo{
-              .clearColor_ = true,
-              .clearDepth_ = true,
-              .flags_ = vkFramework::RenderPassBit_First |
-                        vkFramework::RenderPassBit_Last}) ||
+              .clearColor = true,
+              .clearDepth = true,
+              .flags = vkFramework::RENDER_PASS_BIT_FIRST |
+                       vkFramework::RENDER_PASS_BIT_LAST}) ||
       !vkFramework::createPipelineLayout(mVulkanRenderDevice.device,
                                          mVulkanState.descriptorSetLayout,
                                          &mVulkanState.pipelineLayout) ||
@@ -120,7 +120,7 @@ void app::DemoVulkanApp::initVulkan() {
   if (!vkFramework::createColorAndDepthFramebuffers(
           mVulkanRenderDevice, mVulkanState.renderPass,
           mVulkanState.depthTexture.imageView,
-          mVulkanRenderDevice.swapchainFramebuffers)) {
+          mVulkanState.swapchainFramebuffers)) {
     printf("FATAL ERROR: Failed to create framebuffers");
     exit(EXIT_FAILURE);
   }
@@ -218,7 +218,7 @@ void app::DemoVulkanApp::cleanupSwapchain(VkSwapchainKHR swapchain) {
   vkFramework::destroyVulkanImage(mVulkanRenderDevice.device,
                                   mVulkanState.depthTexture);
 
-  for (VkFramebuffer framebuffer : mVulkanRenderDevice.swapchainFramebuffers) {
+  for (VkFramebuffer framebuffer : mVulkanState.swapchainFramebuffers) {
     vkDestroyFramebuffer(mVulkanRenderDevice.device, framebuffer, nullptr);
   }
 
@@ -250,7 +250,7 @@ void app::DemoVulkanApp::destroyVulkanState() {
   vkDestroyDescriptorPool(mVulkanRenderDevice.device,
                           mVulkanState.descriptorPool, nullptr);
 
-  for (VkFramebuffer framebuffer : mVulkanRenderDevice.swapchainFramebuffers) {
+  for (VkFramebuffer framebuffer : mVulkanState.swapchainFramebuffers) {
     vkDestroyFramebuffer(mVulkanRenderDevice.device, framebuffer, nullptr);
   }
 
@@ -302,8 +302,7 @@ void app::DemoVulkanApp::recreateSwapchain(uint32_t currentFrame) {
 
   CHECK_BOOL(vkFramework::createColorAndDepthFramebuffers(
       mVulkanRenderDevice, mVulkanState.renderPass,
-      mVulkanState.depthTexture.imageView,
-      mVulkanRenderDevice.swapchainFramebuffers));
+      mVulkanState.depthTexture.imageView, mVulkanState.swapchainFramebuffers));
 }
 
 bool app::DemoVulkanApp::createUniformBuffers() {
@@ -499,7 +498,7 @@ bool app::DemoVulkanApp::fillCommandBuffers(size_t imageIndex,
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
       .pNext = nullptr,
       .renderPass = mVulkanState.renderPass,
-      .framebuffer = mVulkanRenderDevice.swapchainFramebuffers[imageIndex],
+      .framebuffer = mVulkanState.swapchainFramebuffers[imageIndex],
       .renderArea = screenRect,
       .clearValueCount = static_cast<uint32_t>(clearValues.size()),
       .pClearValues = clearValues.data()};

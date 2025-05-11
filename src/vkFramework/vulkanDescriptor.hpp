@@ -12,4 +12,14 @@ VkDescriptorSetLayoutBinding
 descriptorSetLayoutBinding(uint32_t binding, VkDescriptorType descriptorType,
                            VkShaderStageFlags stageFlags,
                            uint32_t descriptorCount = 1);
+
+VkWriteDescriptorSet bufferWriteDescriptorSet(VkDescriptorSet ds,
+                                              const VkDescriptorBufferInfo* bi,
+                                              uint32_t bindIdx,
+                                              VkDescriptorType dType);
+
+VkWriteDescriptorSet imageWriteDescriptorSet(VkDescriptorSet ds,
+                                             const VkDescriptorImageInfo* ii,
+                                             uint32_t bindIdx);
+
 } // namespace vkFramework

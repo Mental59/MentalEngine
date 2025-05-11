@@ -5,16 +5,16 @@
 
 namespace vkFramework {
 struct RenderPassCreateInfo final {
-  bool clearColor_ = false;
-  bool clearDepth_ = false;
-  uint8_t flags_ = 0;
+  bool clearColor = false;
+  bool clearDepth = false;
+  uint8_t flags = 0;
 };
 
 enum ERenderPassBit : uint8_t {
-  RenderPassBit_First = 0x01,
-  RenderPassBit_Last = 0x02,
-  RenderPassBit_Offscreen = 0x04,
-  RenderPassBit_OffscreenInternal = 0x08,
+  RENDER_PASS_BIT_FIRST = 0x01,
+  RENDER_PASS_BIT_LAST = 0x02,
+  RENDER_PASS_BIT_OFFSCREEN = 0x04,
+  RENDER_PASS_BIT_OFFSCREEN_INTERNAL = 0x08,
 };
 
 bool createPipelineLayout(VkDevice device, VkDescriptorSetLayout dsLayout,

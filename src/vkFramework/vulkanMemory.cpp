@@ -62,6 +62,16 @@ bool vkFramework::createBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
   return true;
 }
 
+bool vkFramework::createUniformBuffer(VulkanRenderDevice& vkDev,
+                                      VkDeviceSize bufferSize, VkBuffer& buffer,
+                                      VkDeviceMemory& bufferMemory) {
+  return createBuffer(vkDev.device, vkDev.physicalDevice, bufferSize,
+                      VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                      VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                          VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                      buffer, bufferMemory);
+}
+
 void vkFramework::copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer,
                              VkBuffer dstBuffer, VkDeviceSize size) {
   VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);

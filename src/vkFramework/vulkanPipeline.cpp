@@ -26,10 +26,10 @@ bool vkFramework::createColorAndDepthRenderPass(VulkanRenderDevice& device,
                                                 VkRenderPass* renderPass,
                                                 const RenderPassCreateInfo& ci,
                                                 VkFormat colorFormat) {
-  const bool offscreenInternal = ci.flags_ & RenderPassBit_OffscreenInternal;
-  const bool offscreen = ci.flags_ & RenderPassBit_Offscreen;
-  const bool first = ci.flags_ & RenderPassBit_First;
-  const bool last = ci.flags_ & RenderPassBit_Last;
+  const bool offscreenInternal = ci.flags & RENDER_PASS_BIT_OFFSCREEN_INTERNAL;
+  const bool offscreen = ci.flags & RENDER_PASS_BIT_OFFSCREEN;
+  const bool first = ci.flags & RENDER_PASS_BIT_FIRST;
+  const bool last = ci.flags & RENDER_PASS_BIT_LAST;
 
   VkAttachmentDescription colorAttachment = {
       .flags = 0,
@@ -37,8 +37,8 @@ bool vkFramework::createColorAndDepthRenderPass(VulkanRenderDevice& device,
       .samples = VK_SAMPLE_COUNT_1_BIT,
       .loadOp = offscreenInternal
                     ? VK_ATTACHMENT_LOAD_OP_LOAD
-                    : (ci.clearColor_ ? VK_ATTACHMENT_LOAD_OP_CLEAR
-                                      : VK_ATTACHMENT_LOAD_OP_LOAD),
+                    : (ci.clearColor ? VK_ATTACHMENT_LOAD_OP_CLEAR
+                                     : VK_ATTACHMENT_LOAD_OP_LOAD),
       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
       .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -67,13 +67,13 @@ bool vkFramework::createColorAndDepthRenderPass(VulkanRenderDevice& device,
       .samples = VK_SAMPLE_COUNT_1_BIT,
       .loadOp = offscreenInternal
                     ? VK_ATTACHMENT_LOAD_OP_LOAD
-                    : (ci.clearDepth_ ? VK_ATTACHMENT_LOAD_OP_CLEAR
-                                      : VK_ATTACHMENT_LOAD_OP_LOAD),
+                    : (ci.clearDepth ? VK_ATTACHMENT_LOAD_OP_CLEAR
+                                     : VK_ATTACHMENT_LOAD_OP_LOAD),
       .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
       .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
       .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
       .initialLayout =
-          ci.clearDepth_
+          ci.clearDepth
               ? VK_IMAGE_LAYOUT_UNDEFINED
               : (offscreenInternal
                      ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL

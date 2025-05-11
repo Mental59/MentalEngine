@@ -11,31 +11,27 @@ namespace app {
 class DemoVulkanApp : public BaseApp {
 public:
   struct VulkanState {
-    // 1. Descriptor set (layout + pool + sets) -> uses uniform buffers,
-    // textures, framebuffers
     VkDescriptorSetLayout descriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSet> descriptorSets;
 
-    // 2. Pipeline & render pass (using DescriptorSets & pipeline state options)
     VkRenderPass renderPass = VK_NULL_HANDLE;
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
     VkPipeline graphicsPipeline = VK_NULL_HANDLE;
 
-    // 3. Uniform buffer
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
 
-    // 4. Storage Buffer with index and vertex data
     VkBuffer storageBuffer = VK_NULL_HANDLE;
     VkDeviceMemory storageBufferMemory = VK_NULL_HANDLE;
     size_t vertexBufferSize = 0;
     size_t indexBufferSize = 0;
 
-    // 5. Depth buffer
     vkFramework::VulkanImage depthTexture{};
 
     vkFramework::VulkanImage texture{};
+
+    std::vector<VkFramebuffer> swapchainFramebuffers;
   };
 
   DemoVulkanApp();

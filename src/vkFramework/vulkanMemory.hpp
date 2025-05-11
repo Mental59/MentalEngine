@@ -18,6 +18,9 @@ bool createBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
                   VkMemoryPropertyFlags properties, VkBuffer& buffer,
                   VkDeviceMemory& bufferMemory);
 
+bool createUniformBuffer(VulkanRenderDevice& vkDev, VkDeviceSize bufferSize,
+                         VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+
 void copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer,
                 VkBuffer dstBuffer, VkDeviceSize size);
 

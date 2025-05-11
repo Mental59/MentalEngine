@@ -28,7 +28,6 @@ struct VulkanRenderDevice final {
 
   std::vector<VkImage> swapchainImages;
   std::vector<VkImageView> swapchainImageViews;
-  std::vector<VkFramebuffer> swapchainFramebuffers;
 
   VkCommandPool commandPool = VK_NULL_HANDLE;
   std::vector<VkCommandBuffer> commandBuffers;
