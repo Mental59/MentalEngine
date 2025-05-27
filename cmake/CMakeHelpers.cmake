@@ -35,3 +35,22 @@ macro(setup_app projname version)
 		set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 	endif()
 endmacro()
+
+macro(setup_imgui)
+  set(IMGUI_SOURCES
+    deps/libs/imgui/imgui.cpp
+    deps/libs/imgui/imgui_demo.cpp
+    deps/libs/imgui/imgui_draw.cpp
+    deps/libs/imgui/imgui_tables.cpp
+    deps/libs/imgui/imgui_widgets.cpp
+    deps/libs/imgui/backends/imgui_impl_glfw.cpp
+    deps/libs/imgui/backends/imgui_impl_opengl3.cpp
+    deps/libs/imgui/backends/imgui_impl_vulkan.cpp
+  )
+
+  add_library(imgui STATIC ${IMGUI_SOURCES})
+
+  target_include_directories(imgui PUBLIC deps/libs/imgui deps/libs/imgui/backends)
+  target_compile_definitions(imgui PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
+  target_link_libraries(imgui PRIVATE volk glfw)
+endmacro()

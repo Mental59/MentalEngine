@@ -52,6 +52,8 @@ add_subdirectory(deps/libs/assimp)
 add_subdirectory(deps/libs/optick)
 add_subdirectory(deps/libs/glslang)
 
+setup_imgui()
+
 set_property(TARGET assimp PROPERTY FOLDER "Assimp")
 set_property(TARGET uninstall PROPERTY FOLDER "Assimp")
 set_property(TARGET UpdateAssimpLibsDebugSymbolsAndDLLs PROPERTY FOLDER "Assimp")
@@ -59,7 +61,8 @@ set_property(TARGET zlibstatic PROPERTY FOLDER "Assimp")
 set_property(TARGET volk PROPERTY FOLDER "Volk")
 set_property(TARGET optick PROPERTY FOLDER "Optick")
 set_property(TARGET glm PROPERTY FOLDER "GLM")
+set_property(TARGET imgui PROPERTY FOLDER "ImGui")
 
-target_link_libraries(MentalEngine PRIVATE glm glfw assimp volk glslang SPIRV)
+target_link_libraries(MentalEngine PRIVATE glm glfw assimp volk glslang SPIRV imgui)
 target_compile_definitions(MentalEngine PRIVATE VK_NO_PROTOTYPES GLFW_INCLUDE_VULKAN STB_IMAGE_IMPLEMENTATION NOMINMAX)
 target_include_directories(${PROJECT_NAME} PRIVATE deps/libs/stb)
