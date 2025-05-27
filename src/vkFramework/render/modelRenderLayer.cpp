@@ -7,33 +7,36 @@ vkFramework::render::ModelRenderLayer::ModelRenderLayer(
     VulkanRenderDevice& vkDev, const char* modelFile, const char* textureFile,
     uint32_t uniformDataSize)
     : BaseRenderLayer(vkDev, VulkanImage{}) {
-  if (!createTexturedVertexBuffer(vkDev, modelFile, &mStorageBuffer,
-                                  &mStorageBufferMemory, &mVertexBufferSize,
-                                  &mIndexBufferSize)) {
-    CHECK_BOOL(false);
-  }
 
-  createVulkanImage(vkDev, textureFile, mTexture);
+  CHECK_BOOL(createTexturedVertexBuffer(vkDev, modelFile, &mStorageBuffer,
+                                        &mStorageBufferMemory,
+                                        &mVertexBufferSize, &mIndexBufferSize));
 
-  if (!createDepthResources(vkDev, vkDev.swapchainExtent.width,
-                            vkDev.swapchainExtent.height, mDepthTexture) ||
-      !createColorAndDepthRenderPass(vkDev, true, &mRenderPass,
-                                     RenderPassCreateInfo{}) ||
-      !createUniformBuffers(vkDev, uniformDataSize) ||
-      !createColorAndDepthFramebuffers(vkDev, mRenderPass,
-                                       mDepthTexture.imageView,
-                                       mSwapchainFramebuffers) ||
-      !createDescriptorPool(vkDev, 1, 2, 1, &mDescriptorPool) ||
-      !createDescriptorSet(vkDev, uniformDataSize) ||
-      !createPipelineLayout(vkDev.device, mDescriptorSetLayout,
-                            &mPipelineLayout) ||
-      !createGraphicsPipeline(vkDev, mRenderPass, mPipelineLayout,
-                              {"data/shaders/chapter03/VK02.vert",
-                               "data/shaders/chapter03/VK02.frag",
-                               "data/shaders/chapter03/VK02.geom"},
-                              &mGraphicsPipeline)) {
-    CHECK_BOOL(false);
-  }
+  CHECK_BOOL(createVulkanImage(vkDev, textureFile, mTexture));
+
+  CHECK_BOOL(createDepthResources(vkDev, vkDev.swapchainExtent.width,
+                                  vkDev.swapchainExtent.height, mDepthTexture));
+
+  CHECK_BOOL(createColorAndDepthRenderPass(vkDev, true, &mRenderPass,
+                                           RenderPassCreateInfo{}));
+
+  CHECK_BOOL(createUniformBuffers(vkDev, uniformDataSize));
+
+  CHECK_BOOL(createColorAndDepthFramebuffers(
+      vkDev, mRenderPass, mDepthTexture.imageView, mSwapchainFramebuffers));
+
+  CHECK_BOOL(createDescriptorPool(vkDev, 1, 2, 1, &mDescriptorPool));
+
+  CHECK_BOOL(createDescriptorSet(vkDev, uniformDataSize));
+
+  CHECK_BOOL(createPipelineLayout(vkDev.device, mDescriptorSetLayout,
+                                  &mPipelineLayout));
+
+  CHECK_BOOL(createGraphicsPipeline(vkDev, mRenderPass, mPipelineLayout,
+                                    {"data/shaders/chapter03/VK02.vert",
+                                     "data/shaders/chapter03/VK02.frag",
+                                     "data/shaders/chapter03/VK02.geom"},
+                                    &mGraphicsPipeline));
 }
 
 vkFramework::render::ModelRenderLayer::ModelRenderLayer(
@@ -54,25 +57,29 @@ vkFramework::render::ModelRenderLayer::ModelRenderLayer(
     if (mIsExternalDepth) {
       mDepthTexture = externalDepth;
     } else {
-      createDepthResources(vkDev, vkDev.swapchainExtent.width,
-                           vkDev.swapchainExtent.height, mDepthTexture);
+      CHECK_BOOL(createDepthResources(vkDev, vkDev.swapchainExtent.width,
+                                      vkDev.swapchainExtent.height,
+                                      mDepthTexture));
     }
   }
 
-  if (!createColorAndDepthRenderPass(vkDev, useDepth, &mRenderPass,
-                                     RenderPassCreateInfo()) ||
-      !createUniformBuffers(vkDev, uniformDataSize) ||
-      !createColorAndDepthFramebuffers(vkDev, mRenderPass,
-                                       mDepthTexture.imageView,
-                                       mSwapchainFramebuffers) ||
-      !createDescriptorPool(vkDev, 1, 2, 1, &mDescriptorPool) ||
-      !createDescriptorSet(vkDev, uniformDataSize) ||
-      !createPipelineLayout(vkDev.device, mDescriptorSetLayout,
-                            &mPipelineLayout) ||
-      !createGraphicsPipeline(vkDev, mRenderPass, mPipelineLayout, shaderFiles,
-                              &mGraphicsPipeline)) {
-    CHECK_BOOL(false);
-  }
+  CHECK_BOOL(createColorAndDepthRenderPass(vkDev, useDepth, &mRenderPass,
+                                           RenderPassCreateInfo{}));
+
+  CHECK_BOOL(createUniformBuffers(vkDev, uniformDataSize));
+
+  CHECK_BOOL(!createColorAndDepthFramebuffers(
+      vkDev, mRenderPass, mDepthTexture.imageView, mSwapchainFramebuffers));
+
+  CHECK_BOOL(createDescriptorPool(vkDev, 1, 2, 1, &mDescriptorPool));
+
+  CHECK_BOOL(createDescriptorSet(vkDev, uniformDataSize));
+
+  CHECK_BOOL(createPipelineLayout(vkDev.device, mDescriptorSetLayout,
+                                  &mPipelineLayout));
+
+  CHECK_BOOL(createGraphicsPipeline(vkDev, mRenderPass, mPipelineLayout,
+                                    shaderFiles, &mGraphicsPipeline));
 }
 
 vkFramework::render::ModelRenderLayer::~ModelRenderLayer() {
@@ -143,7 +150,7 @@ bool vkFramework::render::ModelRenderLayer::createDescriptorSet(
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
       .pNext = nullptr,
       .descriptorPool = mDescriptorPool,
-      .descriptorSetCount = static_cast<uint32_t>(vkDev.maxFramesInFlight),
+      .descriptorSetCount = vkDev.maxFramesInFlight,
       .pSetLayouts = layouts.data()};
 
   mDescriptorSets.resize(vkDev.maxFramesInFlight);

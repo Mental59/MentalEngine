@@ -1,8 +1,11 @@
 ﻿#version 460 core
 
-#include <data/shaders/chapter03/GLBufferDeclarations>
-
 layout (location=0) out vec3 dir;
+
+layout(binding = 0) uniform UniformBuffer
+{
+	mat4 mvp;
+} ubo;
 
 const vec3 pos[8] = vec3[8](
 	vec3(-1.0,-1.0, 1.0),
@@ -31,14 +34,10 @@ const int indices[36] = int[36](
 	3, 2, 6, 6, 7, 3
 );
 
-out gl_PerVertex
-{
-	vec4 gl_Position;
-};
-
 void main()
 {
-	int idx = indices[gl_VertexID];
-	gl_Position = MVP * vec4(pos[idx], 1.0);
+	float cubeSize = 10.0;
+	int idx = indices[gl_VertexIndex];
+	gl_Position = ubo.mvp * vec4(cubeSize * pos[idx], 1.0);
 	dir = pos[idx].xyz;
 }

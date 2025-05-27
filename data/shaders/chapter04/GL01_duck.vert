@@ -1,6 +1,6 @@
 ﻿#version 460 core
 
-#include <data/shaders/chapter03/GLBufferDeclarations>
+#include <data/shaders/chapter04/GLBufferDeclarations>
 
 vec3 getPosition(int i)
 {
@@ -26,17 +26,15 @@ struct PerVertex
 
 layout (location=0) out PerVertex vtx;
 
-out gl_PerVertex
-{
-	vec4 gl_Position;
-};
-
 void main()
 {
+	mat4 model = in_ModelMatrices[gl_BaseInstance];
+	mat4 MVP = proj * view * model;
+
 	vec3 pos = getPosition(gl_VertexID);
 	gl_Position = MVP * vec4(pos, 1.0);
 
-	mat3 normalMatrix = transpose(inverse(mat3(model)));
+	mat3 normalMatrix = mat3(transpose(inverse(model)));
 
 	vtx.uv = getTexCoord(gl_VertexID);
 	vtx.normal = getNormal(gl_VertexID) * normalMatrix;

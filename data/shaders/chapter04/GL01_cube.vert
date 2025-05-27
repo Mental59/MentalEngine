@@ -1,6 +1,6 @@
 ﻿#version 460 core
 
-#include <data/shaders/chapter03/GLBufferDeclarations>
+#include <data/shaders/chapter04/GLBufferDeclarations>
 
 layout (location=0) out vec3 dir;
 
@@ -31,13 +31,10 @@ const int indices[36] = int[36](
 	3, 2, 6, 6, 7, 3
 );
 
-out gl_PerVertex
-{
-	vec4 gl_Position;
-};
-
 void main()
 {
+	mat4 MVP = proj * view * in_ModelMatrices[gl_BaseInstance];
+
 	int idx = indices[gl_VertexID];
 	gl_Position = MVP * vec4(pos[idx], 1.0);
 	dir = pos[idx].xyz;
