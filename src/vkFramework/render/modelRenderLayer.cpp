@@ -100,13 +100,13 @@ vkFramework::render::ModelRenderLayer::~ModelRenderLayer() {
 void vkFramework::render::ModelRenderLayer::fillCommandBuffer(
     VkCommandBuffer commandBuffer, uint32_t currentFrame,
     uint32_t currentImage) {
-  beginRenderPass(commandBuffer, currentFrame, currentImage);
+  beginRenderPassDynamic(commandBuffer, currentFrame, currentImage);
 
   uint32_t vertexCount =
       static_cast<uint32_t>(mIndexBufferSize / (sizeof(unsigned int)));
   vkCmdDraw(commandBuffer, vertexCount, 1, 0, 0);
 
-  vkCmdEndRenderPass(commandBuffer);
+  endRenderPass(commandBuffer);
 }
 
 void vkFramework::render::ModelRenderLayer::updateUniformBuffer(

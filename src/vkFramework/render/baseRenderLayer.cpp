@@ -41,6 +41,28 @@ void vkFramework::render::BaseRenderLayer::beginRenderPass(
                           0, nullptr);
 }
 
+void vkFramework::render::BaseRenderLayer::beginRenderPassDynamic(
+    VkCommandBuffer commandBuffer, uint32_t currentFrame,
+    uint32_t currentImage) {
+  beginRenderPass(commandBuffer, currentFrame, currentImage);
+
+  VkViewport viewport{.x = 0.0f,
+                      .y = 0.0f,
+                      .width = static_cast<float>(mFramebufferExtent.width),
+                      .height = static_cast<float>(mFramebufferExtent.height),
+                      .minDepth = 0.0f,
+                      .maxDepth = 1.0f};
+  vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+  VkRect2D scissor{.offset = {0, 0}, .extent = mFramebufferExtent};
+  vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+}
+
+void vkFramework::render::BaseRenderLayer::endRenderPass(
+    VkCommandBuffer commandBuffer) {
+  vkCmdEndRenderPass(commandBuffer);
+}
+
 bool vkFramework::render::BaseRenderLayer::createUniformBuffers(
     VulkanRenderDevice& vkDev, size_t uniformDataSize) {
   mUniformBuffers.resize(vkDev.maxFramesInFlight);

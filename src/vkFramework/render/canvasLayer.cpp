@@ -59,10 +59,11 @@ void vkFramework::render::VulkanCanvas::fillCommandBuffer(
     return;
   }
 
-  beginRenderPass(commandBuffer, currentFrame, currentImage);
+  beginRenderPassDynamic(commandBuffer, currentFrame, currentImage);
 
   vkCmdDraw(commandBuffer, static_cast<uint32_t>(mLines.size()), 1, 0, 0);
-  vkCmdEndRenderPass(commandBuffer);
+
+  endRenderPass(commandBuffer);
 }
 
 void vkFramework::render::VulkanCanvas::clear() { mLines.clear(); }

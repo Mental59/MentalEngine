@@ -20,6 +20,12 @@ enum ERenderPassBit : uint8_t {
 bool createPipelineLayout(VkDevice device, VkDescriptorSetLayout dsLayout,
                           VkPipelineLayout* pipelineLayout);
 
+bool createPipelineLayoutWithConstants(VkDevice device,
+                                       VkDescriptorSetLayout dsLayout,
+                                       uint32_t vtxConstSize,
+                                       uint32_t fragConstSize,
+                                       VkPipelineLayout* pipelineLayout);
+
 bool createColorAndDepthRenderPass(
     VulkanRenderDevice& device, bool useDepth, VkRenderPass* renderPass,
     const RenderPassCreateInfo& ci,

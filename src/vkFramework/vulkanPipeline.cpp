@@ -21,6 +21,35 @@ bool vkFramework::createPipelineLayout(VkDevice device,
                                  pipelineLayout) == VK_SUCCESS);
 }
 
+bool vkFramework::createPipelineLayoutWithConstants(
+    VkDevice device, VkDescriptorSetLayout dsLayout, uint32_t vtxConstSize,
+    uint32_t fragConstSize, VkPipelineLayout* pipelineLayout) {
+  const VkPushConstantRange ranges[] = {
+      {.stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+       .offset = 0,
+       .size = vtxConstSize},
+
+      {.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+       .offset = vtxConstSize,
+       .size = fragConstSize}};
+
+  uint32_t constSize = (vtxConstSize > 0) + (fragConstSize > 0);
+
+  const VkPipelineLayoutCreateInfo pipelineLayoutInfo = {
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+      .pNext = nullptr,
+      .flags = 0,
+      .setLayoutCount = 1,
+      .pSetLayouts = &dsLayout,
+      .pushConstantRangeCount = constSize,
+      .pPushConstantRanges = (constSize == 0)
+                                 ? nullptr
+                                 : (vtxConstSize > 0 ? ranges : &ranges[1])};
+
+  return (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr,
+                                 pipelineLayout) == VK_SUCCESS);
+}
+
 bool vkFramework::createColorAndDepthRenderPass(VulkanRenderDevice& device,
                                                 bool useDepth,
                                                 VkRenderPass* renderPass,

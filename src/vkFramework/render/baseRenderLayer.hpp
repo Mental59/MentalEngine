@@ -25,6 +25,12 @@ public:
 protected:
   void beginRenderPass(VkCommandBuffer commandBuffer, uint32_t currentFrame,
                        uint32_t currentImage);
+
+  void beginRenderPassDynamic(VkCommandBuffer commandBuffer,
+                              uint32_t currentFrame, uint32_t currentImage);
+
+  void endRenderPass(VkCommandBuffer commandBuffer);
+
   bool createUniformBuffers(VulkanRenderDevice& vkDev, size_t uniformDataSize);
 
   VkDevice mDevice = VK_NULL_HANDLE;
