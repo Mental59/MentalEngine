@@ -45,7 +45,12 @@ void vkFramework::render::BaseRenderLayer::beginRenderPassDynamic(
     VkCommandBuffer commandBuffer, uint32_t currentFrame,
     uint32_t currentImage) {
   beginRenderPass(commandBuffer, currentFrame, currentImage);
+  cmdSetViewport(commandBuffer);
+  cmdSetScissor(commandBuffer);
+}
 
+void vkFramework::render::BaseRenderLayer::cmdSetViewport(
+    VkCommandBuffer commandBuffer) {
   VkViewport viewport{.x = 0.0f,
                       .y = 0.0f,
                       .width = static_cast<float>(mFramebufferExtent.width),
@@ -53,7 +58,10 @@ void vkFramework::render::BaseRenderLayer::beginRenderPassDynamic(
                       .minDepth = 0.0f,
                       .maxDepth = 1.0f};
   vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+}
 
+void vkFramework::render::BaseRenderLayer::cmdSetScissor(
+    VkCommandBuffer commandBuffer) {
   VkRect2D scissor{.offset = {0, 0}, .extent = mFramebufferExtent};
   vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }

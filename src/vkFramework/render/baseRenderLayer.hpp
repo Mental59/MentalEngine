@@ -29,6 +29,10 @@ protected:
   void beginRenderPassDynamic(VkCommandBuffer commandBuffer,
                               uint32_t currentFrame, uint32_t currentImage);
 
+  void cmdSetViewport(VkCommandBuffer commandBuffer);
+
+  void cmdSetScissor(VkCommandBuffer commandBuffer);
+
   void endRenderPass(VkCommandBuffer commandBuffer);
 
   bool createUniformBuffers(VulkanRenderDevice& vkDev, size_t uniformDataSize);

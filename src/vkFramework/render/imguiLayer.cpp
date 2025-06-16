@@ -88,7 +88,7 @@ void addImGuiItem(uint32_t width, uint32_t height,
 }
 } // namespace
 
-vkFramework::render::ImGuiRenderer::ImGuiRenderer(VulkanRenderDevice& vkDev)
+vkFramework::render::ImGuiLayer::ImGuiLayer(VulkanRenderDevice& vkDev)
     : BaseRenderLayer(vkDev, VulkanImage{}) {
   createFontTexture(ImGui::GetIO(), gDefaultFont, vkDev, mFont.image,
                     mFont.imageMemory);
@@ -132,7 +132,7 @@ vkFramework::render::ImGuiRenderer::ImGuiRenderer(VulkanRenderDevice& vkDev)
                                   &mGraphicsPipeline));
 }
 
-vkFramework::render::ImGuiRenderer::ImGuiRenderer(
+vkFramework::render::ImGuiLayer::ImGuiLayer(
     VulkanRenderDevice& vkDev, const std::vector<VulkanTexture>& textures)
     : BaseRenderLayer(vkDev, VulkanImage{}), mExtTextures(textures) {
   createFontTexture(ImGui::GetIO(), gDefaultFont, vkDev, mFont.image,
@@ -178,7 +178,7 @@ vkFramework::render::ImGuiRenderer::ImGuiRenderer(
                                   &mGraphicsPipeline));
 }
 
-vkFramework::render::ImGuiRenderer::~ImGuiRenderer() {
+vkFramework::render::ImGuiLayer::~ImGuiLayer() {
   for (VkBuffer buffer : mStorageBuffer) {
     vkDestroyBuffer(mDevice, buffer, nullptr);
   }
@@ -190,10 +190,11 @@ vkFramework::render::ImGuiRenderer::~ImGuiRenderer() {
   destroyVulkanImage(mDevice, mFont);
 }
 
-void vkFramework::render::ImGuiRenderer::fillCommandBuffer(
+void vkFramework::render::ImGuiLayer::fillCommandBuffer(
     VkCommandBuffer commandBuffer, uint32_t currentFrame,
     uint32_t currentImage) {
   beginRenderPass(commandBuffer, currentFrame, currentImage);
+  cmdSetViewport(commandBuffer);
 
   int vtxOffset = 0;
   int idxOffset = 0;
@@ -217,7 +218,7 @@ void vkFramework::render::ImGuiRenderer::fillCommandBuffer(
   endRenderPass(commandBuffer);
 }
 
-void vkFramework::render::ImGuiRenderer::updateBuffers(
+void vkFramework::render::ImGuiLayer::updateBuffers(
     VulkanRenderDevice& vkDev, uint32_t currentFrame,
     const ImDrawData* imguiDrawData) {
   mDrawData = imguiDrawData;
@@ -259,7 +260,7 @@ void vkFramework::render::ImGuiRenderer::updateBuffers(
   vkUnmapMemory(vkDev.device, mStorageBufferMemory[currentFrame]);
 }
 
-bool vkFramework::render::ImGuiRenderer::createDescriptorSet(
+bool vkFramework::render::ImGuiLayer::createDescriptorSet(
     VulkanRenderDevice& vkDev) {
   const std::array<VkDescriptorSetLayoutBinding, 4> bindings = {
       descriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -331,7 +332,7 @@ bool vkFramework::render::ImGuiRenderer::createDescriptorSet(
   return true;
 }
 
-bool vkFramework::render::ImGuiRenderer::createMultiDescriptorSet(
+bool vkFramework::render::ImGuiLayer::createMultiDescriptorSet(
     VulkanRenderDevice& vkDev) {
   const std::array<VkDescriptorSetLayoutBinding, 4> bindings = {
       descriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,

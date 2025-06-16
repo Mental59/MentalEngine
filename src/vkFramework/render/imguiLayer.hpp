@@ -7,12 +7,12 @@
 class ImDrawData;
 
 namespace vkFramework::render {
-class ImGuiRenderer : public BaseRenderLayer {
+class ImGuiLayer : public BaseRenderLayer {
 public:
-  explicit ImGuiRenderer(VulkanRenderDevice& vkDev);
-  explicit ImGuiRenderer(VulkanRenderDevice& vkDev,
-                         const std::vector<VulkanTexture>& textures);
-  virtual ~ImGuiRenderer();
+  explicit ImGuiLayer(VulkanRenderDevice& vkDev);
+  explicit ImGuiLayer(VulkanRenderDevice& vkDev,
+                      const std::vector<VulkanTexture>& textures);
+  virtual ~ImGuiLayer();
 
   virtual void fillCommandBuffer(VkCommandBuffer commandBuffer,
                                  uint32_t currentFrame,
