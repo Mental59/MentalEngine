@@ -26,6 +26,11 @@ struct PerVertex
 
 layout (location=0) out PerVertex vtx;
 
+out gl_PerVertex
+{
+	vec4 gl_Position;
+};
+
 void main()
 {
 	mat4 model = in_ModelMatrices[gl_BaseInstance];

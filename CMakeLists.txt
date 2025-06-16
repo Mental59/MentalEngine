@@ -64,5 +64,5 @@ set_property(TARGET glm PROPERTY FOLDER "GLM")
 set_property(TARGET imgui PROPERTY FOLDER "ImGui")
 
 target_link_libraries(MentalEngine PRIVATE glm glfw assimp volk glslang SPIRV imgui)
-target_compile_definitions(MentalEngine PRIVATE VK_NO_PROTOTYPES GLFW_INCLUDE_VULKAN STB_IMAGE_IMPLEMENTATION NOMINMAX)
+target_compile_definitions(MentalEngine PRIVATE VK_NO_PROTOTYPES GLFW_INCLUDE_VULKAN NOMINMAX)
 target_include_directories(${PROJECT_NAME} PRIVATE deps/libs/stb)

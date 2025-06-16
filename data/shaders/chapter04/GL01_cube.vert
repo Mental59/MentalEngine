@@ -31,6 +31,11 @@ const int indices[36] = int[36](
 	3, 2, 6, 6, 7, 3
 );
 
+out gl_PerVertex
+{
+	vec4 gl_Position;
+};
+
 void main()
 {
 	mat4 MVP = proj * view * in_ModelMatrices[gl_BaseInstance];
