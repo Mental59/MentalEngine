@@ -41,12 +41,12 @@ bool createFontTexture(ImGuiIO& io, const char* fontFile,
   return true;
 }
 
-void addImGuiItem(uint32_t width, uint32_t height,
-                  VkCommandBuffer commandBuffer, const ImDrawCmd* pCmd,
-                  ImVec2 clipOff, ImVec2 clipScale, int idxOffset,
-                  int vtxOffset,
-                  const std::vector<vkFramework::VulkanTexture>& textures,
-                  VkPipelineLayout pipelineLayout) {
+void drawImGuiItem(uint32_t width, uint32_t height,
+                   VkCommandBuffer commandBuffer, const ImDrawCmd* pCmd,
+                   ImVec2 clipOff, ImVec2 clipScale, int idxOffset,
+                   int vtxOffset,
+                   const std::vector<vkFramework::VulkanTexture>& textures,
+                   VkPipelineLayout pipelineLayout) {
   if (pCmd->UserCallback)
     return;
 
@@ -205,10 +205,10 @@ void vkFramework::render::ImGuiLayer::fillCommandBuffer(
     for (int j = 0; j < cmdList->CmdBuffer.Size; j++) {
       const ImDrawCmd* cmd = &cmdList->CmdBuffer[j];
 
-      addImGuiItem(mFramebufferExtent.width, mFramebufferExtent.height,
-                   commandBuffer, cmd, mDrawData->DisplayPos,
-                   mDrawData->FramebufferScale, idxOffset, vtxOffset,
-                   mExtTextures, mPipelineLayout);
+      drawImGuiItem(mFramebufferExtent.width, mFramebufferExtent.height,
+                    commandBuffer, cmd, mDrawData->DisplayPos,
+                    mDrawData->FramebufferScale, idxOffset, vtxOffset,
+                    mExtTextures, mPipelineLayout);
     }
 
     vtxOffset += cmdList->VtxBuffer.Size;
