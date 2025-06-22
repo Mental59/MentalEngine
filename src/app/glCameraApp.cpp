@@ -231,22 +231,33 @@ int GlCameraApp::run() {
   glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode,
                                 int action, int mods) {
     const bool pressed = action != GLFW_RELEASE;
+
     if (key == GLFW_KEY_ESCAPE && pressed)
       glfwSetWindowShouldClose(window, GLFW_TRUE);
+
     if (key == GLFW_KEY_W)
       positioner.mMovement.forward = pressed;
+
     if (key == GLFW_KEY_S)
       positioner.mMovement.backward = pressed;
+
     if (key == GLFW_KEY_A)
       positioner.mMovement.left = pressed;
+
     if (key == GLFW_KEY_D)
       positioner.mMovement.right = pressed;
+
     if (key == GLFW_KEY_E)
       positioner.mMovement.up = pressed;
+
     if (key == GLFW_KEY_Q)
       positioner.mMovement.down = pressed;
+
     if (mods & GLFW_MOD_SHIFT)
       positioner.mMovement.fastSpeed = pressed;
+    else
+      positioner.mMovement.fastSpeed = false;
+
     if (key == GLFW_KEY_SPACE)
       positioner.setUpVector(vec3(0.0f, 1.0f, 0.0f));
   });
