@@ -5,10 +5,15 @@ void camera::FirstPersonCameraPositioner::update(double deltaSeconds,
                                                  bool mousePressed) {
   if (mousePressed) {
     const glm::vec2 delta = mousePos - mMousePos;
-    const glm::quat deltaQuat = glm::quat(
-        glm::vec3(mMouseSpeed * delta.y, mMouseSpeed * delta.x, 0.0f));
-    mCameraOrientation = deltaQuat * mCameraOrientation;
-    mCameraOrientation = glm::normalize(mCameraOrientation);
+
+    float pitch = mMouseSpeed * delta.y;
+    float yaw = mMouseSpeed * delta.x;
+    float roll = 0.0f;
+
+    const glm::quat deltaQuat = glm::quat(glm::vec3(pitch, yaw, roll));
+
+    mCameraOrientation = glm::normalize(deltaQuat * mCameraOrientation);
+
     setUpVector(mUp);
   }
   mMousePos = mousePos;
