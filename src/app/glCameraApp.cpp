@@ -10,6 +10,7 @@
 #include "glFramework/glShaderProgram.hpp"
 #include "image/bitmap.hpp"
 #include "image/cubemapUtils.hpp"
+#include "utils/fpsCounter.hpp"
 
 #include <GLFW/glfw3.h>
 #include <assimp/cimport.h>
@@ -66,7 +67,7 @@ int GlCameraApp::run() {
 
   glfwMakeContextCurrent(window);
   gladLoadGL(glfwGetProcAddress);
-  glfwSwapInterval(1);
+  glfwSwapInterval(0);
 
   glFramework::initDebug();
 
@@ -264,8 +265,14 @@ int GlCameraApp::run() {
 
   double timeStamp = glfwGetTime();
   float deltaSeconds = 0.0f;
+  FpsCounter fpsCounter(0.5f);
 
   while (!glfwWindowShouldClose(window)) {
+    bool isFpsUpdated = fpsCounter.tick(deltaSeconds);
+    if (isFpsUpdated) {
+      printf("\rFPS: %.1f", fpsCounter.getFPS());
+    }
+
     positioner.update(deltaSeconds, mouseState.pos, mouseState.pressedLeft);
 
     const double newTimeStamp = glfwGetTime();
