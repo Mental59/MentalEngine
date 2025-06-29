@@ -7,7 +7,6 @@
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
 #include <imgui.h>
-#include <iostream>
 #include <volk.h>
 
 namespace {
@@ -43,11 +42,11 @@ void app::DemoVulkanApp::run() {
 
   uint32_t currentFrame = 0;
 
-  double timeStamp = glfwGetTime();
+  double timeStamp = mWindow.getTime();
   float deltaSeconds = 0.0f;
 
   while (!mWindow.shouldClose()) {
-    const double newTimeStamp = glfwGetTime();
+    const double newTimeStamp = mWindow.getTime();
     deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
     timeStamp = newTimeStamp;
 

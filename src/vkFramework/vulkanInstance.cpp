@@ -4,22 +4,20 @@
 #include "window/window.hpp"
 #include <cstdint>
 #include <cstring>
-#include <format>
-#include <stdexcept>
 #include <vector>
 
 namespace {
 void setupLayers(std::vector<const char*>* layers,
                  VkInstanceCreateInfo* instanceCreateInfo);
 void addValidationLayers(std::vector<const char*>* layers);
-void checkLayersSupport(const char** layers, uint32_t size);
+bool checkLayersSupport(const char** layers, uint32_t size);
 
 void setupExtensions(std::vector<const char*>* extensions,
                      VkInstanceCreateInfo* instanceCreateInfo);
 void addMainExtensions(std::vector<const char*>* extensions);
 void addDebugExtensions(std::vector<const char*>* extensions);
 void addPlatformSpecificExtensions(std::vector<const char*>* extensions);
-void checkExtensionsSupport(const char** extensions, uint32_t size);
+bool checkExtensionsSupport(const char** extensions, uint32_t size);
 } // namespace
 
 namespace vkFramework {
@@ -96,7 +94,7 @@ void setupLayers(std::vector<const char*>* layers,
   if (layers->size() == 0)
     return;
 
-  checkLayersSupport(layers->data(), layers->size());
+  CHECK_BOOL(checkLayersSupport(layers->data(), layers->size()));
 
   instanceCreateInfo->enabledLayerCount = static_cast<uint32_t>(layers->size());
   instanceCreateInfo->ppEnabledLayerNames = layers->data();
@@ -106,7 +104,7 @@ void addValidationLayers(std::vector<const char*>* layers) {
   layers->push_back("VK_LAYER_KHRONOS_validation");
 }
 
-void checkLayersSupport(const char** layers, uint32_t size) {
+bool checkLayersSupport(const char** layers, uint32_t size) {
   uint32_t layerCount;
   vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 
@@ -124,10 +122,11 @@ void checkLayersSupport(const char** layers, uint32_t size) {
     }
 
     if (!layerFound) {
-      throw std::runtime_error(
-          std::format("Layer {} is not supported", layers[i]));
+      return false;
     }
   }
+
+  return true;
 }
 
 void setupExtensions(std::vector<const char*>* extensions,
@@ -140,7 +139,7 @@ void setupExtensions(std::vector<const char*>* extensions,
 
   addPlatformSpecificExtensions(extensions);
 
-  checkExtensionsSupport(extensions->data(), extensions->size());
+  CHECK_BOOL(checkExtensionsSupport(extensions->data(), extensions->size()));
 
   instanceCreateInfo->enabledExtensionCount =
       static_cast<uint32_t>(extensions->size());
@@ -166,7 +165,7 @@ void addPlatformSpecificExtensions(std::vector<const char*>* extensions) {
 #endif
 }
 
-void checkExtensionsSupport(const char** extensions, uint32_t size) {
+bool checkExtensionsSupport(const char** extensions, uint32_t size) {
   uint32_t supportedExtensionCount = 0;
   vkEnumerateInstanceExtensionProperties(nullptr, &supportedExtensionCount,
                                          nullptr);
@@ -188,9 +187,10 @@ void checkExtensionsSupport(const char** extensions, uint32_t size) {
     }
 
     if (!extensionFound) {
-      throw std::runtime_error(
-          std::format("Extension {} is not supported", extensions[i]));
+      return false;
     }
   }
+
+  return true;
 }
 } // namespace

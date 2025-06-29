@@ -1,5 +1,4 @@
 #include "finishLayer.hpp"
-#include "vkFramework/vulkanFramebuffer.hpp"
 #include "vkFramework/vulkanPipeline.hpp"
 #include "vkFramework/vulkanUtils.hpp"
 #include <volk.h>
