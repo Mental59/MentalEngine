@@ -2,7 +2,7 @@
 #include "app/baseApp.hpp"
 
 window::Window::Window(int width, int height, const char* title,
-                       bool fullScreen, BaseApp* pApp) {
+                       bool fullScreen, app::BaseApp* pApp) {
   glfwInit();
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -25,8 +25,15 @@ window::Window::Window(int width, int height, const char* title,
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
       glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
+
     if (key == GLFW_KEY_F && action == GLFW_RELEASE) {
       toggleFullscreen(window);
+    }
+
+    if (app::BaseApp* app =
+            reinterpret_cast<app::BaseApp*>(glfwGetWindowUserPointer(window))) {
+      const bool pressed = action != GLFW_RELEASE;
+      app->onKeyPressed(key, pressed);
     }
   });
 
@@ -35,6 +42,36 @@ window::Window::Window(int width, int height, const char* title,
     if (app::BaseApp* app =
             reinterpret_cast<app::BaseApp*>(glfwGetWindowUserPointer(window))) {
       app->setFramebufferResized(true);
+    }
+  });
+
+  glfwSetMouseButtonCallback(mWindow, [](GLFWwindow* window, int button,
+                                         int action, int mods) {
+    if (app::BaseApp* app =
+            reinterpret_cast<app::BaseApp*>(glfwGetWindowUserPointer(window))) {
+
+      if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        app->onMousePressedLeft(action == GLFW_PRESS);
+      }
+
+      if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        app->onMousePressedRight(action == GLFW_PRESS);
+      }
+
+      if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
+        app->onMousePressedMiddle(action == GLFW_PRESS);
+      }
+    }
+  });
+
+  glfwSetCursorPosCallback(mWindow, [](GLFWwindow* window, double xpos,
+                                       double ypos) {
+    if (app::BaseApp* app =
+            reinterpret_cast<app::BaseApp*>(glfwGetWindowUserPointer(window))) {
+      int width, height;
+      glfwGetFramebufferSize(window, &width, &height);
+      app->onMousePosUpdate(static_cast<float>(xpos), static_cast<float>(ypos),
+                            width, height);
     }
   });
 }
@@ -46,6 +83,8 @@ window::Window::~Window() {
 
 void window::Window::pollEvents() { glfwPollEvents(); }
 void window::Window::waitEvents() { glfwWaitEvents(); }
+
+double window::Window::getTime() const { return glfwGetTime(); }
 
 bool window::Window::shouldClose() { return glfwWindowShouldClose(mWindow); }
 

@@ -11,8 +11,8 @@ VkResult allocateCommandBuffers(VkDevice device, VkCommandPool commandPool,
                                 uint32_t commandBufferCount,
                                 VkCommandBuffer* commandBuffers);
 
-VkCommandBuffer beginSingleTimeCommands(VulkanRenderDevice& vkDev);
+VkCommandBuffer beginSingleTimeCommands(const VulkanRenderDevice& vkDev);
 
-void endSingleTimeCommands(VulkanRenderDevice& vkDev,
+void endSingleTimeCommands(const VulkanRenderDevice& vkDev,
                            VkCommandBuffer commandBuffer);
 } // namespace vkFramework

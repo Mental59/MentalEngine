@@ -1,8 +1,6 @@
-// #include "app/demoVulkanApp.hpp"
-#include "app/glCameraApp.hpp"
+#include "app/demoVulkanApp.hpp"
 
 int main() {
-  // app::DemoVulkanApp app;
-  // app.run();
-  GlCameraApp::run();
+  app::DemoVulkanApp app;
+  app.run();
 }

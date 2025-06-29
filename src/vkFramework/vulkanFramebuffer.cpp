@@ -3,7 +3,7 @@
 #include <array>
 
 bool vkFramework::createColorAndDepthFramebuffers(
-    VulkanRenderDevice& vkDev, VkRenderPass renderPass,
+    const VulkanRenderDevice& vkDev, VkRenderPass renderPass,
     VkImageView depthImageView,
     std::vector<VkFramebuffer>& swapchainFramebuffers) {
 

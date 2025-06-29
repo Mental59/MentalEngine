@@ -7,7 +7,10 @@ namespace vkFramework::render {
 
 class ClearLayer : public BaseRenderLayer {
 public:
-  explicit ClearLayer(VulkanRenderDevice& vkDev, VulkanImage depthTexture);
+  explicit ClearLayer() = default;
+  void init(const VulkanRenderDevice* vkDev, VulkanImage* depthTexture);
+
+  virtual bool createFramebuffers() override;
 
   virtual void fillCommandBuffer(VkCommandBuffer commandBuffer,
                                  uint32_t currentFrame,

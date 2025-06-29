@@ -50,11 +50,9 @@ bool vkFramework::createPipelineLayoutWithConstants(
                                  pipelineLayout) == VK_SUCCESS);
 }
 
-bool vkFramework::createColorAndDepthRenderPass(VulkanRenderDevice& device,
-                                                bool useDepth,
-                                                VkRenderPass* renderPass,
-                                                const RenderPassCreateInfo& ci,
-                                                VkFormat colorFormat) {
+bool vkFramework::createColorAndDepthRenderPass(
+    const VulkanRenderDevice& device, bool useDepth, VkRenderPass* renderPass,
+    const RenderPassCreateInfo& ci, VkFormat colorFormat) {
   const bool offscreenInternal = ci.flags & RENDER_PASS_BIT_OFFSCREEN_INTERNAL;
   const bool offscreen = ci.flags & RENDER_PASS_BIT_OFFSCREEN;
   const bool first = ci.flags & RENDER_PASS_BIT_FIRST;
@@ -184,7 +182,7 @@ bool vkFramework::createColorAndDepthRenderPass(VulkanRenderDevice& device,
 }
 
 bool vkFramework::createGraphicsPipeline(
-    VulkanRenderDevice& vkDev, VkRenderPass renderPass,
+    const VulkanRenderDevice& vkDev, VkRenderPass renderPass,
     VkPipelineLayout pipelineLayout,
     const std::vector<const char*>& shaderFiles, VkPipeline* pipeline,
     VkPrimitiveTopology topology, bool useDepth, bool useBlending,

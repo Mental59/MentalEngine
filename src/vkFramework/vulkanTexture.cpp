@@ -5,7 +5,7 @@
 #include <stb_image.h>
 #include <volk.h>
 
-bool vkFramework::updateTextureImage(VulkanRenderDevice& vkDev,
+bool vkFramework::updateTextureImage(const VulkanRenderDevice& vkDev,
                                      VkImage& textureImage,
                                      VkDeviceMemory& textureImageMemory,
                                      uint32_t texWidth, uint32_t texHeight,
@@ -44,7 +44,7 @@ bool vkFramework::updateTextureImage(VulkanRenderDevice& vkDev,
   return true;
 }
 
-void vkFramework::uploadBufferData(VulkanRenderDevice& vkDev,
+void vkFramework::uploadBufferData(const VulkanRenderDevice& vkDev,
                                    const VkDeviceMemory& bufferMemory,
                                    VkDeviceSize deviceOffset, const void* data,
                                    const size_t dataSize) {
@@ -56,7 +56,7 @@ void vkFramework::uploadBufferData(VulkanRenderDevice& vkDev,
 }
 
 bool vkFramework::createTextureImageFromData(
-    VulkanRenderDevice& vkDev, VkImage& textureImage,
+    const VulkanRenderDevice& vkDev, VkImage& textureImage,
     VkDeviceMemory& textureImageMemory, void* imageData, uint32_t texWidth,
     uint32_t texHeight, VkFormat texFormat, uint32_t layerCount,
     VkImageCreateFlags flags) {
@@ -72,10 +72,13 @@ bool vkFramework::createTextureImageFromData(
                             texHeight, texFormat, layerCount, imageData);
 }
 
-bool vkFramework::loadTextureFromFile(
-    VulkanRenderDevice& vkDev, const char* filename, VkImage& textureImage,
-    VkFormat imageFormat, VkDeviceMemory& textureImageMemory,
-    uint32_t* outTexWidth, uint32_t* outTexHeight) {
+bool vkFramework::loadTextureFromFile(const VulkanRenderDevice& vkDev,
+                                      const char* filename,
+                                      VkImage& textureImage,
+                                      VkFormat imageFormat,
+                                      VkDeviceMemory& textureImageMemory,
+                                      uint32_t* outTexWidth,
+                                      uint32_t* outTexHeight) {
   int texWidth, texHeight, texChannels;
   stbi_uc* pixels =
       stbi_load(filename, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
@@ -98,7 +101,7 @@ bool vkFramework::loadTextureFromFile(
   return result;
 }
 
-bool vkFramework::createVulkanImage(VulkanRenderDevice& vkDev,
+bool vkFramework::createVulkanImage(const VulkanRenderDevice& vkDev,
                                     const char* filename, VulkanImage& image) {
   VkFormat imageFormat = VK_FORMAT_R8G8B8A8_UNORM;
 
@@ -118,7 +121,7 @@ bool vkFramework::createVulkanImage(VulkanRenderDevice& vkDev,
       vkFramework::createTextureSampler(vkDev.device, &image.sampler);
 
   if (!isSamplerCreated) {
-    destroyVulkanImage(vkDev.device, image);
+    destroyVulkanImage(vkDev.device, &image);
     return false;
   }
 

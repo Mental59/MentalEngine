@@ -265,7 +265,7 @@ int GlCameraApp::run() {
 
   double timeStamp = glfwGetTime();
   float deltaSeconds = 0.0f;
-  FpsCounter fpsCounter(0.5f);
+  FpsCounter fpsCounter(0.2f);
 
   while (!glfwWindowShouldClose(window)) {
     bool isFpsUpdated = fpsCounter.tick(deltaSeconds);

@@ -2,15 +2,16 @@
 #include "vkFramework/includes.hpp"
 #include <array>
 
-vkFramework::render::VulkanCanvas::VulkanCanvas(VulkanRenderDevice& vkDev,
-                                                VulkanImage depth)
-    : BaseRenderLayer(vkDev, depth) {
+void vkFramework::render::CanvasLayer::init(const VulkanRenderDevice* vkDev,
+                                            VulkanImage* depth) {
+  CHECK_BOOL(depth != nullptr);
+  BaseRenderLayer::init(vkDev, depth);
   mLines.reserve(mMaxLinesCount / 8);
-  mStorageBuffers.resize(vkDev.maxFramesInFlight);
-  mStorageBuffersMemory.resize(vkDev.maxFramesInFlight);
+  mStorageBuffers.resize(vkDev->maxFramesInFlight);
+  mStorageBuffersMemory.resize(vkDev->maxFramesInFlight);
 
-  for (uint32_t i = 0; i < vkDev.maxFramesInFlight; i++) {
-    CHECK_BOOL(createBuffer(vkDev.device, vkDev.physicalDevice,
+  for (uint32_t i = 0; i < vkDev->maxFramesInFlight; i++) {
+    CHECK_BOOL(createBuffer(vkDev->device, vkDev->physicalDevice,
                             mMaxLinesDataSize,
                             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
                             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
@@ -19,40 +20,41 @@ vkFramework::render::VulkanCanvas::VulkanCanvas(VulkanRenderDevice& vkDev,
   }
 
   CHECK_BOOL(
-      createColorAndDepthRenderPass(vkDev, (depth.image != VK_NULL_HANDLE),
+      createColorAndDepthRenderPass(*vkDev, (depth->image != VK_NULL_HANDLE),
                                     &mRenderPass, RenderPassCreateInfo{}));
 
-  CHECK_BOOL(createUniformBuffers(vkDev, sizeof(UniformBuffer)));
+  CHECK_BOOL(createUniformBuffers(sizeof(UniformBuffer)));
 
-  CHECK_BOOL(createColorAndDepthFramebuffers(
-      vkDev, mRenderPass, depth.imageView, mSwapchainFramebuffers));
+  CHECK_BOOL(createFramebuffers())
 
-  CHECK_BOOL(createDescriptorPool(vkDev, 1, 1, 0, &mDescriptorPool));
+  CHECK_BOOL(createDescriptorPool(*vkDev, 1, 1, 0, &mDescriptorPool));
 
-  CHECK_BOOL(createDescriptorSet(vkDev));
+  CHECK_BOOL(createDescriptorSet());
 
-  CHECK_BOOL(createPipelineLayout(vkDev.device, mDescriptorSetLayout,
+  CHECK_BOOL(createPipelineLayout(vkDev->device, mDescriptorSetLayout,
                                   &mPipelineLayout));
 
-  CHECK_BOOL(createGraphicsPipeline(vkDev, mRenderPass, mPipelineLayout,
+  CHECK_BOOL(createGraphicsPipeline(*vkDev, mRenderPass, mPipelineLayout,
                                     {"data/shaders/chapter04/Lines.vert",
                                      "data/shaders/chapter04/Lines.frag"},
                                     &mGraphicsPipeline,
                                     VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-                                    (depth.image != VK_NULL_HANDLE), true));
+                                    (depth->image != VK_NULL_HANDLE), true));
 }
 
-vkFramework::render::VulkanCanvas::~VulkanCanvas() {
+void vkFramework::render::CanvasLayer::destroy() {
+  BaseRenderLayer::destroy();
+
   for (size_t i = 0; i < mStorageBuffers.size(); i++) {
-    vkDestroyBuffer(mDevice, mStorageBuffers[i], nullptr);
+    vkDestroyBuffer(mRenderDevice->device, mStorageBuffers[i], nullptr);
   }
 
   for (size_t i = 0; i < mStorageBuffersMemory.size(); i++) {
-    vkFreeMemory(mDevice, mStorageBuffersMemory[i], nullptr);
+    vkFreeMemory(mRenderDevice->device, mStorageBuffersMemory[i], nullptr);
   }
 }
 
-void vkFramework::render::VulkanCanvas::fillCommandBuffer(
+void vkFramework::render::CanvasLayer::fillCommandBuffer(
     VkCommandBuffer commandBuffer, uint32_t currentFrame,
     uint32_t currentImage) {
   if (mLines.empty()) {
@@ -66,21 +68,25 @@ void vkFramework::render::VulkanCanvas::fillCommandBuffer(
   endRenderPass(commandBuffer);
 }
 
-void vkFramework::render::VulkanCanvas::clear() { mLines.clear(); }
+bool vkFramework::render::CanvasLayer::createFramebuffers() {
+  return BaseRenderLayer::createFramebuffers(mDepthTexture->imageView);
+}
 
-void vkFramework::render::VulkanCanvas::line(const glm::vec3& p1,
-                                             const glm::vec3& p2,
-                                             const glm::vec4& c) {
+void vkFramework::render::CanvasLayer::clear() { mLines.clear(); }
+
+void vkFramework::render::CanvasLayer::line(const glm::vec3& p1,
+                                            const glm::vec3& p2,
+                                            const glm::vec4& c) {
   mLines.push_back({.position = p1, .color = c});
   mLines.push_back({.position = p2, .color = c});
 }
 
-void vkFramework::render::VulkanCanvas::plane3d(const glm::vec3& orig,
-                                                const glm::vec3& v1,
-                                                const glm::vec3& v2, int n1,
-                                                int n2, float s1, float s2,
-                                                const glm::vec4& color,
-                                                const glm::vec4& outlineColor) {
+void vkFramework::render::CanvasLayer::plane3d(const glm::vec3& orig,
+                                               const glm::vec3& v1,
+                                               const glm::vec3& v2, int n1,
+                                               int n2, float s1, float s2,
+                                               const glm::vec4& color,
+                                               const glm::vec4& outlineColor) {
   line(orig - s1 / 2.0f * v1 - s2 / 2.0f * v2,
        orig - s1 / 2.0f * v1 + s2 / 2.0f * v2, outlineColor);
   line(orig + s1 / 2.0f * v1 - s2 / 2.0f * v2,
@@ -104,29 +110,26 @@ void vkFramework::render::VulkanCanvas::plane3d(const glm::vec3& orig,
   }
 }
 
-void vkFramework::render::VulkanCanvas::updateBuffer(VulkanRenderDevice& vkDev,
-                                                     size_t currentFrame) {
+void vkFramework::render::CanvasLayer::updateBuffer(size_t currentFrame) {
   if (mLines.empty()) {
     return;
   }
 
   const VkDeviceSize bufferSize = mLines.size() * sizeof(VertexData);
 
-  uploadBufferData(vkDev, mStorageBuffersMemory[currentFrame], 0, mLines.data(),
-                   bufferSize);
+  uploadBufferData(*mRenderDevice, mStorageBuffersMemory[currentFrame], 0,
+                   mLines.data(), bufferSize);
 }
 
-void vkFramework::render::VulkanCanvas::updateUniformBuffer(
-    VulkanRenderDevice& vkDev, const glm::mat4& modelViewProj, float time,
-    uint32_t currentFrame) {
+void vkFramework::render::CanvasLayer::updateUniformBuffer(
+    const glm::mat4& modelViewProj, float time, uint32_t currentFrame) {
   const UniformBuffer ubo = {.mvp = modelViewProj, .time = time};
 
-  uploadBufferData(vkDev, mUniformBuffersMemory[currentFrame], 0, &ubo,
+  uploadBufferData(*mRenderDevice, mUniformBuffersMemory[currentFrame], 0, &ubo,
                    sizeof(ubo));
 }
 
-bool vkFramework::render::VulkanCanvas::createDescriptorSet(
-    VulkanRenderDevice& vkDev) {
+bool vkFramework::render::CanvasLayer::createDescriptorSet() {
   const std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
       descriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                  VK_SHADER_STAGE_VERTEX_BIT),
@@ -140,22 +143,22 @@ bool vkFramework::render::VulkanCanvas::createDescriptorSet(
       .bindingCount = static_cast<uint32_t>(bindings.size()),
       .pBindings = bindings.data()};
 
-  VK_CHECK(vkCreateDescriptorSetLayout(vkDev.device, &layoutInfo, nullptr,
-                                       &mDescriptorSetLayout));
+  VK_CHECK(vkCreateDescriptorSetLayout(mRenderDevice->device, &layoutInfo,
+                                       nullptr, &mDescriptorSetLayout));
 
-  std::vector<VkDescriptorSetLayout> layouts(vkDev.maxFramesInFlight,
+  std::vector<VkDescriptorSetLayout> layouts(mRenderDevice->maxFramesInFlight,
                                              mDescriptorSetLayout);
 
   const VkDescriptorSetAllocateInfo allocInfo = {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
       .pNext = nullptr,
       .descriptorPool = mDescriptorPool,
-      .descriptorSetCount = vkDev.maxFramesInFlight,
+      .descriptorSetCount = mRenderDevice->maxFramesInFlight,
       .pSetLayouts = layouts.data()};
 
-  mDescriptorSets.resize(vkDev.maxFramesInFlight);
+  mDescriptorSets.resize(mRenderDevice->maxFramesInFlight);
 
-  VK_CHECK(vkAllocateDescriptorSets(vkDev.device, &allocInfo,
+  VK_CHECK(vkAllocateDescriptorSets(mRenderDevice->device, &allocInfo,
                                     mDescriptorSets.data()));
 
   for (size_t i = 0; i < mDescriptorSets.size(); i++) {
@@ -172,7 +175,7 @@ bool vkFramework::render::VulkanCanvas::createDescriptorSet(
         bufferWriteDescriptorSet(ds, &storageBufferInfo, 1,
                                  VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)};
 
-    vkUpdateDescriptorSets(vkDev.device,
+    vkUpdateDescriptorSets(mRenderDevice->device,
                            static_cast<uint32_t>(descriptorWrites.size()),
                            descriptorWrites.data(), 0, nullptr);
   }

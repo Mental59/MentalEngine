@@ -30,7 +30,7 @@ VkResult vkFramework::allocateCommandBuffers(VkDevice device,
 }
 
 VkCommandBuffer
-vkFramework::beginSingleTimeCommands(VulkanRenderDevice& vkDev) {
+vkFramework::beginSingleTimeCommands(const VulkanRenderDevice& vkDev) {
   const VkCommandBufferAllocateInfo allocInfo = {
       .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
       .pNext = nullptr,
@@ -52,7 +52,7 @@ vkFramework::beginSingleTimeCommands(VulkanRenderDevice& vkDev) {
   return commandBuffer;
 }
 
-void vkFramework::endSingleTimeCommands(VulkanRenderDevice& vkDev,
+void vkFramework::endSingleTimeCommands(const VulkanRenderDevice& vkDev,
                                         VkCommandBuffer commandBuffer) {
   vkEndCommandBuffer(commandBuffer);
 

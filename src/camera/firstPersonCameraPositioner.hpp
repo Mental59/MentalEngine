@@ -8,7 +8,7 @@ class FirstPersonCameraPositioner final : public ICameraPositioner {
 public:
   FirstPersonCameraPositioner() = default;
   FirstPersonCameraPositioner(const glm::vec3& pos, const glm::vec3& target,
-                              const glm::vec3& up)
+                              const glm::vec3& up, bool revertYAxis = false)
       : mCameraPosition(pos), mCameraOrientation(glm::lookAt(pos, target, up)),
         mUp(up) {}
 
@@ -44,7 +44,7 @@ public:
 public:
   float mMouseSpeed = 4.0f;
   float mAcceleration = 150.0f;
-  float mDamping = 0.2f;
+  float mDamping = 0.1f;
   float mMaxSpeed = 10.0f;
   float mFastCoef = 10.0f;
 

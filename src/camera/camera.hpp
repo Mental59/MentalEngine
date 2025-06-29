@@ -5,7 +5,9 @@ namespace camera {
 class ICameraPositioner {
 public:
   virtual ~ICameraPositioner() = default;
+
   virtual glm::mat4 getViewMatrix() const = 0;
+
   virtual glm::vec3 getPosition() const = 0;
 };
 

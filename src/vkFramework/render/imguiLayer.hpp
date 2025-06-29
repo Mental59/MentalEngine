@@ -9,23 +9,27 @@ class ImDrawData;
 namespace vkFramework::render {
 class ImGuiLayer : public BaseRenderLayer {
 public:
-  explicit ImGuiLayer(VulkanRenderDevice& vkDev);
-  explicit ImGuiLayer(VulkanRenderDevice& vkDev,
-                      const std::vector<VulkanTexture>& textures);
-  virtual ~ImGuiLayer();
+  explicit ImGuiLayer() = default;
+
+  void init(const VulkanRenderDevice* vkDev);
+  void init(const VulkanRenderDevice* vkDev,
+            const std::vector<VulkanTexture>& textures);
+
+  void virtual destroy() override;
 
   virtual void fillCommandBuffer(VkCommandBuffer commandBuffer,
                                  uint32_t currentFrame,
                                  uint32_t currentImage) override;
 
-  void updateBuffers(VulkanRenderDevice& vkDev, uint32_t currentFrame,
-                     const ImDrawData* imguiDrawData);
+  virtual bool createFramebuffers() override;
+
+  void updateBuffers(uint32_t currentFrame, const ImDrawData* imguiDrawData);
 
 private:
-  bool createDescriptorSet(VulkanRenderDevice& vkDev);
+  bool createDescriptorSet();
 
   // Descriptor set with multiple textures (for offscreen buffer display etc.)
-  bool createMultiDescriptorSet(VulkanRenderDevice& vkDev);
+  bool createMultiDescriptorSet();
 
   const ImDrawData* mDrawData = nullptr;
 

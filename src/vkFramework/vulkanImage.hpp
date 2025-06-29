@@ -28,13 +28,13 @@ bool createImage(VkDevice device, VkPhysicalDevice physicalDevice,
 
 bool createTextureSampler(VkDevice device, VkSampler* sampler);
 
-void copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer,
+void copyBufferToImage(const VulkanRenderDevice& vkDev, VkBuffer buffer,
                        VkImage image, uint32_t width, uint32_t height,
                        uint32_t layerCount);
 
-void destroyVulkanImage(VkDevice device, VulkanImage& image);
+void destroyVulkanImage(VkDevice device, VulkanImage* image);
 
-void transitionImageLayout(VulkanRenderDevice& vkDev, VkImage image,
+void transitionImageLayout(const VulkanRenderDevice& vkDev, VkImage image,
                            VkFormat format, VkImageLayout oldLayout,
                            VkImageLayout newLayout, uint32_t layerCount = 1,
                            uint32_t mipLevels = 1);
@@ -51,6 +51,6 @@ VkFormat findSupportedFormat(VkPhysicalDevice device,
 
 VkFormat findDepthFormat(VkPhysicalDevice device);
 
-bool createDepthResources(VulkanRenderDevice& vkDev, uint32_t width,
-                          uint32_t height, VulkanImage& depth);
+bool createDepthResources(const VulkanRenderDevice& vkDev, uint32_t width,
+                          uint32_t height, VulkanImage* depth);
 } // namespace vkFramework

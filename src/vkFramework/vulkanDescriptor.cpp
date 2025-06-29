@@ -1,6 +1,6 @@
 #include "vulkanDescriptor.hpp"
 
-bool vkFramework::createDescriptorPool(VulkanRenderDevice& vkDev,
+bool vkFramework::createDescriptorPool(const VulkanRenderDevice& vkDev,
                                        uint32_t uniformBufferCount,
                                        uint32_t storageBufferCount,
                                        uint32_t samplerCount,

@@ -3,97 +3,111 @@
 #include <array>
 #include <volk.h>
 
-vkFramework::render::ModelRenderLayer::ModelRenderLayer(
-    VulkanRenderDevice& vkDev, const char* modelFile, const char* textureFile,
-    uint32_t uniformDataSize)
-    : BaseRenderLayer(vkDev, VulkanImage{}) {
+void vkFramework::render::ModelRenderLayer::init(
+    const VulkanRenderDevice* vkDev, const char* modelFile,
+    const char* textureFile, uint32_t uniformDataSize,
+    VulkanImage* depthTexture) {
 
-  CHECK_BOOL(createTexturedVertexBuffer(vkDev, modelFile, &mStorageBuffer,
+  CHECK_BOOL(depthTexture != nullptr);
+  BaseRenderLayer::init(vkDev, depthTexture);
+
+  CHECK_BOOL(createTexturedVertexBuffer(*vkDev, modelFile, &mStorageBuffer,
                                         &mStorageBufferMemory,
                                         &mVertexBufferSize, &mIndexBufferSize));
 
-  CHECK_BOOL(createVulkanImage(vkDev, textureFile, mTexture));
+  CHECK_BOOL(createVulkanImage(*vkDev, textureFile, mTexture));
 
-  CHECK_BOOL(createDepthResources(vkDev, vkDev.swapchainExtent.width,
-                                  vkDev.swapchainExtent.height, mDepthTexture));
+  mIsExternalDepth = mDepthTexture->image != VK_NULL_HANDLE;
+  if (!mDepthTexture->image) {
+    CHECK_BOOL(createDepthResources(*vkDev, vkDev->swapchainExtent.width,
+                                    vkDev->swapchainExtent.height,
+                                    mDepthTexture));
+  }
 
-  CHECK_BOOL(createColorAndDepthRenderPass(vkDev, true, &mRenderPass,
+  CHECK_BOOL(createColorAndDepthRenderPass(*vkDev, true, &mRenderPass,
                                            RenderPassCreateInfo{}));
 
-  CHECK_BOOL(createUniformBuffers(vkDev, uniformDataSize));
+  CHECK_BOOL(createUniformBuffers(uniformDataSize));
 
-  CHECK_BOOL(createColorAndDepthFramebuffers(
-      vkDev, mRenderPass, mDepthTexture.imageView, mSwapchainFramebuffers));
+  CHECK_BOOL(createFramebuffers());
 
-  CHECK_BOOL(createDescriptorPool(vkDev, 1, 2, 1, &mDescriptorPool));
+  CHECK_BOOL(createDescriptorPool(*vkDev, 1, 2, 1, &mDescriptorPool));
 
-  CHECK_BOOL(createDescriptorSet(vkDev, uniformDataSize));
+  CHECK_BOOL(createDescriptorSet(uniformDataSize));
 
-  CHECK_BOOL(createPipelineLayout(vkDev.device, mDescriptorSetLayout,
+  CHECK_BOOL(createPipelineLayout(vkDev->device, mDescriptorSetLayout,
                                   &mPipelineLayout));
 
-  CHECK_BOOL(createGraphicsPipeline(vkDev, mRenderPass, mPipelineLayout,
+  CHECK_BOOL(createGraphicsPipeline(*vkDev, mRenderPass, mPipelineLayout,
                                     {"data/shaders/chapter03/VK02.vert",
                                      "data/shaders/chapter03/VK02.frag",
                                      "data/shaders/chapter03/VK02.geom"},
                                     &mGraphicsPipeline));
 }
 
-vkFramework::render::ModelRenderLayer::ModelRenderLayer(
-    VulkanRenderDevice& vkDev, bool useDepth, VkBuffer storageBuffer,
+void vkFramework::render::ModelRenderLayer::init(
+    const VulkanRenderDevice* vkDev, bool useDepth, VkBuffer storageBuffer,
     VkDeviceMemory storageBufferMemory, uint32_t vertexBufferSize,
     uint32_t indexBufferSize, VulkanImage texture,
     const std::vector<const char*>& shaderFiles, uint32_t uniformDataSize,
-    bool useGeneralTextureLayout, VulkanImage externalDepth,
-    bool deleteMeshData)
-    : mUseGeneralTextureLayout(useGeneralTextureLayout),
-      mVertexBufferSize(vertexBufferSize), mIndexBufferSize(indexBufferSize),
-      mStorageBuffer(storageBuffer), mStorageBufferMemory(storageBufferMemory),
-      mTexture(texture), mDeleteMeshData(deleteMeshData),
-      BaseRenderLayer(vkDev, VulkanImage{}) {
+    bool useGeneralTextureLayout, VulkanImage* externalDepth,
+    bool deleteMeshData) {
+
+  mUseGeneralTextureLayout = useGeneralTextureLayout;
+  mVertexBufferSize = vertexBufferSize;
+  mIndexBufferSize = indexBufferSize;
+  mStorageBuffer = storageBuffer;
+  mStorageBufferMemory = storageBufferMemory;
+  mTexture = texture;
+  mDeleteMeshData = deleteMeshData;
+
+  BaseRenderLayer::init(vkDev, nullptr);
+
   if (useDepth) {
-    mIsExternalDepth = (externalDepth.image != VK_NULL_HANDLE);
+    mIsExternalDepth = (externalDepth->image != VK_NULL_HANDLE);
 
     if (mIsExternalDepth) {
       mDepthTexture = externalDepth;
     } else {
-      CHECK_BOOL(createDepthResources(vkDev, vkDev.swapchainExtent.width,
-                                      vkDev.swapchainExtent.height,
+      CHECK_BOOL(createDepthResources(*vkDev, vkDev->swapchainExtent.width,
+                                      vkDev->swapchainExtent.height,
                                       mDepthTexture));
     }
   }
 
-  CHECK_BOOL(createColorAndDepthRenderPass(vkDev, useDepth, &mRenderPass,
+  CHECK_BOOL(createColorAndDepthRenderPass(*vkDev, useDepth, &mRenderPass,
                                            RenderPassCreateInfo{}));
 
-  CHECK_BOOL(createUniformBuffers(vkDev, uniformDataSize));
+  CHECK_BOOL(createUniformBuffers(uniformDataSize));
 
   CHECK_BOOL(!createColorAndDepthFramebuffers(
-      vkDev, mRenderPass, mDepthTexture.imageView, mSwapchainFramebuffers));
+      *vkDev, mRenderPass, mDepthTexture->imageView, mSwapchainFramebuffers));
 
-  CHECK_BOOL(createDescriptorPool(vkDev, 1, 2, 1, &mDescriptorPool));
+  CHECK_BOOL(createDescriptorPool(*vkDev, 1, 2, 1, &mDescriptorPool));
 
-  CHECK_BOOL(createDescriptorSet(vkDev, uniformDataSize));
+  CHECK_BOOL(createDescriptorSet(uniformDataSize));
 
-  CHECK_BOOL(createPipelineLayout(vkDev.device, mDescriptorSetLayout,
+  CHECK_BOOL(createPipelineLayout(vkDev->device, mDescriptorSetLayout,
                                   &mPipelineLayout));
 
-  CHECK_BOOL(createGraphicsPipeline(vkDev, mRenderPass, mPipelineLayout,
+  CHECK_BOOL(createGraphicsPipeline(*vkDev, mRenderPass, mPipelineLayout,
                                     shaderFiles, &mGraphicsPipeline));
 }
 
-vkFramework::render::ModelRenderLayer::~ModelRenderLayer() {
+void vkFramework::render::ModelRenderLayer::destroy() {
+  BaseRenderLayer::destroy();
+
   if (mDeleteMeshData) {
-    vkDestroyBuffer(mDevice, mStorageBuffer, nullptr);
-    vkFreeMemory(mDevice, mStorageBufferMemory, nullptr);
+    vkDestroyBuffer(mRenderDevice->device, mStorageBuffer, nullptr);
+    vkFreeMemory(mRenderDevice->device, mStorageBufferMemory, nullptr);
   }
 
   if (mTexture.sampler != VK_NULL_HANDLE) {
-    destroyVulkanImage(mDevice, mTexture);
+    destroyVulkanImage(mRenderDevice->device, &mTexture);
   }
 
   if (!mIsExternalDepth) {
-    destroyVulkanImage(mDevice, mDepthTexture);
+    destroyVulkanImage(mRenderDevice->device, mDepthTexture);
   }
 }
 
@@ -109,10 +123,13 @@ void vkFramework::render::ModelRenderLayer::fillCommandBuffer(
   endRenderPass(commandBuffer);
 }
 
+bool vkFramework::render::ModelRenderLayer::createFramebuffers() {
+  return BaseRenderLayer::createFramebuffers(mDepthTexture->imageView);
+}
+
 void vkFramework::render::ModelRenderLayer::updateUniformBuffer(
-    VulkanRenderDevice& vkDev, uint32_t currentFrame, const void* data,
-    const size_t dataSize) {
-  uploadBufferData(vkDev, mUniformBuffersMemory[currentFrame], 0, data,
+    uint32_t currentFrame, const void* data, const size_t dataSize) {
+  uploadBufferData(*mRenderDevice, mUniformBuffersMemory[currentFrame], 0, data,
                    dataSize);
 }
 
@@ -122,7 +139,7 @@ void vkFramework::render::ModelRenderLayer::freeTextureSampler() {
 }
 
 bool vkFramework::render::ModelRenderLayer::createDescriptorSet(
-    VulkanRenderDevice& vkDev, uint32_t uniformDataSize) {
+    uint32_t uniformDataSize) {
   const std::array<VkDescriptorSetLayoutBinding, 4> bindings = {
       descriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                  VK_SHADER_STAGE_VERTEX_BIT),
@@ -140,22 +157,22 @@ bool vkFramework::render::ModelRenderLayer::createDescriptorSet(
       .bindingCount = static_cast<uint32_t>(bindings.size()),
       .pBindings = bindings.data()};
 
-  VK_CHECK(vkCreateDescriptorSetLayout(vkDev.device, &layoutInfo, nullptr,
-                                       &mDescriptorSetLayout));
+  VK_CHECK(vkCreateDescriptorSetLayout(mRenderDevice->device, &layoutInfo,
+                                       nullptr, &mDescriptorSetLayout));
 
-  std::vector<VkDescriptorSetLayout> layouts(vkDev.maxFramesInFlight,
+  std::vector<VkDescriptorSetLayout> layouts(mRenderDevice->maxFramesInFlight,
                                              mDescriptorSetLayout);
 
   const VkDescriptorSetAllocateInfo allocInfo = {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
       .pNext = nullptr,
       .descriptorPool = mDescriptorPool,
-      .descriptorSetCount = vkDev.maxFramesInFlight,
+      .descriptorSetCount = mRenderDevice->maxFramesInFlight,
       .pSetLayouts = layouts.data()};
 
-  mDescriptorSets.resize(vkDev.maxFramesInFlight);
+  mDescriptorSets.resize(mRenderDevice->maxFramesInFlight);
 
-  VK_CHECK(vkAllocateDescriptorSets(vkDev.device, &allocInfo,
+  VK_CHECK(vkAllocateDescriptorSets(mRenderDevice->device, &allocInfo,
                                     mDescriptorSets.data()));
 
   for (size_t i = 0; i < mDescriptorSets.size(); i++) {
@@ -181,7 +198,7 @@ bool vkFramework::render::ModelRenderLayer::createDescriptorSet(
                                  VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
         imageWriteDescriptorSet(ds, &imageInfo, 3)};
 
-    vkUpdateDescriptorSets(vkDev.device,
+    vkUpdateDescriptorSets(mRenderDevice->device,
                            static_cast<uint32_t>(descriptorWrites.size()),
                            descriptorWrites.data(), 0, nullptr);
   }

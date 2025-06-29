@@ -10,17 +10,21 @@ namespace vkFramework::render {
 
 class BaseRenderLayer {
 public:
-  explicit BaseRenderLayer(const VulkanRenderDevice& vkDev,
-                           VulkanImage depthTexture)
-      : mDevice(vkDev.device), mFramebufferExtent(vkDev.swapchainExtent),
-        mDepthTexture(depthTexture) {}
+  explicit BaseRenderLayer() = default;
+  void init(const VulkanRenderDevice* vkDev, VulkanImage* depthTexture);
 
-  virtual ~BaseRenderLayer();
+  void virtual destroy();
+
   virtual void fillCommandBuffer(VkCommandBuffer commandBuffer,
                                  uint32_t currentFrame,
                                  uint32_t currentImage) = 0;
 
-  inline VulkanImage getDepthTexture() const { return mDepthTexture; }
+  inline const VulkanImage* getDepthTexture() const { return mDepthTexture; }
+
+  void destroyFramebuffers();
+
+  bool createFramebuffers(VkImageView depthImageView);
+  virtual bool createFramebuffers() = 0;
 
 protected:
   void beginRenderPass(VkCommandBuffer commandBuffer, uint32_t currentFrame,
@@ -35,13 +39,11 @@ protected:
 
   void endRenderPass(VkCommandBuffer commandBuffer);
 
-  bool createUniformBuffers(VulkanRenderDevice& vkDev, size_t uniformDataSize);
+  bool createUniformBuffers(size_t uniformDataSize);
 
-  VkDevice mDevice = VK_NULL_HANDLE;
+  const VulkanRenderDevice* mRenderDevice = nullptr;
 
-  VkExtent2D mFramebufferExtent{};
-
-  VulkanImage mDepthTexture{};
+  VulkanImage* mDepthTexture = nullptr;
 
   VkDescriptorSetLayout mDescriptorSetLayout = VK_NULL_HANDLE;
   VkDescriptorPool mDescriptorPool = VK_NULL_HANDLE;

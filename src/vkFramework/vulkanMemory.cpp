@@ -62,7 +62,7 @@ bool vkFramework::createBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
   return true;
 }
 
-bool vkFramework::createUniformBuffer(VulkanRenderDevice& vkDev,
+bool vkFramework::createUniformBuffer(const VulkanRenderDevice& vkDev,
                                       VkDeviceSize bufferSize, VkBuffer& buffer,
                                       VkDeviceMemory& bufferMemory) {
   return createBuffer(vkDev.device, vkDev.physicalDevice, bufferSize,
@@ -72,8 +72,9 @@ bool vkFramework::createUniformBuffer(VulkanRenderDevice& vkDev,
                       buffer, bufferMemory);
 }
 
-void vkFramework::copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer,
-                             VkBuffer dstBuffer, VkDeviceSize size) {
+void vkFramework::copyBuffer(const VulkanRenderDevice& vkDev,
+                             VkBuffer srcBuffer, VkBuffer dstBuffer,
+                             VkDeviceSize size) {
   VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 
   const VkBufferCopy copyRegion = {
@@ -85,9 +86,9 @@ void vkFramework::copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer,
 }
 
 bool vkFramework::createTexturedVertexBuffer(
-    VulkanRenderDevice& vkDev, const char* filename, VkBuffer* storageBuffer,
-    VkDeviceMemory* storageBufferMemory, size_t* vertexBufferSize,
-    size_t* indexBufferSize) {
+    const VulkanRenderDevice& vkDev, const char* filename,
+    VkBuffer* storageBuffer, VkDeviceMemory* storageBufferMemory,
+    size_t* vertexBufferSize, size_t* indexBufferSize) {
   const aiScene* scene = aiImportFile(filename, aiProcess_Triangulate);
 
   if (!scene || !scene->HasMeshes()) {
@@ -125,7 +126,7 @@ bool vkFramework::createTexturedVertexBuffer(
 }
 
 size_t vkFramework::allocateVertexBuffer(
-    VulkanRenderDevice& vkDev, VkBuffer* storageBuffer,
+    const VulkanRenderDevice& vkDev, VkBuffer* storageBuffer,
     VkDeviceMemory* storageBufferMemory, size_t vertexDataSize,
     const void* vertexData, size_t indexDataSize, const void* indexData) {
   VkDeviceSize bufferSize = vertexDataSize + indexDataSize;

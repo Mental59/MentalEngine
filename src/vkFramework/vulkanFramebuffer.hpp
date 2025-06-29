@@ -5,7 +5,7 @@
 
 namespace vkFramework {
 bool createColorAndDepthFramebuffers(
-    VulkanRenderDevice& vkDev, VkRenderPass renderPass,
+    const VulkanRenderDevice& vkDev, VkRenderPass renderPass,
     VkImageView depthImageView,
     std::vector<VkFramebuffer>& swapchainFramebuffers);
 } // namespace vkFramework

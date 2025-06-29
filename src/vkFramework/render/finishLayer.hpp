@@ -6,7 +6,10 @@ namespace vkFramework::render {
 
 class FinishLayer : public BaseRenderLayer {
 public:
-  FinishLayer(VulkanRenderDevice& vkDev, VulkanImage depthTexture);
+  explicit FinishLayer() = default;
+  void init(const VulkanRenderDevice* vkDev, VulkanImage* depthTexture);
+
+  virtual bool createFramebuffers() override;
 
   virtual void fillCommandBuffer(VkCommandBuffer commandBuffer,
                                  uint32_t currentFrame,

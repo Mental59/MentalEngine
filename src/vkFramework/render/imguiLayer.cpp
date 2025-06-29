@@ -10,7 +10,7 @@ constexpr uint32_t gImGuiIdxBufferSize = 512 * 1024 * sizeof(uint32_t);
 const char* gDefaultFont = "data/OpenSans-Light.ttf";
 
 bool createFontTexture(ImGuiIO& io, const char* fontFile,
-                       vkFramework::VulkanRenderDevice& vkDev,
+                       const vkFramework::VulkanRenderDevice* vkDev,
                        VkImage& textureImage,
                        VkDeviceMemory& textureImageMemory) {
   ImFontConfig cfg = ImFontConfig();
@@ -29,7 +29,7 @@ bool createFontTexture(ImGuiIO& io, const char* fontFile,
   io.Fonts->GetTexDataAsRGBA32(&pixels, &texWidth, &texHeight);
 
   if (!pixels || !createTextureImageFromData(
-                     vkDev, textureImage, textureImageMemory, pixels, texWidth,
+                     *vkDev, textureImage, textureImageMemory, pixels, texWidth,
                      texHeight, VK_FORMAT_R8G8B8A8_UNORM)) {
     return false;
   }
@@ -88,106 +88,109 @@ void drawImGuiItem(uint32_t width, uint32_t height,
 }
 } // namespace
 
-vkFramework::render::ImGuiLayer::ImGuiLayer(VulkanRenderDevice& vkDev)
-    : BaseRenderLayer(vkDev, VulkanImage{}) {
+void vkFramework::render::ImGuiLayer::init(const VulkanRenderDevice* vkDev) {
+  BaseRenderLayer::init(vkDev, nullptr);
   createFontTexture(ImGui::GetIO(), gDefaultFont, vkDev, mFont.image,
                     mFont.imageMemory);
 
-  createImageView(vkDev.device, mFont.image, VK_FORMAT_R8G8B8A8_UNORM,
+  createImageView(vkDev->device, mFont.image, VK_FORMAT_R8G8B8A8_UNORM,
                   VK_IMAGE_ASPECT_COLOR_BIT, &mFont.imageView);
-  createTextureSampler(vkDev.device, &mFont.sampler);
+  createTextureSampler(vkDev->device, &mFont.sampler);
 
   // Buffer allocation
-  mStorageBuffer.resize(vkDev.maxFramesInFlight);
-  mStorageBufferMemory.resize(vkDev.maxFramesInFlight);
+  mStorageBuffer.resize(vkDev->maxFramesInFlight);
+  mStorageBufferMemory.resize(vkDev->maxFramesInFlight);
 
   mBufferSize = gImGuiVtxBufferSize + gImGuiIdxBufferSize;
 
-  for (size_t i = 0; i < vkDev.maxFramesInFlight; i++) {
-    VK_CHECK(createBuffer(vkDev.device, vkDev.physicalDevice, mBufferSize,
-                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                          mStorageBuffer[i], mStorageBufferMemory[i]));
+  for (size_t i = 0; i < vkDev->maxFramesInFlight; i++) {
+    CHECK_BOOL(createBuffer(vkDev->device, vkDev->physicalDevice, mBufferSize,
+                            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                            mStorageBuffer[i], mStorageBufferMemory[i]));
   }
 
-  VK_CHECK(createColorAndDepthRenderPass(vkDev, false, &mRenderPass,
-                                         RenderPassCreateInfo{}));
+  CHECK_BOOL(createColorAndDepthRenderPass(*vkDev, false, &mRenderPass,
+                                           RenderPassCreateInfo{}));
 
-  VK_CHECK(createColorAndDepthFramebuffers(vkDev, mRenderPass, VK_NULL_HANDLE,
-                                           mSwapchainFramebuffers));
+  CHECK_BOOL(createColorAndDepthFramebuffers(
+      *vkDev, mRenderPass, VK_NULL_HANDLE, mSwapchainFramebuffers));
 
-  VK_CHECK(createUniformBuffers(vkDev, sizeof(glm::mat4)));
+  CHECK_BOOL(createUniformBuffers(sizeof(glm::mat4)));
 
-  VK_CHECK(createDescriptorPool(vkDev, 1, 2, 1, &mDescriptorPool));
+  CHECK_BOOL(createDescriptorPool(*vkDev, 1, 2, 1, &mDescriptorPool));
 
-  VK_CHECK(createDescriptorSet(vkDev));
+  CHECK_BOOL(createDescriptorSet());
 
-  VK_CHECK(createPipelineLayout(vkDev.device, mDescriptorSetLayout,
-                                &mPipelineLayout));
+  CHECK_BOOL(createPipelineLayout(vkDev->device, mDescriptorSetLayout,
+                                  &mPipelineLayout));
 
-  VK_CHECK(createGraphicsPipeline(vkDev, mRenderPass, mPipelineLayout,
-                                  {"data/shaders/chapter07/VK02_ImGui.vert",
-                                   "data/shaders/chapter07/VK02_ImGui.frag"},
-                                  &mGraphicsPipeline));
+  CHECK_BOOL(createGraphicsPipeline(*vkDev, mRenderPass, mPipelineLayout,
+                                    {"data/shaders/chapter04/imgui.vert",
+                                     "data/shaders/chapter04/imgui.frag"},
+                                    &mGraphicsPipeline));
 }
 
-vkFramework::render::ImGuiLayer::ImGuiLayer(
-    VulkanRenderDevice& vkDev, const std::vector<VulkanTexture>& textures)
-    : BaseRenderLayer(vkDev, VulkanImage{}), mExtTextures(textures) {
+void vkFramework::render::ImGuiLayer::init(
+    const VulkanRenderDevice* vkDev,
+    const std::vector<VulkanTexture>& textures) {
+  BaseRenderLayer::init(vkDev, nullptr);
+  mExtTextures = textures;
   createFontTexture(ImGui::GetIO(), gDefaultFont, vkDev, mFont.image,
                     mFont.imageMemory);
 
-  createImageView(vkDev.device, mFont.image, VK_FORMAT_R8G8B8A8_UNORM,
+  createImageView(vkDev->device, mFont.image, VK_FORMAT_R8G8B8A8_UNORM,
                   VK_IMAGE_ASPECT_COLOR_BIT, &mFont.imageView);
-  createTextureSampler(vkDev.device, &mFont.sampler);
+  createTextureSampler(vkDev->device, &mFont.sampler);
 
-  mStorageBuffer.resize(vkDev.maxFramesInFlight);
-  mStorageBufferMemory.resize(vkDev.maxFramesInFlight);
+  mStorageBuffer.resize(vkDev->maxFramesInFlight);
+  mStorageBufferMemory.resize(vkDev->maxFramesInFlight);
 
   mBufferSize = gImGuiVtxBufferSize + gImGuiIdxBufferSize;
 
-  for (size_t i = 0; i < vkDev.maxFramesInFlight; i++) {
-    VK_CHECK(createBuffer(vkDev.device, vkDev.physicalDevice, mBufferSize,
-                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                              VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                          mStorageBuffer[i], mStorageBufferMemory[i]));
+  for (size_t i = 0; i < vkDev->maxFramesInFlight; i++) {
+    CHECK_BOOL(createBuffer(vkDev->device, vkDev->physicalDevice, mBufferSize,
+                            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                            mStorageBuffer[i], mStorageBufferMemory[i]));
   }
 
-  VK_CHECK(createColorAndDepthRenderPass(vkDev, false, &mRenderPass,
-                                         RenderPassCreateInfo{}));
+  CHECK_BOOL(createColorAndDepthRenderPass(*vkDev, false, &mRenderPass,
+                                           RenderPassCreateInfo{}));
 
-  VK_CHECK(createColorAndDepthFramebuffers(vkDev, mRenderPass, VK_NULL_HANDLE,
-                                           mSwapchainFramebuffers));
+  CHECK_BOOL(createFramebuffers())
 
-  VK_CHECK(createUniformBuffers(vkDev, sizeof(glm::mat4)));
+  CHECK_BOOL(createUniformBuffers(sizeof(glm::mat4)));
 
-  VK_CHECK(
-      createDescriptorPool(vkDev, 1, 2, 1 + textures.size(), &mDescriptorPool));
+  CHECK_BOOL(createDescriptorPool(*vkDev, 1, 2, 1 + textures.size(),
+                                  &mDescriptorPool));
 
-  VK_CHECK(createMultiDescriptorSet(vkDev));
+  CHECK_BOOL(createMultiDescriptorSet());
 
-  VK_CHECK(createPipelineLayoutWithConstants(vkDev.device, mDescriptorSetLayout,
-                                             0, sizeof(uint32_t),
-                                             &mPipelineLayout));
+  CHECK_BOOL(
+      createPipelineLayoutWithConstants(vkDev->device, mDescriptorSetLayout, 0,
+                                        sizeof(uint32_t), &mPipelineLayout));
 
-  VK_CHECK(createGraphicsPipeline(vkDev, mRenderPass, mPipelineLayout,
-                                  {"data/shaders/chapter04/imgui.vert",
-                                   "data/shaders/chapter06/imgui_multi.frag"},
-                                  &mGraphicsPipeline));
+  CHECK_BOOL(createGraphicsPipeline(*vkDev, mRenderPass, mPipelineLayout,
+                                    {"data/shaders/chapter04/imgui.vert",
+                                     "data/shaders/chapter04/imgui.frag"},
+                                    &mGraphicsPipeline));
 }
 
-vkFramework::render::ImGuiLayer::~ImGuiLayer() {
+void vkFramework::render::ImGuiLayer::destroy() {
+  BaseRenderLayer::destroy();
+
   for (VkBuffer buffer : mStorageBuffer) {
-    vkDestroyBuffer(mDevice, buffer, nullptr);
+    vkDestroyBuffer(mRenderDevice->device, buffer, nullptr);
   }
 
   for (VkDeviceMemory memory : mStorageBufferMemory) {
-    vkFreeMemory(mDevice, memory, nullptr);
+    vkFreeMemory(mRenderDevice->device, memory, nullptr);
   }
 
-  destroyVulkanImage(mDevice, mFont);
+  destroyVulkanImage(mRenderDevice->device, &mFont);
 }
 
 void vkFramework::render::ImGuiLayer::fillCommandBuffer(
@@ -205,10 +208,10 @@ void vkFramework::render::ImGuiLayer::fillCommandBuffer(
     for (int j = 0; j < cmdList->CmdBuffer.Size; j++) {
       const ImDrawCmd* cmd = &cmdList->CmdBuffer[j];
 
-      drawImGuiItem(mFramebufferExtent.width, mFramebufferExtent.height,
-                    commandBuffer, cmd, mDrawData->DisplayPos,
-                    mDrawData->FramebufferScale, idxOffset, vtxOffset,
-                    mExtTextures, mPipelineLayout);
+      drawImGuiItem(mRenderDevice->swapchainExtent.width,
+                    mRenderDevice->swapchainExtent.height, commandBuffer, cmd,
+                    mDrawData->DisplayPos, mDrawData->FramebufferScale,
+                    idxOffset, vtxOffset, mExtTextures, mPipelineLayout);
     }
 
     vtxOffset += cmdList->VtxBuffer.Size;
@@ -218,9 +221,12 @@ void vkFramework::render::ImGuiLayer::fillCommandBuffer(
   endRenderPass(commandBuffer);
 }
 
+bool vkFramework::render::ImGuiLayer::createFramebuffers() {
+  return BaseRenderLayer::createFramebuffers(VK_NULL_HANDLE);
+}
+
 void vkFramework::render::ImGuiLayer::updateBuffers(
-    VulkanRenderDevice& vkDev, uint32_t currentFrame,
-    const ImDrawData* imguiDrawData) {
+    uint32_t currentFrame, const ImDrawData* imguiDrawData) {
   mDrawData = imguiDrawData;
 
   const float left = mDrawData->DisplayPos.x;
@@ -230,12 +236,12 @@ void vkFramework::render::ImGuiLayer::updateBuffers(
 
   const glm::mat4 inMtx = glm::ortho(left, right, bottom, top);
 
-  uploadBufferData(vkDev, mUniformBuffersMemory[currentFrame], 0,
+  uploadBufferData(*mRenderDevice, mUniformBuffersMemory[currentFrame], 0,
                    glm::value_ptr(inMtx), sizeof(glm::mat4));
 
   void* data = nullptr;
-  vkMapMemory(vkDev.device, mStorageBufferMemory[currentFrame], 0, mBufferSize,
-              0, &data);
+  vkMapMemory(mRenderDevice->device, mStorageBufferMemory[currentFrame], 0,
+              mBufferSize, 0, &data);
 
   ImDrawVert* vtx = (ImDrawVert*)data;
   for (int i = 0; i < mDrawData->CmdListsCount; i++) {
@@ -257,11 +263,10 @@ void vkFramework::render::ImGuiLayer::updateBuffers(
     }
   }
 
-  vkUnmapMemory(vkDev.device, mStorageBufferMemory[currentFrame]);
+  vkUnmapMemory(mRenderDevice->device, mStorageBufferMemory[currentFrame]);
 }
 
-bool vkFramework::render::ImGuiLayer::createDescriptorSet(
-    VulkanRenderDevice& vkDev) {
+bool vkFramework::render::ImGuiLayer::createDescriptorSet() {
   const std::array<VkDescriptorSetLayoutBinding, 4> bindings = {
       descriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                  VK_SHADER_STAGE_VERTEX_BIT),
@@ -279,22 +284,22 @@ bool vkFramework::render::ImGuiLayer::createDescriptorSet(
       .bindingCount = static_cast<uint32_t>(bindings.size()),
       .pBindings = bindings.data()};
 
-  VK_CHECK(vkCreateDescriptorSetLayout(vkDev.device, &layoutInfo, nullptr,
-                                       &mDescriptorSetLayout));
+  VK_CHECK(vkCreateDescriptorSetLayout(mRenderDevice->device, &layoutInfo,
+                                       nullptr, &mDescriptorSetLayout));
 
-  std::vector<VkDescriptorSetLayout> layouts(vkDev.maxFramesInFlight,
+  std::vector<VkDescriptorSetLayout> layouts(mRenderDevice->maxFramesInFlight,
                                              mDescriptorSetLayout);
 
   const VkDescriptorSetAllocateInfo allocInfo = {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
       .pNext = nullptr,
       .descriptorPool = mDescriptorPool,
-      .descriptorSetCount = vkDev.maxFramesInFlight,
+      .descriptorSetCount = mRenderDevice->maxFramesInFlight,
       .pSetLayouts = layouts.data()};
 
-  mDescriptorSets.resize(vkDev.maxFramesInFlight);
+  mDescriptorSets.resize(mRenderDevice->maxFramesInFlight);
 
-  VK_CHECK(vkAllocateDescriptorSets(vkDev.device, &allocInfo,
+  VK_CHECK(vkAllocateDescriptorSets(mRenderDevice->device, &allocInfo,
                                     mDescriptorSets.data()));
 
   for (size_t i = 0; i < mDescriptorSets.size(); i++) {
@@ -324,7 +329,7 @@ bool vkFramework::render::ImGuiLayer::createDescriptorSet(
                                  VK_DESCRIPTOR_TYPE_STORAGE_BUFFER),
         imageWriteDescriptorSet(ds, &imageInfo, 3)};
 
-    vkUpdateDescriptorSets(vkDev.device,
+    vkUpdateDescriptorSets(mRenderDevice->device,
                            static_cast<uint32_t>(descriptorWrites.size()),
                            descriptorWrites.data(), 0, nullptr);
   }
@@ -332,8 +337,7 @@ bool vkFramework::render::ImGuiLayer::createDescriptorSet(
   return true;
 }
 
-bool vkFramework::render::ImGuiLayer::createMultiDescriptorSet(
-    VulkanRenderDevice& vkDev) {
+bool vkFramework::render::ImGuiLayer::createMultiDescriptorSet() {
   const std::array<VkDescriptorSetLayoutBinding, 4> bindings = {
       descriptorSetLayoutBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                                  VK_SHADER_STAGE_VERTEX_BIT),
@@ -353,22 +357,22 @@ bool vkFramework::render::ImGuiLayer::createMultiDescriptorSet(
       .bindingCount = static_cast<uint32_t>(bindings.size()),
       .pBindings = bindings.data()};
 
-  VK_CHECK(vkCreateDescriptorSetLayout(vkDev.device, &layoutInfo, nullptr,
-                                       &mDescriptorSetLayout));
+  VK_CHECK(vkCreateDescriptorSetLayout(mRenderDevice->device, &layoutInfo,
+                                       nullptr, &mDescriptorSetLayout));
 
-  std::vector<VkDescriptorSetLayout> layouts(vkDev.maxFramesInFlight,
+  std::vector<VkDescriptorSetLayout> layouts(mRenderDevice->maxFramesInFlight,
                                              mDescriptorSetLayout);
 
   const VkDescriptorSetAllocateInfo allocInfo = {
       .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
       .pNext = nullptr,
       .descriptorPool = mDescriptorPool,
-      .descriptorSetCount = vkDev.maxFramesInFlight,
+      .descriptorSetCount = mRenderDevice->maxFramesInFlight,
       .pSetLayouts = layouts.data()};
 
-  mDescriptorSets.resize(vkDev.maxFramesInFlight);
+  mDescriptorSets.resize(mRenderDevice->maxFramesInFlight);
 
-  VK_CHECK(vkAllocateDescriptorSets(vkDev.device, &allocInfo,
+  VK_CHECK(vkAllocateDescriptorSets(mRenderDevice->device, &allocInfo,
                                     mDescriptorSets.data()));
 
   // use the font texture initialized in the constructor
@@ -415,7 +419,7 @@ bool vkFramework::render::ImGuiLayer::createMultiDescriptorSet(
             .pImageInfo = textureDescriptors.data()},
     };
 
-    vkUpdateDescriptorSets(vkDev.device,
+    vkUpdateDescriptorSets(mRenderDevice->device,
                            static_cast<uint32_t>(descriptorWrites.size()),
                            descriptorWrites.data(), 0, nullptr);
   }

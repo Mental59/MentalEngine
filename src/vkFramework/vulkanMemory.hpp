@@ -18,19 +18,21 @@ bool createBuffer(VkDevice device, VkPhysicalDevice physicalDevice,
                   VkMemoryPropertyFlags properties, VkBuffer& buffer,
                   VkDeviceMemory& bufferMemory);
 
-bool createUniformBuffer(VulkanRenderDevice& vkDev, VkDeviceSize bufferSize,
-                         VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+bool createUniformBuffer(const VulkanRenderDevice& vkDev,
+                         VkDeviceSize bufferSize, VkBuffer& buffer,
+                         VkDeviceMemory& bufferMemory);
 
-void copyBuffer(VulkanRenderDevice& vkDev, VkBuffer srcBuffer,
+void copyBuffer(const VulkanRenderDevice& vkDev, VkBuffer srcBuffer,
                 VkBuffer dstBuffer, VkDeviceSize size);
 
-bool createTexturedVertexBuffer(VulkanRenderDevice& vkDev, const char* filename,
-                                VkBuffer* storageBuffer,
+bool createTexturedVertexBuffer(const VulkanRenderDevice& vkDev,
+                                const char* filename, VkBuffer* storageBuffer,
                                 VkDeviceMemory* storageBufferMemory,
                                 size_t* vertexBufferSize,
                                 size_t* indexBufferSize);
 
-size_t allocateVertexBuffer(VulkanRenderDevice& vkDev, VkBuffer* storageBuffer,
+size_t allocateVertexBuffer(const VulkanRenderDevice& vkDev,
+                            VkBuffer* storageBuffer,
                             VkDeviceMemory* storageBufferMemory,
                             size_t vertexDataSize, const void* vertexData,
                             size_t indexDataSize, const void* indexData);

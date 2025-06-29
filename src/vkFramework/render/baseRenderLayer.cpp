@@ -1,29 +1,62 @@
 #include "baseRenderLayer.hpp"
+#include "vkFramework/vulkanFramebuffer.hpp"
 #include "vkFramework/vulkanMemory.hpp"
+#include "vkFramework/vulkanUtils.hpp"
 #include <volk.h>
 
-vkFramework::render::BaseRenderLayer::~BaseRenderLayer() {
+void vkFramework::render::BaseRenderLayer::init(const VulkanRenderDevice* vkDev,
+                                                VulkanImage* depthTexture) {
+  CHECK_BOOL(vkDev != nullptr);
+  mRenderDevice = vkDev;
+  mDepthTexture = depthTexture;
+}
+
+void vkFramework::render::BaseRenderLayer::destroy() {
   for (VkBuffer buf : mUniformBuffers)
-    vkDestroyBuffer(mDevice, buf, nullptr);
+    vkDestroyBuffer(mRenderDevice->device, buf, nullptr);
 
   for (VkDeviceMemory mem : mUniformBuffersMemory)
-    vkFreeMemory(mDevice, mem, nullptr);
+    vkFreeMemory(mRenderDevice->device, mem, nullptr);
 
-  vkDestroyDescriptorSetLayout(mDevice, mDescriptorSetLayout, nullptr);
-  vkDestroyDescriptorPool(mDevice, mDescriptorPool, nullptr);
+  if (mDescriptorSetLayout) {
+    vkDestroyDescriptorSetLayout(mRenderDevice->device, mDescriptorSetLayout,
+                                 nullptr);
+  }
 
-  for (VkFramebuffer framebuffer : mSwapchainFramebuffers)
-    vkDestroyFramebuffer(mDevice, framebuffer, nullptr);
+  if (mDescriptorPool) {
+    vkDestroyDescriptorPool(mRenderDevice->device, mDescriptorPool, nullptr);
+  }
 
-  vkDestroyRenderPass(mDevice, mRenderPass, nullptr);
-  vkDestroyPipelineLayout(mDevice, mPipelineLayout, nullptr);
-  vkDestroyPipeline(mDevice, mGraphicsPipeline, nullptr);
+  destroyFramebuffers();
+
+  if (mRenderPass) {
+    vkDestroyRenderPass(mRenderDevice->device, mRenderPass, nullptr);
+  }
+  if (mPipelineLayout) {
+    vkDestroyPipelineLayout(mRenderDevice->device, mPipelineLayout, nullptr);
+  }
+  if (mGraphicsPipeline) {
+    vkDestroyPipeline(mRenderDevice->device, mGraphicsPipeline, nullptr);
+  }
+}
+
+void vkFramework::render::BaseRenderLayer::destroyFramebuffers() {
+  for (VkFramebuffer framebuffer : mSwapchainFramebuffers) {
+    vkDestroyFramebuffer(mRenderDevice->device, framebuffer, nullptr);
+  }
+}
+
+bool vkFramework::render::BaseRenderLayer::createFramebuffers(
+    VkImageView depthImageView) {
+  return createColorAndDepthFramebuffers(
+      *mRenderDevice, mRenderPass, depthImageView, mSwapchainFramebuffers);
 }
 
 void vkFramework::render::BaseRenderLayer::beginRenderPass(
     VkCommandBuffer commandBuffer, uint32_t currentFrame,
     uint32_t currentImage) {
-  const VkRect2D screenRect = {.offset = {0, 0}, .extent = mFramebufferExtent};
+  const VkRect2D screenRect = {.offset = {0, 0},
+                               .extent = mRenderDevice->swapchainExtent};
 
   const VkRenderPassBeginInfo renderPassInfo = {
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
@@ -51,18 +84,19 @@ void vkFramework::render::BaseRenderLayer::beginRenderPassDynamic(
 
 void vkFramework::render::BaseRenderLayer::cmdSetViewport(
     VkCommandBuffer commandBuffer) {
-  VkViewport viewport{.x = 0.0f,
-                      .y = 0.0f,
-                      .width = static_cast<float>(mFramebufferExtent.width),
-                      .height = static_cast<float>(mFramebufferExtent.height),
-                      .minDepth = 0.0f,
-                      .maxDepth = 1.0f};
+  VkViewport viewport{
+      .x = 0.0f,
+      .y = 0.0f,
+      .width = static_cast<float>(mRenderDevice->swapchainExtent.width),
+      .height = static_cast<float>(mRenderDevice->swapchainExtent.height),
+      .minDepth = 0.0f,
+      .maxDepth = 1.0f};
   vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 }
 
 void vkFramework::render::BaseRenderLayer::cmdSetScissor(
     VkCommandBuffer commandBuffer) {
-  VkRect2D scissor{.offset = {0, 0}, .extent = mFramebufferExtent};
+  VkRect2D scissor{.offset = {0, 0}, .extent = mRenderDevice->swapchainExtent};
   vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 }
 
@@ -72,12 +106,12 @@ void vkFramework::render::BaseRenderLayer::endRenderPass(
 }
 
 bool vkFramework::render::BaseRenderLayer::createUniformBuffers(
-    VulkanRenderDevice& vkDev, size_t uniformDataSize) {
-  mUniformBuffers.resize(vkDev.maxFramesInFlight);
-  mUniformBuffersMemory.resize(vkDev.maxFramesInFlight);
+    size_t uniformDataSize) {
+  mUniformBuffers.resize(mRenderDevice->maxFramesInFlight);
+  mUniformBuffersMemory.resize(mRenderDevice->maxFramesInFlight);
 
   for (size_t i = 0; i < mUniformBuffers.size(); i++) {
-    if (!vkFramework::createUniformBuffer(vkDev, uniformDataSize,
+    if (!vkFramework::createUniformBuffer(*mRenderDevice, uniformDataSize,
                                           mUniformBuffers[i],
                                           mUniformBuffersMemory[i])) {
       return false;

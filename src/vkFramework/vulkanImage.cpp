@@ -98,9 +98,10 @@ bool vkFramework::createTextureSampler(VkDevice device, VkSampler* sampler) {
           VK_SUCCESS);
 }
 
-void vkFramework::copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer,
-                                    VkImage image, uint32_t width,
-                                    uint32_t height, uint32_t layerCount) {
+void vkFramework::copyBufferToImage(const VulkanRenderDevice& vkDev,
+                                    VkBuffer buffer, VkImage image,
+                                    uint32_t width, uint32_t height,
+                                    uint32_t layerCount) {
   VkCommandBuffer commandBuffer = beginSingleTimeCommands(vkDev);
 
   const VkBufferImageCopy region = {
@@ -121,14 +122,18 @@ void vkFramework::copyBufferToImage(VulkanRenderDevice& vkDev, VkBuffer buffer,
   endSingleTimeCommands(vkDev, commandBuffer);
 }
 
-void vkFramework::destroyVulkanImage(VkDevice device, VulkanImage& image) {
-  vkDestroySampler(device, image.sampler, nullptr);
-  vkDestroyImageView(device, image.imageView, nullptr);
-  vkDestroyImage(device, image.image, nullptr);
-  vkFreeMemory(device, image.imageMemory, nullptr);
+void vkFramework::destroyVulkanImage(VkDevice device, VulkanImage* image) {
+  if (image == nullptr) {
+    return;
+  }
+
+  vkDestroySampler(device, image->sampler, nullptr);
+  vkDestroyImageView(device, image->imageView, nullptr);
+  vkDestroyImage(device, image->image, nullptr);
+  vkFreeMemory(device, image->imageMemory, nullptr);
 }
 
-void vkFramework::transitionImageLayout(VulkanRenderDevice& vkDev,
+void vkFramework::transitionImageLayout(const VulkanRenderDevice& vkDev,
                                         VkImage image, VkFormat format,
                                         VkImageLayout oldLayout,
                                         VkImageLayout newLayout,
@@ -321,9 +326,9 @@ VkFormat vkFramework::findDepthFormat(VkPhysicalDevice device) {
       VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 }
 
-bool vkFramework::createDepthResources(VulkanRenderDevice& vkDev,
+bool vkFramework::createDepthResources(const VulkanRenderDevice& vkDev,
                                        uint32_t width, uint32_t height,
-                                       VulkanImage& depth) {
+                                       VulkanImage* depth) {
 
   VkFormat depthFormat = findDepthFormat(vkDev.physicalDevice);
   if (depthFormat == VK_FORMAT_UNDEFINED) {
@@ -333,19 +338,19 @@ bool vkFramework::createDepthResources(VulkanRenderDevice& vkDev,
   if (!createImage(vkDev.device, vkDev.physicalDevice, width, height,
                    depthFormat, VK_IMAGE_TILING_OPTIMAL,
                    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth.image,
-                   depth.imageMemory)) {
+                   VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, depth->image,
+                   depth->imageMemory)) {
     return false;
   }
 
-  if (createImageView(vkDev.device, depth.image, depthFormat,
+  if (createImageView(vkDev.device, depth->image, depthFormat,
                       VK_IMAGE_ASPECT_DEPTH_BIT,
-                      &depth.imageView) != VK_SUCCESS) {
+                      &depth->imageView) != VK_SUCCESS) {
     destroyVulkanImage(vkDev.device, depth);
     return false;
   }
 
-  transitionImageLayout(vkDev, depth.image, depthFormat,
+  transitionImageLayout(vkDev, depth->image, depthFormat,
                         VK_IMAGE_LAYOUT_UNDEFINED,
                         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 

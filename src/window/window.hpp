@@ -3,8 +3,11 @@
 #include <GLFW/glfw3.h>
 #include <volk.h>
 
-namespace window {
+namespace app {
 class BaseApp;
+}
+
+namespace window {
 
 class Window {
 public:
@@ -15,11 +18,13 @@ public:
   };
 
   Window(int width, int height, const char* title, bool fullScreen = false,
-         BaseApp* pApp = nullptr);
+         app::BaseApp* pApp = nullptr);
   ~Window();
 
   void pollEvents();
   void waitEvents();
+
+  double getTime() const;
 
   bool shouldClose();
   Size getSize() const;

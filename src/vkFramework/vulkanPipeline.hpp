@@ -27,12 +27,12 @@ bool createPipelineLayoutWithConstants(VkDevice device,
                                        VkPipelineLayout* pipelineLayout);
 
 bool createColorAndDepthRenderPass(
-    VulkanRenderDevice& device, bool useDepth, VkRenderPass* renderPass,
+    const VulkanRenderDevice& device, bool useDepth, VkRenderPass* renderPass,
     const RenderPassCreateInfo& ci,
     VkFormat colorFormat = VK_FORMAT_B8G8R8A8_UNORM);
 
 bool createGraphicsPipeline(
-    VulkanRenderDevice& vkDev, VkRenderPass renderPass,
+    const VulkanRenderDevice& vkDev, VkRenderPass renderPass,
     VkPipelineLayout pipelineLayout,
     const std::vector<const char*>& shaderFiles, VkPipeline* pipeline,
     VkPrimitiveTopology topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,

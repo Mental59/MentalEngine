@@ -3,28 +3,35 @@
 #include "vkFramework/vulkanPipeline.hpp"
 #include "vkFramework/vulkanUtils.hpp"
 
-vkFramework::render::ClearLayer::ClearLayer(VulkanRenderDevice& vkDev,
-                                            VulkanImage depthTexture)
-    : BaseRenderLayer(vkDev, depthTexture),
-      mShouldClearDepth(depthTexture.image != VK_NULL_HANDLE) {
+void vkFramework::render::ClearLayer::init(const VulkanRenderDevice* vkDev,
+                                           VulkanImage* depthTexture)
+
+{
+  CHECK_BOOL(depthTexture != nullptr);
+  BaseRenderLayer::init(vkDev, depthTexture);
+  mShouldClearDepth = depthTexture->image != VK_NULL_HANDLE;
   CHECK_BOOL(createColorAndDepthRenderPass(
-      vkDev, mShouldClearDepth, &mRenderPass,
+      *vkDev, mShouldClearDepth, &mRenderPass,
       RenderPassCreateInfo{.clearColor = true,
                            .clearDepth = true,
                            .flags = RENDER_PASS_BIT_FIRST}));
 
-  CHECK_BOOL(createColorAndDepthFramebuffers(
-      vkDev, mRenderPass, depthTexture.imageView, mSwapchainFramebuffers));
+  CHECK_BOOL(createFramebuffers());
+}
+
+bool vkFramework::render::ClearLayer::createFramebuffers() {
+  return BaseRenderLayer::createFramebuffers(mDepthTexture->imageView);
 }
 
 void vkFramework::render::ClearLayer::fillCommandBuffer(
     VkCommandBuffer commandBuffer, uint32_t currentFrame,
     uint32_t currentImage) {
   const VkClearValue clearValues[2] = {
-      VkClearValue{.color = {1.0f, 1.0f, 1.0f, 1.0f}},
+      VkClearValue{.color = {0.1f, 0.1f, 0.1f, 1.0f}},
       VkClearValue{.depthStencil = {1.0f, 0}}};
 
-  const VkRect2D screenRect = {.offset = {0, 0}, .extent = mFramebufferExtent};
+  const VkRect2D screenRect = {.offset = {0, 0},
+                               .extent = mRenderDevice->swapchainExtent};
 
   const VkRenderPassBeginInfo renderPassInfo = {
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
