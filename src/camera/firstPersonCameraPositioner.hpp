@@ -8,7 +8,7 @@ class FirstPersonCameraPositioner final : public ICameraPositioner {
 public:
   FirstPersonCameraPositioner() = default;
   FirstPersonCameraPositioner(const glm::vec3& pos, const glm::vec3& target,
-                              const glm::vec3& up, bool revertYAxis = false)
+                              const glm::vec3& up)
       : mCameraPosition(pos), mCameraOrientation(glm::lookAt(pos, target, up)),
         mUp(up) {}
 
