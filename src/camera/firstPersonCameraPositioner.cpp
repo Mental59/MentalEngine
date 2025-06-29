@@ -1,23 +1,22 @@
 #include "firstPersonCameraPositioner.hpp"
 
-void camera::FirstPersonCameraPositioner::update(double deltaSeconds,
-                                                 const glm::vec2& mousePos,
-                                                 bool mousePressed) {
-  if (mousePressed) {
-    const glm::vec2 delta = mousePos - mMousePos;
-
-    float pitch = mMouseSpeed * delta.y;
-    float yaw = mMouseSpeed * delta.x;
-    float roll = 0.0f;
-
-    const glm::quat deltaQuat = glm::quat(glm::vec3(pitch, yaw, roll));
-
-    mCameraOrientation = glm::normalize(deltaQuat * mCameraOrientation);
-
-    setUpVector(mUp);
-  }
+void camera::FirstPersonCameraPositioner::updateRotation(
+    const glm::vec2& mousePos) {
+  const glm::vec2 delta = mousePos - mMousePos;
   mMousePos = mousePos;
 
+  float pitch = mMouseSpeed * delta.y;
+  float yaw = mMouseSpeed * delta.x;
+  float roll = 0.0f;
+
+  const glm::quat deltaQuat = glm::quat(glm::vec3(pitch, yaw, roll));
+
+  mCameraOrientation = glm::normalize(deltaQuat * mCameraOrientation);
+
+  setUpVector(mUp);
+}
+
+void camera::FirstPersonCameraPositioner::updatePosition(float deltaSeconds) {
   const glm::mat4 v = glm::mat4_cast(mCameraOrientation);
 
   const glm::vec3 forward = -glm::vec3(v[0][2], v[1][2], v[2][2]);
@@ -46,19 +45,17 @@ void camera::FirstPersonCameraPositioner::update(double deltaSeconds,
 
   if (accel == glm::vec3(0)) {
     // decelerate naturally according to the damping value
-    mMoveSpeed -=
-        mMoveSpeed *
-        std::min((1.0f / mDamping) * static_cast<float>(deltaSeconds), 1.0f);
+    mMoveSpeed -= mMoveSpeed * std::min((1.0f / mDamping) * deltaSeconds, 1.0f);
   } else {
     // acceleration
-    mMoveSpeed += accel * mAcceleration * static_cast<float>(deltaSeconds);
+    mMoveSpeed += accel * mAcceleration * deltaSeconds;
     const float maxSpeed =
         mMovement.fastSpeed ? mMaxSpeed * mFastCoef : mMaxSpeed;
     if (glm::length(mMoveSpeed) > maxSpeed)
       mMoveSpeed = glm::normalize(mMoveSpeed) * maxSpeed;
   }
 
-  mCameraPosition += mMoveSpeed * static_cast<float>(deltaSeconds);
+  mCameraPosition += mMoveSpeed * deltaSeconds;
 }
 
 glm::mat4 camera::FirstPersonCameraPositioner::getViewMatrix() const {

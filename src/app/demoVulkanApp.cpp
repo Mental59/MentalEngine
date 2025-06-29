@@ -7,6 +7,7 @@
 #include <glm/ext.hpp>
 #include <glm/glm.hpp>
 #include <imgui.h>
+#include <iostream>
 #include <volk.h>
 
 namespace {
@@ -50,11 +51,29 @@ void app::DemoVulkanApp::run() {
     deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);
     timeStamp = newTimeStamp;
 
+    app::MouseState prevMouseState = mMouseState;
     mWindow.pollEvents();
 
     glm::vec2 mousePos = mMouseState.posNormalized;
     mousePos.y *= -1.0f;
-    gFpsPositioner.update(deltaSeconds, mousePos, mMouseState.pressedRight);
+
+    const bool prevShouldUpdateRotation =
+        prevMouseState.pressedLeft || prevMouseState.pressedRight;
+    const bool currentShouldUpdateRotation =
+        mMouseState.pressedLeft || mMouseState.pressedRight;
+    const bool currentShouldUpdatePosition = mMouseState.pressedRight;
+
+    if (!prevShouldUpdateRotation && currentShouldUpdateRotation) {
+      gFpsPositioner.resetMousePosition(mousePos);
+    }
+
+    if (currentShouldUpdateRotation) {
+      gFpsPositioner.updateRotation(mousePos);
+    }
+
+    if (currentShouldUpdatePosition) {
+      gFpsPositioner.updatePosition(deltaSeconds);
+    }
 
     bool frameRendered = render(currentFrame);
     gFpsCounter.tick(deltaSeconds, frameRendered);

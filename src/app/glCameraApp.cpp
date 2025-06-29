@@ -273,7 +273,10 @@ int GlCameraApp::run() {
       printf("\rFPS: %.1f", fpsCounter.getFPS());
     }
 
-    positioner.update(deltaSeconds, mouseState.pos, mouseState.pressedLeft);
+    if (mouseState.pressedLeft) {
+      positioner.updateRotation(mouseState.pos);
+      positioner.updatePosition(deltaSeconds);
+    }
 
     const double newTimeStamp = glfwGetTime();
     deltaSeconds = static_cast<float>(newTimeStamp - timeStamp);

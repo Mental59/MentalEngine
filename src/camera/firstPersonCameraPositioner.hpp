@@ -12,8 +12,8 @@ public:
       : mCameraPosition(pos), mCameraOrientation(glm::lookAt(pos, target, up)),
         mUp(up) {}
 
-  void update(double deltaSeconds, const glm::vec2& mousePos,
-              bool mousePressed);
+  void updateRotation(const glm::vec2& mousePos);
+  void updatePosition(float deltaSeconds);
 
   virtual glm::mat4 getViewMatrix() const override;
 
