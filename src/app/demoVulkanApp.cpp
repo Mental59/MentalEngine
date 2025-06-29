@@ -278,7 +278,7 @@ void app::DemoVulkanApp::updateGUI(uint32_t currentFrame) {
       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
       ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
       ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs |
-      ImGuiWindowFlags_NoBackground;
+      ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_AlwaysAutoResize;
   ImGui::Begin("Statistics", nullptr, flags);
   ImGui::Text("FPS: %.2f", gFpsCounter.getFPS());
   ImGui::End();
