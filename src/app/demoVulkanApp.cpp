@@ -20,10 +20,8 @@ static constexpr std::array<const char*, 2> gDeviceExtensions{
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME};
 
-glm::vec3 cameraPos(0.0f, 0.0f, 0.0f);
-
 FpsCounter gFpsCounter(0.1f);
-camera::FirstPersonCameraPositioner gFpsPositioner(cameraPos,
+camera::FirstPersonCameraPositioner gFpsPositioner(glm::vec3(0.0f),
                                                    glm::vec3(0.0f, 0.0f, -1.0f),
                                                    glm::vec3(0.0f, 1.0f, 0.0f));
 camera::Camera gCamera(gFpsPositioner);

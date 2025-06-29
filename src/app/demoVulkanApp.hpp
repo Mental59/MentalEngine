@@ -32,8 +32,8 @@ private:
   void composeFrame(uint32_t currentFrame, uint32_t currentImage);
 
   bool render(uint32_t currentFrame);
-  void updateGUI(uint32_t currentFrame);
 
+  void updateGUI(uint32_t currentFrame);
   void update3D(uint32_t currentFrame);
   void update2D(uint32_t currentFrame);
 
