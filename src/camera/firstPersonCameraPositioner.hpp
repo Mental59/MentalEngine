@@ -42,7 +42,7 @@ public:
   } mMovement;
 
 public:
-  float mMouseSpeed = 4.0f;
+  float mMouseSpeed = 2.0f;
   float mAcceleration = 150.0f;
   float mDamping = 0.1f;
   float mMaxSpeed = 10.0f;

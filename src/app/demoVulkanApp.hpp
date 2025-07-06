@@ -35,7 +35,6 @@ private:
 
   void updateGUI(uint32_t currentFrame);
   void update3D(uint32_t currentFrame);
-  void update2D(uint32_t currentFrame);
 
   void cleanup();
   void cleanupSwapchain(VkSwapchainKHR swapchain);
@@ -58,6 +57,7 @@ private:
   vkFramework::render::CanvasLayer mCanvasLayer;
   vkFramework::render::ClearLayer mClearLayer;
   vkFramework::render::FinishLayer mFinishLayer;
+  vkFramework::render::GridLayer mGridLayer;
 
   std::vector<vkFramework::render::BaseRenderLayer*> mLayers;
 

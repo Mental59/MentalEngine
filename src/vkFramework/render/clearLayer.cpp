@@ -27,7 +27,7 @@ void vkFramework::render::ClearLayer::fillCommandBuffer(
     VkCommandBuffer commandBuffer, uint32_t currentFrame,
     uint32_t currentImage) {
   const VkClearValue clearValues[2] = {
-      VkClearValue{.color = {0.1f, 0.1f, 0.1f, 1.0f}},
+      VkClearValue{.color = {0.75f, 0.75f, 0.75f, 1.0f}},
       VkClearValue{.depthStencil = {1.0f, 0}}};
 
   const VkRect2D screenRect = {.offset = {0, 0},

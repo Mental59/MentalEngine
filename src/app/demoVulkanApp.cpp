@@ -21,9 +21,9 @@ static constexpr std::array<const char*, 2> gDeviceExtensions{
     VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME};
 
 FpsCounter gFpsCounter(0.1f);
-camera::FirstPersonCameraPositioner gFpsPositioner(glm::vec3(0.0f),
-                                                   glm::vec3(0.0f, 0.0f, -1.0f),
-                                                   glm::vec3(0.0f, 1.0f, 0.0f));
+camera::FirstPersonCameraPositioner
+    gFpsPositioner(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(0.0f, -2.0f, -1.0f),
+                   glm::vec3(0.0f, 1.0f, 0.0f));
 camera::Camera gCamera(gFpsPositioner);
 
 } // namespace
@@ -169,11 +169,13 @@ void app::DemoVulkanApp::initVulkan() {
   mCanvasLayer.init(&mVulkanRenderDevice, &mDepthTexture);
   mClearLayer.init(&mVulkanRenderDevice, &mDepthTexture);
   mFinishLayer.init(&mVulkanRenderDevice, &mDepthTexture);
+  mGridLayer.init(&mVulkanRenderDevice, &mDepthTexture);
 
-  mLayers.reserve(5);
+  mLayers.reserve(6);
   mLayers.push_back(&mClearLayer);
   mLayers.push_back(&mModelRenderer);
-  mLayers.push_back(&mCanvasLayer);
+  // mLayers.push_back(&mCanvasLayer);
+  mLayers.push_back(&mGridLayer);
   mLayers.push_back(&mImguiLayer);
   mLayers.push_back(&mFinishLayer);
 
@@ -184,7 +186,7 @@ void app::DemoVulkanApp::initGUI() { ImGui::CreateContext(); }
 
 void app::DemoVulkanApp::initCanvas() {
   mCanvasLayer.plane3d(glm::vec3(0, +1.5, 0), glm::vec3(1, 0, 0),
-                       glm::vec3(0, 0, 1), 40, 40, 10.0f, 10.0f,
+                       glm::vec3(0, 0, 1), 10, 10, 100.0f, 100.0f,
                        glm::vec4(1, 0, 0, 1), glm::vec4(0, 1, 0, 1));
 
   for (uint32_t i = 0; i < mVulkanRenderDevice.maxFramesInFlight; i++) {
@@ -196,7 +198,6 @@ void app::DemoVulkanApp::composeFrame(uint32_t currentFrame,
                                       uint32_t currentImage) {
   update3D(currentFrame);
   updateGUI(currentFrame);
-  update2D(currentFrame);
 
   VkCommandBuffer commandBuffer =
       mVulkanRenderDevice.commandBuffers[currentFrame];
@@ -309,22 +310,24 @@ void app::DemoVulkanApp::update3D(uint32_t currentFrame) {
   window::Window::Size framebufferSize = mWindow.getSize();
 
   const glm::mat4 m1 = glm::rotate(
-      glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 0.5f, -1.5f)) *
+      glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -0.5f, -1.5f)) *
           glm::rotate(glm::mat4(1.f), glm::pi<float>(), glm::vec3(1, 0, 0)),
       (float)mWindow.getTime(), glm::vec3(0.0f, 1.0f, 0.0f));
 
   const glm::mat4 p =
-      glm::perspective(45.0f, framebufferSize.ratio, 0.1f, 1000.0f);
+      glm::perspective(45.0f, framebufferSize.ratio, 0.01f, 1000.0f);
 
   const glm::mat4 view = gCamera.getViewMatrix();
   const glm::mat4 mtx = p * view * m1;
 
   mModelRenderer.updateUniformBuffer(currentFrame, glm::value_ptr(mtx),
                                      sizeof(glm::mat4));
-  mCanvasLayer.updateUniformBuffer(p * view, 0.0f, currentFrame);
-}
+  mCanvasLayer.updateUniformBuffer(
+      p * view * glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -2.f, 0.f)),
+      0.0f, currentFrame);
 
-void app::DemoVulkanApp::update2D(uint32_t currentFrame) {}
+  mGridLayer.updateUniformBuffer(p * view, gCamera.getPosition(), currentFrame);
+}
 
 void app::DemoVulkanApp::cleanup() {
   vkDeviceWaitIdle(mVulkanRenderDevice.device);

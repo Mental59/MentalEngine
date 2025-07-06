@@ -4,5 +4,6 @@
 #include "canvasLayer.hpp"
 #include "clearLayer.hpp"
 #include "finishLayer.hpp"
+#include "gridLayer.hpp"
 #include "imguiLayer.hpp"
 #include "modelRenderLayer.hpp"
