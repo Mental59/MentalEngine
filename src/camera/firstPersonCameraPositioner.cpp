@@ -81,9 +81,6 @@ void camera::FirstPersonCameraPositioner::lookAt(const glm::vec3& target) {
   const float distanceXZ =
       sqrtf(direction.x * direction.x + direction.z * direction.z);
   mAngles.x = atan2f(direction.y, distanceXZ);
-
-  // Clamp pitch to prevent camera flipping
-  // mAngles.x = glm::clamp(mAngles.x, gMinPitch, gMaxPitch);
 }
 
 glm::mat4 camera::FirstPersonCameraPositioner::getOrientation() const {
