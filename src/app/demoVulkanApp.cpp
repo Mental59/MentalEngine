@@ -56,18 +56,15 @@ void app::DemoVulkanApp::run() {
     app::MouseState prevMouseState = mMouseState;
     mWindow.pollEvents();
 
-    glm::vec2 mousePos = mMouseState.posNormalized;
-    // mousePos.y *= -1.0f;
-
     const bool prevShouldUpdatePositioner = prevMouseState.pressedRight;
     const bool curShouldUpdatePositioner = mMouseState.pressedRight;
 
     if (!prevShouldUpdatePositioner && curShouldUpdatePositioner) {
-      gFpsPositioner.resetMousePosition(mousePos);
+      gFpsPositioner.resetMousePosition(mMouseState.posNormalized);
     }
 
     if (curShouldUpdatePositioner) {
-      gFpsPositioner.updateRotation(mousePos);
+      gFpsPositioner.updateRotation(mMouseState.posNormalized);
       gFpsPositioner.updatePosition(deltaSeconds);
     }
 
