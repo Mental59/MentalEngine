@@ -16,14 +16,19 @@ constexpr uint32_t gScreenHeight = 720;
 const char* gWindowTitle = "Demo Vulkan App";
 constexpr bool gFullScreenMode = false;
 
+constexpr glm::vec3 gInitialCameraPos = glm::vec3(0.0f, -2.0f, 0.0f);
+constexpr glm::vec3 gInitialCameraTarget = glm::vec3(0.0f, -0.5f, -1.5f);
+constexpr glm::vec3 gInitialCameraUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
+
 static constexpr std::array<const char*, 2> gDeviceExtensions{
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME};
 
 FpsCounter gFpsCounter(0.1f);
-camera::FirstPersonCameraPositioner
-    gFpsPositioner(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec3(0.0f, -2.0f, -1.0f),
-                   glm::vec3(0.0f, 1.0f, 0.0f));
+
+camera::FirstPersonCameraPositioner gFpsPositioner(gInitialCameraPos,
+                                                   gInitialCameraTarget,
+                                                   gInitialCameraUpVector);
 camera::Camera gCamera(gFpsPositioner);
 
 } // namespace
@@ -92,6 +97,12 @@ void app::DemoVulkanApp::onMousePressedLeft(bool pressed) {
 
   ImGuiIO& io = ImGui::GetIO();
   io.MouseDown[0] = pressed;
+
+  if (pressed) {
+    mWindow.hideCursor();
+  } else {
+    mWindow.showCursor();
+  }
 }
 
 void app::DemoVulkanApp::onMousePressedRight(bool pressed) {
@@ -99,6 +110,12 @@ void app::DemoVulkanApp::onMousePressedRight(bool pressed) {
 
   ImGuiIO& io = ImGui::GetIO();
   io.MouseDown[2] = pressed;
+
+  if (pressed) {
+    mWindow.hideCursor();
+  } else {
+    mWindow.showCursor();
+  }
 }
 
 void app::DemoVulkanApp::onMousePressedMiddle(bool pressed) {
@@ -131,6 +148,10 @@ void app::DemoVulkanApp::onKeyPressed(int key, bool pressed) {
 
   if (key == GLFW_KEY_Q) {
     gFpsPositioner.mMovement.up = pressed;
+  }
+
+  if (key == GLFW_KEY_L) {
+    gFpsPositioner.lookAt(gInitialCameraTarget);
   }
 }
 

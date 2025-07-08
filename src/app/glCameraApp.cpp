@@ -258,9 +258,6 @@ int GlCameraApp::run() {
       positioner.mMovement.fastSpeed = pressed;
     else
       positioner.mMovement.fastSpeed = false;
-
-    if (key == GLFW_KEY_SPACE)
-      positioner.setUpVector(vec3(0.0f, 1.0f, 0.0f));
   });
 
   double timeStamp = glfwGetTime();

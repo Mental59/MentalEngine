@@ -8,9 +8,7 @@ class FirstPersonCameraPositioner final : public ICameraPositioner {
 public:
   FirstPersonCameraPositioner() = default;
   FirstPersonCameraPositioner(const glm::vec3& pos, const glm::vec3& target,
-                              const glm::vec3& up)
-      : mCameraPosition(pos), mCameraOrientation(glm::lookAt(pos, target, up)),
-        mUp(up) {}
+                              const glm::vec3& up);
 
   void updateRotation(const glm::vec2& mousePos);
   void updatePosition(float deltaSeconds);
@@ -25,10 +23,7 @@ public:
 
   inline void resetMousePosition(const glm::vec2& p) { mMousePos = p; };
 
-  void setUpVector(const glm::vec3& up);
-
-  void lookAt(const glm::vec3& pos, const glm::vec3& target,
-              const glm::vec3& up);
+  void lookAt(const glm::vec3& target);
 
 public:
   struct Movement {
@@ -42,17 +37,26 @@ public:
   } mMovement;
 
 public:
-  float mMouseSpeed = 2.0f;
+  float mMouseSpeed = 5.0f;
   float mAcceleration = 150.0f;
   float mDamping = 0.1f;
   float mMaxSpeed = 10.0f;
   float mFastCoef = 10.0f;
 
 private:
-  glm::vec2 mMousePos = glm::vec2(0);
+  glm::mat4 getOrientation() const;
+  glm::mat4 getTranslation() const;
+
+  glm::vec3 forward(const glm::mat4& orientation) const;
+  glm::vec3 right(const glm::mat4& orientation) const;
+  glm::vec3 up(const glm::vec3& right, const glm::vec3& forward) const;
+
+  glm::vec2 mMousePos = glm::vec2(0.0f);
   glm::vec3 mCameraPosition = glm::vec3(0.0f, 10.0f, 10.0f);
-  glm::quat mCameraOrientation = glm::quat(glm::vec3(0));
   glm::vec3 mMoveSpeed = glm::vec3(0.0f);
-  glm::vec3 mUp = glm::vec3(0.0f, 0.0f, 1.0f);
+
+  const glm::vec3 mUp = glm::vec3(0.0f, 0.0f, 1.0f);
+
+  glm::vec3 mAngles = glm::vec3(0.0f);
 };
 } // namespace camera

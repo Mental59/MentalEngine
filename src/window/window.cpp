@@ -15,6 +15,8 @@ window::Window::Window(int width, int height, const char* title,
     glfwSetWindowUserPointer(mWindow, pApp);
   }
 
+  glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
   if (!mWindow) {
     glfwTerminate();
     exit(EXIT_FAILURE);
@@ -83,6 +85,24 @@ window::Window::~Window() {
 
 void window::Window::pollEvents() { glfwPollEvents(); }
 void window::Window::waitEvents() { glfwWaitEvents(); }
+
+void window::Window::hideCursor() {
+  if (mIsCursorHidden) {
+    return;
+  }
+
+  mIsCursorHidden = true;
+  glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void window::Window::showCursor() {
+  if (!mIsCursorHidden) {
+    return;
+  }
+
+  mIsCursorHidden = false;
+  glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
 
 double window::Window::getTime() const { return glfwGetTime(); }
 

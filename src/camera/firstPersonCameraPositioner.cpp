@@ -1,5 +1,16 @@
 #include "firstPersonCameraPositioner.hpp"
 
+namespace {
+constexpr float gMaxPitch = glm::radians(90.0f);
+constexpr float gMinPitch = glm::radians(-90.0f);
+} // namespace
+
+camera::FirstPersonCameraPositioner::FirstPersonCameraPositioner(
+    const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up)
+    : mCameraPosition(pos), mUp(up) {
+  lookAt(target);
+}
+
 void camera::FirstPersonCameraPositioner::updateRotation(
     const glm::vec2& mousePos) {
   const glm::vec2 delta = mousePos - mMousePos;
@@ -7,38 +18,35 @@ void camera::FirstPersonCameraPositioner::updateRotation(
 
   float pitch = mMouseSpeed * delta.y;
   float yaw = mMouseSpeed * delta.x;
-  float roll = 0.0f;
 
-  const glm::quat deltaQuat = glm::quat(glm::vec3(pitch, yaw, roll));
-
-  mCameraOrientation = glm::normalize(deltaQuat * mCameraOrientation);
-
-  setUpVector(mUp);
+  mAngles.x += pitch;
+  mAngles.y += yaw;
+  mAngles.x = glm::clamp(mAngles.x, gMinPitch, gMaxPitch);
 }
 
 void camera::FirstPersonCameraPositioner::updatePosition(float deltaSeconds) {
-  const glm::mat4 v = glm::mat4_cast(mCameraOrientation);
+  const glm::mat4 v = getOrientation();
 
-  const glm::vec3 forward = -glm::vec3(v[0][2], v[1][2], v[2][2]);
-  const glm::vec3 right = glm::vec3(v[0][0], v[1][0], v[2][0]);
-  const glm::vec3 up = glm::cross(right, forward);
+  const glm::vec3 forwardV = forward(v);
+  const glm::vec3 rightV = right(v);
+  const glm::vec3 upV = up(rightV, forwardV);
 
   glm::vec3 accel(0.0f);
 
   if (mMovement.forward)
-    accel += forward;
+    accel += forwardV;
   if (mMovement.backward)
-    accel -= forward;
+    accel -= forwardV;
 
   if (mMovement.left)
-    accel -= right;
+    accel -= rightV;
   if (mMovement.right)
-    accel += right;
+    accel += rightV;
 
   if (mMovement.up)
-    accel += up;
+    accel += upV;
   if (mMovement.down)
-    accel -= up;
+    accel -= upV;
 
   if (mMovement.fastSpeed)
     accel *= mFastCoef;
@@ -59,20 +67,48 @@ void camera::FirstPersonCameraPositioner::updatePosition(float deltaSeconds) {
 }
 
 glm::mat4 camera::FirstPersonCameraPositioner::getViewMatrix() const {
-  const glm::mat4 translate = glm::translate(glm::mat4(1.0f), -mCameraPosition);
-  const glm::mat4 rotation = glm::mat4_cast(mCameraOrientation);
-  return rotation * translate;
+  return getOrientation() * getTranslation();
 }
 
-void camera::FirstPersonCameraPositioner::setUpVector(const glm::vec3& up) {
-  const glm::mat4 view = getViewMatrix();
-  const glm::vec3 dir = -glm::vec3(view[0][2], view[1][2], view[2][2]);
-  mCameraOrientation = glm::lookAt(mCameraPosition, mCameraPosition + dir, up);
+void camera::FirstPersonCameraPositioner::lookAt(const glm::vec3& target) {
+  // Calculate direction vector from camera to target
+  const glm::vec3 direction = -glm::normalize(target - mCameraPosition);
+
+  // Calculate yaw (horizontal angle)
+  mAngles.y = -atan2f(direction.x, direction.z);
+
+  // Calculate pitch (vertical angle)
+  const float distanceXZ =
+      sqrtf(direction.x * direction.x + direction.z * direction.z);
+  mAngles.x = atan2f(direction.y, distanceXZ);
+
+  // Clamp pitch to prevent camera flipping
+  // mAngles.x = glm::clamp(mAngles.x, gMinPitch, gMaxPitch);
 }
 
-void camera::FirstPersonCameraPositioner::lookAt(const glm::vec3& pos,
-                                                 const glm::vec3& target,
-                                                 const glm::vec3& up) {
-  mCameraPosition = pos;
-  mCameraOrientation = glm::lookAt(pos, target, up);
+glm::mat4 camera::FirstPersonCameraPositioner::getOrientation() const {
+  glm::quat pitchQuat = glm::angleAxis(mAngles.x, glm::vec3(1.0f, 0.0f, 0.0f));
+  glm::quat yawQuat = glm::angleAxis(mAngles.y, mUp);
+
+  return glm::mat4_cast(pitchQuat * yawQuat);
+}
+
+glm::mat4 camera::FirstPersonCameraPositioner::getTranslation() const {
+  return glm::translate(glm::mat4(1.0f), -mCameraPosition);
+}
+
+glm::vec3 camera::FirstPersonCameraPositioner::forward(
+    const glm::mat4& orientation) const {
+  return -glm::vec3(orientation[0][2], orientation[1][2], orientation[2][2]);
+}
+
+glm::vec3
+camera::FirstPersonCameraPositioner::right(const glm::mat4& orientation) const {
+  return glm::vec3(orientation[0][0], orientation[1][0], orientation[2][0]);
+}
+
+glm::vec3
+camera::FirstPersonCameraPositioner::up(const glm::vec3& right,
+                                        const glm::vec3& forward) const {
+  return glm::cross(right, forward);
 }

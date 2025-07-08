@@ -24,6 +24,9 @@ public:
   void pollEvents();
   void waitEvents();
 
+  void hideCursor();
+  void showCursor();
+
   double getTime() const;
 
   bool shouldClose();
@@ -35,5 +38,6 @@ public:
 
 private:
   GLFWwindow* mWindow = nullptr;
+  bool mIsCursorHidden = false;
 };
 } // namespace window
