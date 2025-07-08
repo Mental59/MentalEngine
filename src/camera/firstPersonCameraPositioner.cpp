@@ -6,8 +6,9 @@ constexpr float gMinPitch = glm::radians(-90.0f);
 } // namespace
 
 camera::FirstPersonCameraPositioner::FirstPersonCameraPositioner(
-    const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up)
-    : mCameraPosition(pos), mUp(up) {
+    const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up,
+    const glm::vec3& right)
+    : mCameraPosition(pos), mUp(up), mRight(right) {
   lookAt(target);
 }
 
@@ -67,7 +68,9 @@ void camera::FirstPersonCameraPositioner::updatePosition(float deltaSeconds) {
 }
 
 glm::mat4 camera::FirstPersonCameraPositioner::getViewMatrix() const {
-  return getOrientation() * getTranslation();
+  glm::mat4 view = getOrientation() * getTranslation();
+
+  return view;
 }
 
 void camera::FirstPersonCameraPositioner::lookAt(const glm::vec3& target) {
@@ -84,7 +87,7 @@ void camera::FirstPersonCameraPositioner::lookAt(const glm::vec3& target) {
 }
 
 glm::mat4 camera::FirstPersonCameraPositioner::getOrientation() const {
-  glm::quat pitchQuat = glm::angleAxis(mAngles.x, glm::vec3(1.0f, 0.0f, 0.0f));
+  glm::quat pitchQuat = glm::angleAxis(mAngles.x, mRight);
   glm::quat yawQuat = glm::angleAxis(mAngles.y, mUp);
 
   return glm::mat4_cast(pitchQuat * yawQuat);

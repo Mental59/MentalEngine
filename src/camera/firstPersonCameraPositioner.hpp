@@ -8,7 +8,9 @@ class FirstPersonCameraPositioner final : public ICameraPositioner {
 public:
   FirstPersonCameraPositioner() = default;
   FirstPersonCameraPositioner(const glm::vec3& pos, const glm::vec3& target,
-                              const glm::vec3& up);
+                              const glm::vec3& up = glm::vec3(0.0f, 1.0f, 0.0f),
+                              const glm::vec3& right = glm::vec3(1.0f, 0.0f,
+                                                                 0.0f));
 
   void updateRotation(const glm::vec2& mousePos);
   void updatePosition(float deltaSeconds);
@@ -56,6 +58,7 @@ private:
   glm::vec3 mMoveSpeed = glm::vec3(0.0f);
 
   const glm::vec3 mUp = glm::vec3(0.0f, 0.0f, 1.0f);
+  const glm::vec3 mRight = glm::vec3(1.0f, 0.0f, 0.0f);
 
   glm::vec3 mAngles = glm::vec3(0.0f);
 };

@@ -16,9 +16,8 @@ constexpr uint32_t gScreenHeight = 720;
 const char* gWindowTitle = "Demo Vulkan App";
 constexpr bool gFullScreenMode = false;
 
-constexpr glm::vec3 gInitialCameraPos = glm::vec3(0.0f, -2.0f, 0.0f);
-constexpr glm::vec3 gInitialCameraTarget = glm::vec3(0.0f, -0.5f, -1.5f);
-constexpr glm::vec3 gInitialCameraUpVector = glm::vec3(0.0f, 1.0f, 0.0f);
+constexpr glm::vec3 gInitialCameraPos = glm::vec3(0.0f, 2.0f, 0.0f);
+constexpr glm::vec3 gInitialCameraTarget = glm::vec3(0.f, 0.5f, -1.5f);
 
 static constexpr std::array<const char*, 2> gDeviceExtensions{
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -27,8 +26,7 @@ static constexpr std::array<const char*, 2> gDeviceExtensions{
 FpsCounter gFpsCounter(0.1f);
 
 camera::FirstPersonCameraPositioner gFpsPositioner(gInitialCameraPos,
-                                                   gInitialCameraTarget,
-                                                   gInitialCameraUpVector);
+                                                   gInitialCameraTarget);
 camera::Camera gCamera(gFpsPositioner);
 
 } // namespace
@@ -59,23 +57,17 @@ void app::DemoVulkanApp::run() {
     mWindow.pollEvents();
 
     glm::vec2 mousePos = mMouseState.posNormalized;
-    mousePos.y *= -1.0f;
+    // mousePos.y *= -1.0f;
 
-    const bool prevShouldUpdateRotation =
-        prevMouseState.pressedLeft || prevMouseState.pressedRight;
-    const bool currentShouldUpdateRotation =
-        mMouseState.pressedLeft || mMouseState.pressedRight;
-    const bool currentShouldUpdatePosition = mMouseState.pressedRight;
+    const bool prevShouldUpdatePositioner = prevMouseState.pressedRight;
+    const bool curShouldUpdatePositioner = mMouseState.pressedRight;
 
-    if (!prevShouldUpdateRotation && currentShouldUpdateRotation) {
+    if (!prevShouldUpdatePositioner && curShouldUpdatePositioner) {
       gFpsPositioner.resetMousePosition(mousePos);
     }
 
-    if (currentShouldUpdateRotation) {
+    if (curShouldUpdatePositioner) {
       gFpsPositioner.updateRotation(mousePos);
-    }
-
-    if (currentShouldUpdatePosition) {
       gFpsPositioner.updatePosition(deltaSeconds);
     }
 
@@ -97,12 +89,6 @@ void app::DemoVulkanApp::onMousePressedLeft(bool pressed) {
 
   ImGuiIO& io = ImGui::GetIO();
   io.MouseDown[0] = pressed;
-
-  if (pressed) {
-    mWindow.hideCursor();
-  } else {
-    mWindow.showCursor();
-  }
 }
 
 void app::DemoVulkanApp::onMousePressedRight(bool pressed) {
@@ -143,11 +129,11 @@ void app::DemoVulkanApp::onKeyPressed(int key, bool pressed) {
   }
 
   if (key == GLFW_KEY_E) {
-    gFpsPositioner.mMovement.down = pressed;
+    gFpsPositioner.mMovement.up = pressed;
   }
 
   if (key == GLFW_KEY_Q) {
-    gFpsPositioner.mMovement.up = pressed;
+    gFpsPositioner.mMovement.down = pressed;
   }
 
   if (key == GLFW_KEY_L) {
@@ -195,7 +181,7 @@ void app::DemoVulkanApp::initVulkan() {
   mLayers.reserve(6);
   mLayers.push_back(&mClearLayer);
   mLayers.push_back(&mModelRenderer);
-  // mLayers.push_back(&mCanvasLayer);
+  mLayers.push_back(&mCanvasLayer);
   mLayers.push_back(&mGridLayer);
   mLayers.push_back(&mImguiLayer);
   mLayers.push_back(&mFinishLayer);
@@ -330,22 +316,23 @@ void app::DemoVulkanApp::updateGUI(uint32_t currentFrame) {
 void app::DemoVulkanApp::update3D(uint32_t currentFrame) {
   window::Window::Size framebufferSize = mWindow.getSize();
 
-  const glm::mat4 m1 = glm::rotate(
-      glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -0.5f, -1.5f)) *
-          glm::rotate(glm::mat4(1.f), glm::pi<float>(), glm::vec3(1, 0, 0)),
-      (float)mWindow.getTime(), glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::mat4 m1(1.0f);
+  m1 = glm::translate(m1, glm::vec3(0.f, 0.5f, -1.5f));
+  m1 = glm::rotate(m1, static_cast<float>(mWindow.getTime()),
+                   glm::vec3(0.0f, 1.0f, 0.0f));
 
-  const glm::mat4 p =
-      glm::perspective(45.0f, framebufferSize.ratio, 0.01f, 1000.0f);
+  glm::mat4 p =
+      glm::perspectiveRH_ZO(45.0f, framebufferSize.ratio, 0.01f, 1000.0f);
+  p[1][1] *= -1.0f; // invert y axis
 
   const glm::mat4 view = gCamera.getViewMatrix();
   const glm::mat4 mtx = p * view * m1;
 
   mModelRenderer.updateUniformBuffer(currentFrame, glm::value_ptr(mtx),
                                      sizeof(glm::mat4));
-  mCanvasLayer.updateUniformBuffer(
-      p * view * glm::translate(glm::mat4(1.0f), glm::vec3(0.f, -2.f, 0.f)),
-      0.0f, currentFrame);
+  // mCanvasLayer.updateUniformBuffer(
+  //     p * view * glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 2.f, 0.f)),
+  //     0.0f, currentFrame);
 
   mGridLayer.updateUniformBuffer(p * view, gCamera.getPosition(), currentFrame);
 }

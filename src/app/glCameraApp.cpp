@@ -38,11 +38,12 @@ struct PerFrameData {
 
 struct MouseState {
   glm::vec2 pos = glm::vec2(0.0f);
-  bool pressedLeft = false;
+  bool pressedRight = false;
 } mouseState;
 
-camera::FirstPersonCameraPositioner
-    positioner(vec3(0.0f), vec3(0.0f, 0.0f, -1.0f), vec3(0.0f, 1.0f, 0.0f));
+camera::FirstPersonCameraPositioner positioner(vec3(0.0f, 0.0f, 0.0f),
+                                               vec3(0.0f, -0.5f, -1.5f),
+                                               vec3(0.0f, 1.0f, 0.0f));
 camera::Camera camera3d(positioner);
 
 int GlCameraApp::run() {
@@ -225,8 +226,8 @@ int GlCameraApp::run() {
 
   glfwSetMouseButtonCallback(
       window, [](auto* window, int button, int action, int mods) {
-        if (button == GLFW_MOUSE_BUTTON_LEFT)
-          mouseState.pressedLeft = action == GLFW_PRESS;
+        if (button == GLFW_MOUSE_BUTTON_RIGHT)
+          mouseState.pressedRight = action == GLFW_PRESS;
       });
 
   glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode,
@@ -254,6 +255,9 @@ int GlCameraApp::run() {
     if (key == GLFW_KEY_Q)
       positioner.mMovement.down = pressed;
 
+    if (key == GLFW_KEY_L)
+      positioner.lookAt(vec3(0.0f, -0.5f, -1.5f));
+
     if (mods & GLFW_MOD_SHIFT)
       positioner.mMovement.fastSpeed = pressed;
     else
@@ -264,13 +268,18 @@ int GlCameraApp::run() {
   float deltaSeconds = 0.0f;
   FpsCounter fpsCounter(0.2f);
 
+  MouseState prevMouseState = mouseState;
+
   while (!glfwWindowShouldClose(window)) {
     bool isFpsUpdated = fpsCounter.tick(deltaSeconds);
     if (isFpsUpdated) {
       printf("\rFPS: %.1f", fpsCounter.getFPS());
     }
 
-    if (mouseState.pressedLeft) {
+    if (!prevMouseState.pressedRight && mouseState.pressedRight) {
+      positioner.resetMousePosition(mouseState.pos);
+    }
+    if (mouseState.pressedRight) {
       positioner.updateRotation(mouseState.pos);
       positioner.updatePosition(deltaSeconds);
     }
@@ -286,7 +295,7 @@ int GlCameraApp::run() {
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    const mat4 p = glm::perspective(45.0f, ratio, 0.1f, 1000.0f);
+    const mat4 p = glm::perspectiveRH_NO(45.0f, ratio, 0.1f, 1000.0f);
     const mat4 view = camera3d.getViewMatrix();
 
     PerFrameData perFrameData = {.view = view,
@@ -316,6 +325,8 @@ int GlCameraApp::run() {
     glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, 36, 1, 1);
 
     glfwSwapBuffers(window);
+
+    prevMouseState = mouseState;
     glfwPollEvents();
 
     assert(glGetError() == GL_NO_ERROR);
