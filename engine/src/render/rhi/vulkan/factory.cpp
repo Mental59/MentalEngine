@@ -140,7 +140,7 @@ DeviceHandle DeviceFactory::create() const
     return instance;
 }
 
-bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*> extensions) const
+bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const
 {
     auto availableExtensions = ::vk::enumerateInstanceExtensionProperties();
     if (availableExtensions.result != ::vk::Result::eSuccess)
@@ -158,7 +158,7 @@ bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>
     return requiredSet.empty();
 }
 
-bool DeviceFactory::checkInstanceLayerSupport(const std::vector<const char*> layers) const
+bool DeviceFactory::checkInstanceLayerSupport(const std::vector<const char*>& layers) const
 {
     auto availableLayers = ::vk::enumerateInstanceLayerProperties();
 

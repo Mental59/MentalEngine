@@ -13,8 +13,8 @@ public:
 private:
     ::vk::Instance createInstance() const;
 
-    bool checkInstanceExtensionSupport(const std::vector<const char*> extensions) const;
-    bool checkInstanceLayerSupport(const std::vector<const char*> layers) const;
+    bool checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const;
+    bool checkInstanceLayerSupport(const std::vector<const char*>& layers) const;
 
 #if defined(_DEBUG)
     void setupDebugMessenger(::vk::Instance instance) const;
