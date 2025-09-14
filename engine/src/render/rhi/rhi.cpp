@@ -14,6 +14,10 @@ static const char* graphicsApiToString(GraphicsApi api)
         {
             return "Vulkan";
         }
+        default:
+        {
+            return "";
+        }
     }
 }
 
@@ -28,7 +32,7 @@ DeviceHandle createDevice(GraphicsApi api)
         {
             vk::DeviceFactory factory;
             device = factory.create();
-
+            if (!device) mental::core::log::fatal("Failed to create Vulkan device");
             break;
         }
 #endif

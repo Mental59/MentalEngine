@@ -11,6 +11,14 @@ add_library(MentalEngine STATIC ${SOURCES} ${HEADERS})
 
 find_package(Vulkan REQUIRED)
 
+if(WIN32)
+target_compile_definitions(MentalEngine PRIVATE MENTAL_WIN32 VK_USE_PLATFORM_WIN32_KHR)
+elseif(LINUX)
+target_compile_definitions(MentalEngine PRIVATE MENTAL_LINUX VK_USE_PLATFORM_XCB_KHR)
+else()
+message(FATAL_ERROR "Unsupported platform")
+endif()
+
 target_include_directories(MentalEngine PRIVATE include ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(MentalEngine PRIVATE Vulkan::Vulkan)
-target_compile_definitions(MentalEngine PRIVATE VULKAN_HPP_NO_EXCEPTIONS MENTAL_WITH_VULKAN)
+target_compile_definitions(MentalEngine PRIVATE VULKAN_HPP_NO_EXCEPTIONS MENTAL_WITH_VULKAN VK_NO_PROTOTYPES VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1)
