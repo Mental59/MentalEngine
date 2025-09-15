@@ -8,16 +8,16 @@ Device::Device(const DeviceDesc& desc)
     mental::core::log::info("Vulkan device created");
 }
 
+Device::~Device()
+{
+    mental::core::log::info("Vulkan device destroyed");
+}
+
 void Device::WaitIdle() {}
 
 GraphicsApi Device::getGraphicsApi()
 {
     return GraphicsApi::Vulkan;
-}
-
-Object Device::getNativeObject(ObjectType type)
-{
-    return nullptr;
 }
 
 DeviceHandle createDevice(const DeviceDesc& desc)

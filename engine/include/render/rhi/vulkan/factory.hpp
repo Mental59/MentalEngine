@@ -3,12 +3,17 @@
 #include <vulkan/vulkan.hpp>
 #include <vector>
 
+namespace mental::platform
+{
+class IWindow;
+}
+
 namespace mental::rhi::vk
 {
 class DeviceFactory
 {
 public:
-    DeviceHandle create() const;
+    DeviceHandle create(const mental::platform::IWindow* const window) const;
 
 private:
     ::vk::Instance createInstance() const;

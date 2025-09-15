@@ -8,6 +8,4 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
 
 add_executable(MentalEditor ${SOURCES} ${HEADERS})
 
-target_include_directories(MentalEditor PRIVATE include ..)
-
 target_link_libraries(MentalEditor PRIVATE MentalEngine)

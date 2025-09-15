@@ -1,5 +1,6 @@
 #include <render/rhi/rhi.hpp>
 #include <core/log.hpp>
+#include <platform/window.hpp>
 #if defined MENTAL_WITH_VULKAN
 #include <render/rhi/vulkan/factory.hpp>
 #endif
@@ -21,7 +22,7 @@ static const char* graphicsApiToString(GraphicsApi api)
     }
 }
 
-DeviceHandle createDevice(GraphicsApi api)
+DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* const window)
 {
     DeviceHandle device;
 
@@ -31,8 +32,13 @@ DeviceHandle createDevice(GraphicsApi api)
         case GraphicsApi::Vulkan:
         {
             vk::DeviceFactory factory;
-            device = factory.create();
-            if (!device) mental::core::log::fatal("Failed to create Vulkan device");
+            device = factory.create(window);
+
+            if (!device)
+            {
+                mental::core::log::fatal("Failed to create Vulkan device");
+            }
+
             break;
         }
 #endif

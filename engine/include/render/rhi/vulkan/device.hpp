@@ -2,6 +2,7 @@
 
 #include <render/rhi/rhi.hpp>
 #include <vulkan/vulkan.hpp>
+#include <core/memory.hpp>
 
 namespace mental::rhi::vk
 {
@@ -12,15 +13,14 @@ struct DeviceDesc
     ::vk::Device device;
 };
 
-class Device : public RefCounter<IDevice>
+class Device : public core::memory::RefCounter<IDevice>
 {
 public:
     Device(const DeviceDesc& desc);
+    virtual ~Device() override;
 
     virtual void WaitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
-
-    virtual Object getNativeObject(ObjectType type) override;
 };
 
 DeviceHandle createDevice(const DeviceDesc& desc);

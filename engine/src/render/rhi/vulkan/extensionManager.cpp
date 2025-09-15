@@ -1,4 +1,5 @@
 #include <render/rhi/vulkan/extensionManager.hpp>
+#include <core/log.hpp>
 #include <vulkan/vulkan.hpp>
 
 std::vector<const char*> mental::rhi::vk::ExtensionManager::getRequiredInstanceExtensions()
@@ -9,6 +10,8 @@ std::vector<const char*> mental::rhi::vk::ExtensionManager::getRequiredInstanceE
     extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
 #elif defined(MENTAL_LINUX)
     extensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
+#else
+    mental::core::log::fatal("Unsupported platform");
 #endif
 
     extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);

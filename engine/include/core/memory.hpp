@@ -1,10 +1,10 @@
 #pragma once
 
+#include <cassert>
 #include <atomic>
 #include <cstdint>
-#include <cassert>
 
-namespace mental::rhi
+namespace mental::core::memory
 {
 typedef uint32_t ObjectType;
 
@@ -236,4 +236,4 @@ public:
 };
 
 typedef RefCountPtr<IResource> ResourceHandle;
-}  // namespace mental::rhi
+}  // namespace mental::core::memory

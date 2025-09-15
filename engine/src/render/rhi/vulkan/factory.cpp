@@ -1,9 +1,10 @@
-#include <Volk/volk.h>
 #include <render/rhi/vulkan/factory.hpp>
 #include <render/rhi/vulkan/device.hpp>
 #include <render/rhi/vulkan/extensionManager.hpp>
-#include <core/log.hpp>
+#include <platform/window.hpp>
+#include <Volk/volk.h>
 #include <vulkan/vulkan.hpp>
+#include <core/log.hpp>
 #include <set>
 #include <vector>
 
@@ -67,9 +68,10 @@ void DeviceFactory::setupDebugMessenger(::vk::Instance instance) const
 }
 #endif
 
-DeviceHandle DeviceFactory::create() const
+DeviceHandle DeviceFactory::create(const mental::platform::IWindow* const window) const
 {
     ::vk::Instance instance = createInstance();
+    ::vk::SurfaceKHR surface = window->createSurface(instance);
 
     return createDevice({.instance = instance});
 }

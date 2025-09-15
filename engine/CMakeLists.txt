@@ -19,6 +19,13 @@ else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
 
-target_include_directories(MentalEngine PRIVATE include ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(MentalEngine PRIVATE Vulkan::Vulkan)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "")
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
+set(GLFW_INSTALL OFF CACHE BOOL "")
+
+add_subdirectory(deps/glfw)
+
+target_include_directories(MentalEngine PUBLIC include ${Vulkan_INCLUDE_DIRS})
+target_link_libraries(MentalEngine PRIVATE Vulkan::Vulkan glfw)
 target_compile_definitions(MentalEngine PRIVATE VULKAN_HPP_NO_EXCEPTIONS MENTAL_WITH_VULKAN VK_NO_PROTOTYPES VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1)
