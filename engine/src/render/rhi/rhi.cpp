@@ -32,7 +32,11 @@ DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* cons
         case GraphicsApi::Vulkan:
         {
             vk::DeviceFactory factory;
-            device = factory.create(window);
+
+            ::vk::Instance instance = factory.createInstance();
+            ::vk::SurfaceKHR surface = window->createSurface(instance);
+
+            device = factory.create(instance, surface);
 
             if (!device)
             {

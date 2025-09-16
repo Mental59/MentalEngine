@@ -3,21 +3,15 @@
 #include <vulkan/vulkan.hpp>
 #include <vector>
 
-namespace mental::platform
-{
-class IWindow;
-}
-
 namespace mental::rhi::vk
 {
 class DeviceFactory
 {
 public:
-    DeviceHandle create(const mental::platform::IWindow* const window) const;
-
-private:
+    DeviceHandle create(const ::vk::Instance& instance, const ::vk::SurfaceKHR& surface) const;
     ::vk::Instance createInstance() const;
 
+private:
     bool checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const;
     bool checkInstanceLayerSupport(const std::vector<const char*>& layers) const;
 

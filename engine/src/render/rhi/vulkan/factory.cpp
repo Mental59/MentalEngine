@@ -68,12 +68,13 @@ void DeviceFactory::setupDebugMessenger(::vk::Instance instance) const
 }
 #endif
 
-DeviceHandle DeviceFactory::create(const mental::platform::IWindow* const window) const
+DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::SurfaceKHR& surface) const
 {
-    ::vk::Instance instance = createInstance();
-    ::vk::SurfaceKHR surface = window->createSurface(instance);
+    ::vk::PhysicalDevice physicalDevice;
+    ::vk::Device device;
+    // TODO: choose physical device and create logical device
 
-    return createDevice({.instance = instance});
+    return createDevice({instance, surface, physicalDevice, device});
 }
 
 ::vk::Instance DeviceFactory::createInstance() const

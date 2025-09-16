@@ -9,6 +9,7 @@ namespace mental::rhi::vk
 struct DeviceDesc
 {
     ::vk::Instance instance;
+    ::vk::SurfaceKHR surface;
     ::vk::PhysicalDevice physicalDevice;
     ::vk::Device device;
 };
@@ -21,6 +22,12 @@ public:
 
     virtual void WaitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
+
+private:
+    ::vk::Instance mInstance;
+    ::vk::PhysicalDevice mPhysicalDevice;
+    ::vk::Device mDevice;
+    ::vk::SurfaceKHR mSurface;
 };
 
 DeviceHandle createDevice(const DeviceDesc& desc);
