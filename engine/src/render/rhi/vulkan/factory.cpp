@@ -50,7 +50,7 @@ static ::vk::DebugReportCallbackCreateInfoEXT getReportCallbackCreateInfo()
     return createInfo;
 }
 
-void DeviceFactory::setupDebugMessenger(::vk::Instance instance) const
+DebugMessenger DeviceFactory::createDebugMessenger(::vk::Instance instance) const
 {
     ::vk::DebugUtilsMessengerCreateInfoEXT createDebugMessengerInfo = getDebugMessengerCreateInfo();
     ::vk::ResultValue<::vk::DebugUtilsMessengerEXT> debugMessengerRes = instance.createDebugUtilsMessengerEXT(createDebugMessengerInfo);
@@ -65,6 +65,8 @@ void DeviceFactory::setupDebugMessenger(::vk::Instance instance) const
     {
         mental::core::log::error("Failed to call createDebugReportCallbackEXT");
     }
+
+    return {debugMessengerRes.value, reportCallbackRes.value};
 }
 #endif
 
@@ -72,9 +74,15 @@ DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::S
 {
     ::vk::PhysicalDevice physicalDevice;
     ::vk::Device device;
+
+    DebugMessenger debugMessenger{};
+#if defined(_DEBUG)
+    debugMessenger = createDebugMessenger(instance);
+#endif
+
     // TODO: choose physical device and create logical device
 
-    return createDevice({instance, surface, physicalDevice, device});
+    return createDevice({instance, debugMessenger.utilsMessenger, debugMessenger.reportCallback, surface, physicalDevice, device});
 }
 
 ::vk::Instance DeviceFactory::createInstance() const
@@ -135,10 +143,6 @@ DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::S
     ::vk::Instance instance = createInstanceRes.value;
     volkLoadInstance(instance);
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
-
-#if defined(_DEBUG)
-    setupDebugMessenger(instance);
-#endif
 
     return instance;
 }

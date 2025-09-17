@@ -16,7 +16,7 @@ mental::platform::GLFWwindow::GLFWwindow(const WindowDesc& desc)
         core::log::fatal("Failed to create GLFW window");
     }
 
-    core::log::info("GLFW window created");
+    core::log::info("GLFW window initialized");
 }
 
 mental::platform::GLFWwindow::~GLFWwindow()

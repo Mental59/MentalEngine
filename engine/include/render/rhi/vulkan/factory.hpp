@@ -5,6 +5,12 @@
 
 namespace mental::rhi::vk
 {
+struct DebugMessenger
+{
+    ::vk::DebugUtilsMessengerEXT utilsMessenger;
+    ::vk::DebugReportCallbackEXT reportCallback;
+};
+
 class DeviceFactory
 {
 public:
@@ -16,7 +22,7 @@ private:
     bool checkInstanceLayerSupport(const std::vector<const char*>& layers) const;
 
 #if defined(_DEBUG)
-    void setupDebugMessenger(::vk::Instance instance) const;
+    DebugMessenger createDebugMessenger(::vk::Instance instance) const;
 #endif
 };
 }  // namespace mental::rhi::vk

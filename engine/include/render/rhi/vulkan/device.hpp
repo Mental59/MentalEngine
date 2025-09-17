@@ -9,7 +9,10 @@ namespace mental::rhi::vk
 struct DeviceDesc
 {
     ::vk::Instance instance;
+    ::vk::DebugUtilsMessengerEXT debugUtilsMessenger;
+    ::vk::DebugReportCallbackEXT debugReportCallback;
     ::vk::SurfaceKHR surface;
+
     ::vk::PhysicalDevice physicalDevice;
     ::vk::Device device;
 };
@@ -25,9 +28,12 @@ public:
 
 private:
     ::vk::Instance mInstance;
+    ::vk::DebugUtilsMessengerEXT mDebugUtilsMessenger;
+    ::vk::DebugReportCallbackEXT mDebugReportCallback;
+    ::vk::SurfaceKHR mSurface;
+
     ::vk::PhysicalDevice mPhysicalDevice;
     ::vk::Device mDevice;
-    ::vk::SurfaceKHR mSurface;
 };
 
 DeviceHandle createDevice(const DeviceDesc& desc);

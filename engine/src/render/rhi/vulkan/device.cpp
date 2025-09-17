@@ -4,14 +4,24 @@
 namespace mental::rhi::vk
 {
 Device::Device(const DeviceDesc& desc)
-    : mInstance(desc.instance), mPhysicalDevice(desc.physicalDevice), mDevice(desc.device), mSurface(desc.surface)
+    : mInstance(desc.instance), mDebugUtilsMessenger(desc.debugUtilsMessenger), mDebugReportCallback(desc.debugReportCallback),
+      mSurface(desc.surface), mPhysicalDevice(desc.physicalDevice), mDevice(desc.device)
 {
-    mental::core::log::info("Vulkan device created");
+    // TODO: validate desc
+
+    mental::core::log::info("Vulkan device initialized");
 }
 
 Device::~Device()
 {
-    // TODO: destroy vulkan objects
+    mDevice.destroy();
+
+    mInstance.destroySurfaceKHR(mSurface);
+
+    if (mDebugUtilsMessenger) mInstance.destroyDebugUtilsMessengerEXT(mDebugUtilsMessenger);
+    if (mDebugReportCallback) mInstance.destroyDebugReportCallbackEXT(mDebugReportCallback);
+
+    mInstance.destroy();
 
     mental::core::log::info("Vulkan device destroyed");
 }
