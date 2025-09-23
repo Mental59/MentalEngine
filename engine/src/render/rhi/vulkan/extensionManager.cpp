@@ -35,3 +35,8 @@ std::vector<const char*> mental::rhi::vk::ExtensionManager::getValidationLayers(
 
     return layers;
 }
+
+std::vector<const char*> mental::rhi::vk::ExtensionManager::getRequiredDeviceExtensions()
+{
+    return {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+}

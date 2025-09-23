@@ -72,7 +72,12 @@ DebugMessenger DeviceFactory::createDebugMessenger(::vk::Instance instance) cons
 
 DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::SurfaceKHR& surface) const
 {
-    ::vk::PhysicalDevice physicalDevice;
+    PhysicalDeviceInfo physicalDeviceInfo = choosePhysicalDevice(instance, surface);
+    if (!physicalDeviceInfo.getPhysicalDevice())
+    {
+        mental::core::log::fatal("Failed to find physical device");
+    }
+
     ::vk::Device device;
 
     DebugMessenger debugMessenger{};
@@ -80,9 +85,10 @@ DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::S
     debugMessenger = createDebugMessenger(instance);
 #endif
 
-    // TODO: choose physical device and create logical device
+    // TODO: create logical device
 
-    return createDevice({instance, debugMessenger.utilsMessenger, debugMessenger.reportCallback, surface, physicalDevice, device});
+    return createDevice(
+        {instance, debugMessenger.utilsMessenger, debugMessenger.reportCallback, surface, physicalDeviceInfo.getPhysicalDevice(), device});
 }
 
 ::vk::Instance DeviceFactory::createInstance() const
@@ -156,7 +162,6 @@ bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>
     }
 
     std::set<std::string> requiredSet(extensions.begin(), extensions.end());
-
     for (const ::vk::ExtensionProperties& extension : availableExtensions.value)
     {
         requiredSet.erase(extension.extensionName);
@@ -168,7 +173,6 @@ bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>
 bool DeviceFactory::checkInstanceLayerSupport(const std::vector<const char*>& layers) const
 {
     auto availableLayers = ::vk::enumerateInstanceLayerProperties();
-
     if (availableLayers.result != ::vk::Result::eSuccess)
     {
         mental::core::log::fatal("Failed to call enumerateInstanceLayerProperties");
@@ -181,6 +185,110 @@ bool DeviceFactory::checkInstanceLayerSupport(const std::vector<const char*>& la
     }
 
     return requiredSet.empty();
+}
+
+PhysicalDeviceInfo DeviceFactory::choosePhysicalDevice(const ::vk::Instance& instance, const ::vk::SurfaceKHR& surface) const
+{
+    std::vector<const char*> extensions = ExtensionManager::getRequiredDeviceExtensions();
+
+    auto physicalDevices = instance.enumeratePhysicalDevices();
+    if (physicalDevices.result != ::vk::Result::eSuccess)
+    {
+
+        mental::core::log::fatal("Failed to call enumeratePhysicalDevices");
+    }
+
+    PhysicalDeviceInfo bestPhysicalDeviceInfo;
+    std::vector<const char*> requiredExtensions = ExtensionManager::getRequiredDeviceExtensions();
+    for (const ::vk::PhysicalDevice& physicalDevice : physicalDevices.value)
+    {
+        PhysicalDeviceInfo physicalDeviceInfo(physicalDevice, surface, requiredExtensions);
+        if (physicalDeviceInfo.getScore() > bestPhysicalDeviceInfo.getScore())
+        {
+            bestPhysicalDeviceInfo = physicalDeviceInfo;
+            break;
+        }
+    }
+
+    return bestPhysicalDeviceInfo;
+}
+
+PhysicalDeviceInfo::PhysicalDeviceInfo(
+    const ::vk::PhysicalDevice& physicalDevice, const ::vk::SurfaceKHR& surface, const std::vector<const char*>& requiredExtensions)
+    : mPhysicalDevice(physicalDevice), mSurface(surface), mProperties(physicalDevice.getProperties()),
+      mFeatures(physicalDevice.getFeatures()), mAreExtensionsSupported(checkDeviceExtensionSupport(requiredExtensions)),
+      mQueueFamilyWithPresentSupport(findQueueFamilyWithPresentSupport(::vk::QueueFlagBits::eGraphics)),
+      mSwapchainSupportDetails(querySwapchainSupport())
+{
+}
+
+int PhysicalDeviceInfo::getScore() const
+{
+    if (!mAreExtensionsSupported || !isGPU() || !mFeatures.geometryShader || mQueueFamilyWithPresentSupport == -1 ||
+        mSwapchainSupportDetails.formats.empty() || mSwapchainSupportDetails.presentModes.empty())
+    {
+        return 0;
+    }
+
+    int score = 1;
+    if (isDiscreteGPU())
+    {
+        score += 10;
+    }
+
+    return score;
+}
+
+bool PhysicalDeviceInfo::checkDeviceExtensionSupport(const std::vector<const char*>& extensions) const
+{
+    auto extensionProperties = mPhysicalDevice.enumerateDeviceExtensionProperties();
+    if (extensionProperties.result != ::vk::Result::eSuccess)
+    {
+        mental::core::log::fatal("Failed to call enumerateDeviceExtensionProperties");
+    }
+
+    std::set<std::string> requiredSet(extensions.begin(), extensions.end());
+    for (const ::vk::ExtensionProperties& property : extensionProperties.value)
+    {
+        requiredSet.erase(property.extensionName);
+    }
+
+    return requiredSet.empty();
+}
+
+int PhysicalDeviceInfo::findQueueFamilyWithPresentSupport(::vk::QueueFlags desiredFlags) const
+{
+    auto queueFamilyProperties = mPhysicalDevice.getQueueFamilyProperties();
+    for (uint32_t i = 0; i < queueFamilyProperties.size(); i++)
+    {
+        auto isPresentSupported = mPhysicalDevice.getSurfaceSupportKHR(i, mSurface);
+        if (isPresentSupported.result != ::vk::Result::eSuccess)
+        {
+            continue;
+        }
+
+        if (queueFamilyProperties[i].queueCount > 0 && queueFamilyProperties[i].queueFlags & desiredFlags && isPresentSupported.value)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+SwapchainSupportDetails PhysicalDeviceInfo::querySwapchainSupport() const
+{
+    auto surfaceCapabilities = mPhysicalDevice.getSurfaceCapabilitiesKHR(mSurface);
+    auto surfaceFormats = mPhysicalDevice.getSurfaceFormatsKHR(mSurface);
+    auto presentModes = mPhysicalDevice.getSurfacePresentModesKHR(mSurface);
+
+    if (surfaceCapabilities.result != ::vk::Result::eSuccess || surfaceFormats.result != ::vk::Result::eSuccess ||
+        presentModes.result != ::vk::Result::eSuccess)
+    {
+        return {};
+    }
+
+    return {surfaceCapabilities.value, surfaceFormats.value, presentModes.value};
 }
 
 }  // namespace mental::rhi::vk
