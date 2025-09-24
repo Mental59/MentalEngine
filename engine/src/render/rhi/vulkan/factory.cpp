@@ -72,20 +72,13 @@ DebugMessenger DeviceFactory::createDebugMessenger(::vk::Instance instance) cons
 
 DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::SurfaceKHR& surface) const
 {
-    PhysicalDeviceInfo physicalDeviceInfo = choosePhysicalDevice(instance, surface);
-    if (!physicalDeviceInfo.getPhysicalDevice())
-    {
-        mental::core::log::fatal("Failed to find physical device");
-    }
-
-    ::vk::Device device;
-
     DebugMessenger debugMessenger{};
 #if defined(_DEBUG)
     debugMessenger = createDebugMessenger(instance);
 #endif
 
-    // TODO: create logical device
+    PhysicalDeviceInfo physicalDeviceInfo = choosePhysicalDevice(instance, surface);
+    ::vk::Device device = createLogicalDevice(physicalDeviceInfo);
 
     return createDevice(
         {instance, debugMessenger.utilsMessenger, debugMessenger.reportCallback, surface, physicalDeviceInfo.getPhysicalDevice(), device});
@@ -200,9 +193,12 @@ PhysicalDeviceInfo DeviceFactory::choosePhysicalDevice(const ::vk::Instance& ins
 
     PhysicalDeviceInfo bestPhysicalDeviceInfo;
     std::vector<const char*> requiredExtensions = ExtensionManager::getRequiredDeviceExtensions();
+    ::vk::PhysicalDeviceFeatures requiredFeatures{};
+    requiredFeatures.setGeometryShader(::vk::True);
+
     for (const ::vk::PhysicalDevice& physicalDevice : physicalDevices.value)
     {
-        PhysicalDeviceInfo physicalDeviceInfo(physicalDevice, surface, requiredExtensions);
+        PhysicalDeviceInfo physicalDeviceInfo(physicalDevice, surface, requiredExtensions, requiredFeatures);
         if (physicalDeviceInfo.getScore() > bestPhysicalDeviceInfo.getScore())
         {
             bestPhysicalDeviceInfo = physicalDeviceInfo;
@@ -210,33 +206,46 @@ PhysicalDeviceInfo DeviceFactory::choosePhysicalDevice(const ::vk::Instance& ins
         }
     }
 
+    if (!bestPhysicalDeviceInfo.isSuitable())
+    {
+        mental::core::log::fatal("Failed to find suitable physical device");
+    }
+
     return bestPhysicalDeviceInfo;
 }
 
-PhysicalDeviceInfo::PhysicalDeviceInfo(
-    const ::vk::PhysicalDevice& physicalDevice, const ::vk::SurfaceKHR& surface, const std::vector<const char*>& requiredExtensions)
-    : mPhysicalDevice(physicalDevice), mSurface(surface), mProperties(physicalDevice.getProperties()),
-      mFeatures(physicalDevice.getFeatures()), mAreExtensionsSupported(checkDeviceExtensionSupport(requiredExtensions)),
-      mQueueFamilyWithPresentSupport(findQueueFamilyWithPresentSupport(::vk::QueueFlagBits::eGraphics)),
-      mSwapchainSupportDetails(querySwapchainSupport())
+::vk::Device DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo) const
 {
+    ::vk::PhysicalDevice physDevice = physicalDeviceInfo.getPhysicalDevice();
+
+    ::vk::DeviceQueueCreateInfo graphicsQueueCreateInfo{};
+    float graphicsQueuePriority = 1.0f;
+    graphicsQueueCreateInfo.setQueueFamilyIndex(physicalDeviceInfo.getGraphicsQueueFamily())
+        .setQueueCount(1)
+        .setPQueuePriorities(&graphicsQueuePriority);
+
+    ::vk::DeviceCreateInfo createInfo{};
+    createInfo.setQueueCreateInfoCount(1)
+        .setPQueueCreateInfos(&graphicsQueueCreateInfo)
+        .setPEnabledExtensionNames(physicalDeviceInfo.getRequiredExtensions())
+        .setPEnabledFeatures(&physicalDeviceInfo.getRequiredFeatures());
+
+    auto createDeviceRes = physDevice.createDevice(createInfo);
+    if (createDeviceRes.result != ::vk::Result::eSuccess)
+    {
+        mental::core::log::fatal("Failed to create logical device");
+    }
+
+    return createDeviceRes.value;
 }
 
-int PhysicalDeviceInfo::getScore() const
+PhysicalDeviceInfo::PhysicalDeviceInfo(const ::vk::PhysicalDevice& physicalDevice, const ::vk::SurfaceKHR& surface,
+    const std::vector<const char*>& requiredExtensions, const ::vk::PhysicalDeviceFeatures& features)
+    : mPhysicalDevice(physicalDevice), mSurface(surface), mProperties(physicalDevice.getProperties()),
+      mFeatures(physicalDevice.getFeatures()), mAreExtensionsSupported(checkDeviceExtensionSupport(requiredExtensions)),
+      mGraphicsQueueFamily(findGraphicsQueueFamily()), mSwapchainSupportDetails(querySwapchainSupport()), mScore(calculateScore()),
+      mRequiredExtensions(requiredExtensions), mRequiredFeatures(features)
 {
-    if (!mAreExtensionsSupported || !isGPU() || !mFeatures.geometryShader || mQueueFamilyWithPresentSupport == -1 ||
-        mSwapchainSupportDetails.formats.empty() || mSwapchainSupportDetails.presentModes.empty())
-    {
-        return 0;
-    }
-
-    int score = 1;
-    if (isDiscreteGPU())
-    {
-        score += 10;
-    }
-
-    return score;
 }
 
 bool PhysicalDeviceInfo::checkDeviceExtensionSupport(const std::vector<const char*>& extensions) const
@@ -256,9 +265,10 @@ bool PhysicalDeviceInfo::checkDeviceExtensionSupport(const std::vector<const cha
     return requiredSet.empty();
 }
 
-int PhysicalDeviceInfo::findQueueFamilyWithPresentSupport(::vk::QueueFlags desiredFlags) const
+int PhysicalDeviceInfo::findGraphicsQueueFamily() const
 {
     auto queueFamilyProperties = mPhysicalDevice.getQueueFamilyProperties();
+    ::vk::QueueFlags desiredFlags = ::vk::QueueFlagBits::eGraphics;
     for (uint32_t i = 0; i < queueFamilyProperties.size(); i++)
     {
         auto isPresentSupported = mPhysicalDevice.getSurfaceSupportKHR(i, mSurface);
@@ -289,6 +299,29 @@ SwapchainSupportDetails PhysicalDeviceInfo::querySwapchainSupport() const
     }
 
     return {surfaceCapabilities.value, surfaceFormats.value, presentModes.value};
+}
+
+int PhysicalDeviceInfo::calculateScore() const
+{
+    if (!mAreExtensionsSupported || !isGPU() || mGraphicsQueueFamily < 0 || mSwapchainSupportDetails.formats.empty() ||
+        mSwapchainSupportDetails.presentModes.empty())
+    {
+        return 0;
+    }
+
+    // TODO: should be expanded, only checking geometry shader support
+    if (mRequiredFeatures.geometryShader && !mFeatures.geometryShader)
+    {
+        return 0;
+    }
+
+    int score = 1;
+    if (isDiscreteGPU())
+    {
+        score += 10;
+    }
+
+    return score;
 }
 
 }  // namespace mental::rhi::vk

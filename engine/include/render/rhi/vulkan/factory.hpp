@@ -22,29 +22,38 @@ class PhysicalDeviceInfo
 {
 public:
     PhysicalDeviceInfo() = default;
-    PhysicalDeviceInfo(
-        const ::vk::PhysicalDevice& physicalDevice, const ::vk::SurfaceKHR& surface, const std::vector<const char*>& requiredExtensions);
+    PhysicalDeviceInfo(const ::vk::PhysicalDevice& physicalDevice, const ::vk::SurfaceKHR& surface,
+        const std::vector<const char*>& requiredExtensions, const ::vk::PhysicalDeviceFeatures& features);
 
     bool isDiscreteGPU() const { return mProperties.deviceType == ::vk::PhysicalDeviceType::eDiscreteGpu; }
     bool isIntegratedGPU() const { return mProperties.deviceType == ::vk::PhysicalDeviceType::eIntegratedGpu; }
     bool isGPU() const { return isDiscreteGPU() || isIntegratedGPU(); }
     bool areExtensionsSupported() const { return mAreExtensionsSupported; }
-    int getScore() const;
+    bool isSuitable() const { return mScore > 0; }
+
+    int getScore() const { return mScore; }
     ::vk::PhysicalDevice getPhysicalDevice() const { return mPhysicalDevice; };
+    uint32_t getGraphicsQueueFamily() const { return static_cast<uint32_t>(mGraphicsQueueFamily); }
+    const std::vector<const char*>& getRequiredExtensions() const { return mRequiredExtensions; }
+    const ::vk::PhysicalDeviceFeatures& getRequiredFeatures() const { return mRequiredFeatures; }
 
 private:
     bool checkDeviceExtensionSupport(const std::vector<const char*>& extensions) const;
-    int findQueueFamilyWithPresentSupport(::vk::QueueFlags desiredFlags) const;
+    int findGraphicsQueueFamily() const;
     SwapchainSupportDetails querySwapchainSupport() const;
+    int calculateScore() const;
 
     ::vk::PhysicalDevice mPhysicalDevice = nullptr;
     ::vk::SurfaceKHR mSurface = nullptr;
     ::vk::PhysicalDeviceProperties mProperties{};
     ::vk::PhysicalDeviceFeatures mFeatures{};
+    std::vector<const char*> mRequiredExtensions{};
 
-    int mQueueFamilyWithPresentSupport = -1;
+    int mGraphicsQueueFamily = -1;
     SwapchainSupportDetails mSwapchainSupportDetails{};
     bool mAreExtensionsSupported = false;
+    int mScore = 0;
+    ::vk::PhysicalDeviceFeatures mRequiredFeatures{};
 };
 
 class DeviceFactory
@@ -58,6 +67,7 @@ private:
     bool checkInstanceLayerSupport(const std::vector<const char*>& layers) const;
 
     PhysicalDeviceInfo choosePhysicalDevice(const ::vk::Instance& instance, const ::vk::SurfaceKHR& surface) const;
+    ::vk::Device createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo) const;
 
 #if defined(_DEBUG)
     DebugMessenger createDebugMessenger(::vk::Instance instance) const;
