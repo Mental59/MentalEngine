@@ -216,8 +216,6 @@ PhysicalDeviceInfo DeviceFactory::choosePhysicalDevice(const ::vk::Instance& ins
 
 ::vk::Device DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo) const
 {
-    ::vk::PhysicalDevice physDevice = physicalDeviceInfo.getPhysicalDevice();
-
     ::vk::DeviceQueueCreateInfo graphicsQueueCreateInfo{};
     float graphicsQueuePriority = 1.0f;
     graphicsQueueCreateInfo.setQueueFamilyIndex(physicalDeviceInfo.getGraphicsQueueFamily())
@@ -230,13 +228,17 @@ PhysicalDeviceInfo DeviceFactory::choosePhysicalDevice(const ::vk::Instance& ins
         .setPEnabledExtensionNames(physicalDeviceInfo.getRequiredExtensions())
         .setPEnabledFeatures(&physicalDeviceInfo.getRequiredFeatures());
 
-    auto createDeviceRes = physDevice.createDevice(createInfo);
+    auto createDeviceRes = physicalDeviceInfo.getPhysicalDevice().createDevice(createInfo);
     if (createDeviceRes.result != ::vk::Result::eSuccess)
     {
         mental::core::log::fatal("Failed to create logical device");
     }
 
-    return createDeviceRes.value;
+    ::vk::Device device = createDeviceRes.value;
+    volkLoadDevice(device);
+    VULKAN_HPP_DEFAULT_DISPATCHER.init(device);
+
+    return device;
 }
 
 PhysicalDeviceInfo::PhysicalDeviceInfo(const ::vk::PhysicalDevice& physicalDevice, const ::vk::SurfaceKHR& surface,
