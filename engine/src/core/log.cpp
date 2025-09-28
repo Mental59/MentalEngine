@@ -13,7 +13,7 @@ static constexpr size_t gMessageBufferSize = 4096;
 
 static std::string gErrorMessageCaption = "Error";
 
-static bool gOutputToMessageBox = false;
+static bool gOutputToMessageBox = true;
 static bool gOutputToDebug = false;
 static bool gOutputToConsole = true;
 

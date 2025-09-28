@@ -25,15 +25,15 @@ public:
     PhysicalDeviceInfo(const ::vk::PhysicalDevice& physicalDevice, const ::vk::SurfaceKHR& surface,
         const std::vector<const char*>& requiredExtensions, const ::vk::PhysicalDeviceFeatures& features);
 
-    bool isDiscreteGPU() const { return mProperties.deviceType == ::vk::PhysicalDeviceType::eDiscreteGpu; }
-    bool isIntegratedGPU() const { return mProperties.deviceType == ::vk::PhysicalDeviceType::eIntegratedGpu; }
+    bool isDiscreteGPU() const { return mPhysicalDevice.getProperties().deviceType == ::vk::PhysicalDeviceType::eDiscreteGpu; }
+    bool isIntegratedGPU() const { return mPhysicalDevice.getProperties().deviceType == ::vk::PhysicalDeviceType::eIntegratedGpu; }
     bool isGPU() const { return isDiscreteGPU() || isIntegratedGPU(); }
     bool areExtensionsSupported() const { return mAreExtensionsSupported; }
     bool isSuitable() const { return mScore > 0; }
 
     int getScore() const { return mScore; }
     ::vk::PhysicalDevice getPhysicalDevice() const { return mPhysicalDevice; };
-    uint32_t getGraphicsQueueFamily() const { return static_cast<uint32_t>(mGraphicsQueueFamily); }
+    int getGraphicsQueueFamily() const { return mGraphicsQueueFamily; }
     const std::vector<const char*>& getRequiredExtensions() const { return mRequiredExtensions; }
     const ::vk::PhysicalDeviceFeatures& getRequiredFeatures() const { return mRequiredFeatures; }
 
@@ -45,8 +45,6 @@ private:
 
     ::vk::PhysicalDevice mPhysicalDevice = nullptr;
     ::vk::SurfaceKHR mSurface = nullptr;
-    ::vk::PhysicalDeviceProperties mProperties{};
-    ::vk::PhysicalDeviceFeatures mFeatures{};
     std::vector<const char*> mRequiredExtensions{};
 
     int mGraphicsQueueFamily = -1;

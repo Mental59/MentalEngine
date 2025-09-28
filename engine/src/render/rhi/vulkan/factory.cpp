@@ -80,8 +80,16 @@ DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::S
     PhysicalDeviceInfo physicalDeviceInfo = choosePhysicalDevice(instance, surface);
     ::vk::Device device = createLogicalDevice(physicalDeviceInfo);
 
-    return createDevice(
-        {instance, debugMessenger.utilsMessenger, debugMessenger.reportCallback, surface, physicalDeviceInfo.getPhysicalDevice(), device});
+    DeviceDesc desc{.instance = instance,
+        .surface = surface,
+        .physicalDevice = physicalDeviceInfo.getPhysicalDevice(),
+        .device = device,
+        .graphicsQueue = device.getQueue(physicalDeviceInfo.getGraphicsQueueFamily(), 0),
+        .graphicsQueueIndex = physicalDeviceInfo.getGraphicsQueueFamily(),
+        .debugUtilsMessenger = debugMessenger.utilsMessenger,
+        .debugReportCallback = debugMessenger.reportCallback};
+
+    return createDevice(desc);
 }
 
 ::vk::Instance DeviceFactory::createInstance() const
@@ -243,8 +251,7 @@ PhysicalDeviceInfo DeviceFactory::choosePhysicalDevice(const ::vk::Instance& ins
 
 PhysicalDeviceInfo::PhysicalDeviceInfo(const ::vk::PhysicalDevice& physicalDevice, const ::vk::SurfaceKHR& surface,
     const std::vector<const char*>& requiredExtensions, const ::vk::PhysicalDeviceFeatures& features)
-    : mPhysicalDevice(physicalDevice), mSurface(surface), mProperties(physicalDevice.getProperties()),
-      mFeatures(physicalDevice.getFeatures()), mAreExtensionsSupported(checkDeviceExtensionSupport(requiredExtensions)),
+    : mPhysicalDevice(physicalDevice), mSurface(surface), mAreExtensionsSupported(checkDeviceExtensionSupport(requiredExtensions)),
       mGraphicsQueueFamily(findGraphicsQueueFamily()), mSwapchainSupportDetails(querySwapchainSupport()), mScore(calculateScore()),
       mRequiredExtensions(requiredExtensions), mRequiredFeatures(features)
 {
@@ -312,7 +319,8 @@ int PhysicalDeviceInfo::calculateScore() const
     }
 
     // TODO: should be expanded, only checking geometry shader support
-    if (mRequiredFeatures.geometryShader && !mFeatures.geometryShader)
+    ::vk::PhysicalDeviceFeatures features = mPhysicalDevice.getFeatures();
+    if (mRequiredFeatures.geometryShader && !features.geometryShader)
     {
         return 0;
     }
