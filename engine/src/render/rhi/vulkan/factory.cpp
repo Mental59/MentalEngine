@@ -70,29 +70,31 @@ DebugMessenger DeviceFactory::createDebugMessenger(::vk::Instance instance) cons
 }
 #endif
 
-DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::SurfaceKHR& surface) const
+DeviceHandle DeviceFactory::create(const InstanceInfo& instanceInfo, const ::vk::SurfaceKHR& surface) const
 {
     DebugMessenger debugMessenger{};
 #if defined(_DEBUG)
-    debugMessenger = createDebugMessenger(instance);
+    debugMessenger = createDebugMessenger(instanceInfo.getInstance());
 #endif
 
-    PhysicalDeviceInfo physicalDeviceInfo = choosePhysicalDevice(instance, surface);
+    PhysicalDeviceInfo physicalDeviceInfo = choosePhysicalDevice(instanceInfo.getInstance(), surface);
     ::vk::Device device = createLogicalDevice(physicalDeviceInfo);
 
-    DeviceDesc desc{.instance = instance,
+    DeviceDesc desc{.instance = instanceInfo.getInstance(),
         .surface = surface,
         .physicalDevice = physicalDeviceInfo.getPhysicalDevice(),
         .device = device,
         .graphicsQueue = device.getQueue(physicalDeviceInfo.getGraphicsQueueFamily(), 0),
         .graphicsQueueIndex = physicalDeviceInfo.getGraphicsQueueFamily(),
         .debugUtilsMessenger = debugMessenger.utilsMessenger,
-        .debugReportCallback = debugMessenger.reportCallback};
+        .debugReportCallback = debugMessenger.reportCallback,
+        .instanceExtensions = instanceInfo.getExtensions(),
+        .deviceExtensions = physicalDeviceInfo.getRequiredExtensions()};
 
     return createDevice(desc);
 }
 
-::vk::Instance DeviceFactory::createInstance() const
+InstanceInfo DeviceFactory::createInstance() const
 {
     VkResult volkInitRes = volkInitialize();
     if (volkInitRes != VK_SUCCESS)
@@ -119,7 +121,7 @@ DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::S
             VK_API_VERSION_MAJOR(minimumVulkanVersion), VK_API_VERSION_MINOR(minimumVulkanVersion),
             VK_API_VERSION_PATCH(minimumVulkanVersion));
 
-        return nullptr;
+        return {};
     }
 
     std::vector<const char*> instanceExtensions = ExtensionManager::getRequiredInstanceExtensions();
@@ -144,14 +146,14 @@ DeviceHandle DeviceFactory::create(const ::vk::Instance& instance, const ::vk::S
     ::vk::ResultValue<::vk::Instance> createInstanceRes = ::vk::createInstance(instanceCreateInfo);
     if (createInstanceRes.result != ::vk::Result::eSuccess)
     {
-        return nullptr;
+        return {};
     }
 
     ::vk::Instance instance = createInstanceRes.value;
     volkLoadInstance(instance);
     VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
 
-    return instance;
+    return InstanceInfo(instance, instanceExtensions);
 }
 
 bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const

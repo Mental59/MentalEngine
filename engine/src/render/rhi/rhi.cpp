@@ -33,10 +33,10 @@ DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* cons
         {
             vk::DeviceFactory factory;
 
-            ::vk::Instance instance = factory.createInstance();
-            ::vk::SurfaceKHR surface = window->createSurface(instance);
+            vk::InstanceInfo instanceInfo = factory.createInstance();
+            ::vk::SurfaceKHR surface = window->createSurface(instanceInfo.getInstance());
 
-            device = factory.create(instance, surface);
+            device = factory.create(instanceInfo, surface);
 
             if (!device)
             {

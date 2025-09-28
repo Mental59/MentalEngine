@@ -3,6 +3,9 @@
 #include <render/rhi/rhi.hpp>
 #include <vulkan/vulkan.hpp>
 #include <core/memory.hpp>
+#include <unordered_set>
+#include <string>
+#include <vector>
 
 namespace mental::rhi::vk
 {
@@ -18,24 +21,31 @@ struct DeviceDesc
 
     ::vk::DebugUtilsMessengerEXT debugUtilsMessenger;
     ::vk::DebugReportCallbackEXT debugReportCallback;
+
+    std::vector<const char*> instanceExtensions;
+    std::vector<const char*> deviceExtensions;
 };
 
 struct Context
 {
-    ::vk::Instance instance;
-    ::vk::SurfaceKHR surface;
-    ::vk::PhysicalDevice physicalDevice;
-    ::vk::Device device;
+    ::vk::Instance mInstance;
+    ::vk::SurfaceKHR mSurface;
+    ::vk::PhysicalDevice mPhysicalDevice;
+    ::vk::Device mDevice;
 
-    ::vk::DebugReportCallbackEXT debugReportCallback;
-    ::vk::DebugUtilsMessengerEXT debugUtilsMessenger;
+    ::vk::DebugReportCallbackEXT mDebugReportCallback;
+    ::vk::DebugUtilsMessengerEXT mDebugUtilsMessenger;
 
-    ::vk::SurfaceCapabilitiesKHR capabilities;
-    std::vector<::vk::SurfaceFormatKHR> formats;
-    std::vector<::vk::PresentModeKHR> presentModes;
+    ::vk::SurfaceCapabilitiesKHR mCapabilities;
+    std::vector<::vk::SurfaceFormatKHR> mFormats;
+    std::vector<::vk::PresentModeKHR> mPresentModes;
+
+    std::unordered_set<std::string> mInstanceExtensions;
+    std::unordered_set<std::string> mDeviceExtensions;
 
     Context(::vk::Instance instance, ::vk::SurfaceKHR surface, ::vk::PhysicalDevice physicalDevice, ::vk::Device device,
-        ::vk::DebugReportCallbackEXT debugReportCallback, ::vk::DebugUtilsMessengerEXT debugUtilsMessenger);
+        ::vk::DebugReportCallbackEXT debugReportCallback, ::vk::DebugUtilsMessengerEXT debugUtilsMessenger,
+        const std::vector<const char*>& instanceExtensions, const std::vector<const char*>& deviceExtensions);
     void destroy();
 };
 

@@ -54,11 +54,25 @@ private:
     ::vk::PhysicalDeviceFeatures mRequiredFeatures{};
 };
 
+class InstanceInfo
+{
+public:
+    InstanceInfo() = default;
+    InstanceInfo(::vk::Instance instance, const std::vector<const char*>& extensions) : mInstance(instance), mExtensions(extensions) {}
+
+    ::vk::Instance getInstance() const { return mInstance; }
+    const std::vector<const char*>& getExtensions() const { return mExtensions; };
+
+private:
+    ::vk::Instance mInstance = nullptr;
+    std::vector<const char*> mExtensions;
+};
+
 class DeviceFactory
 {
 public:
-    DeviceHandle create(const ::vk::Instance& instance, const ::vk::SurfaceKHR& surface) const;
-    ::vk::Instance createInstance() const;
+    DeviceHandle create(const InstanceInfo& instanceInfo, const ::vk::SurfaceKHR& surface) const;
+    InstanceInfo createInstance() const;
 
 private:
     bool checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const;
