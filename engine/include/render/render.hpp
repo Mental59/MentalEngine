@@ -12,12 +12,10 @@ namespace mental::render
 class RenderSystem
 {
 public:
-    RenderSystem() = default;
-    ~RenderSystem() = default;
-
-    bool init(const mental::platform::IWindow* const window);
+    RenderSystem(const mental::platform::IWindow* const window);
+    ~RenderSystem();
 
 private:
-    mental::rhi::DeviceHandle mDevice;
+    mental::rhi::IDevice* mDevice;
 };
 }  // namespace mental::render

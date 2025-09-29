@@ -1,16 +1,15 @@
 #pragma once
 #include <platform/window.hpp>
-#include <core/memory.hpp>
 
 class GLFWwindow;
 
 namespace mental::platform
 {
-class GLFWwindow : public core::memory::RefCounter<IWindow>
+class GLFWwindow : public IWindow
 {
 public:
     GLFWwindow(const WindowDesc& desc);
-    virtual ~GLFWwindow() override;
+    virtual ~GLFWwindow();
 
     virtual void pollEvents() const override;
     virtual double getTime() const override;

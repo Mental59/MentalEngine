@@ -6,8 +6,6 @@
 
 namespace mental::core::memory
 {
-typedef uint32_t ObjectType;
-
 struct Object
 {
     union
@@ -26,7 +24,13 @@ struct Object
     }
 };
 
-class IResource
+class IObject
+{
+public:
+    virtual Object getNativeObject(uint32_t type) { return nullptr; }
+};
+
+class IResource : public IObject
 {
 protected:
     IResource() = default;
@@ -35,8 +39,6 @@ protected:
 public:
     virtual unsigned long AddRef() = 0;
     virtual unsigned long Release() = 0;
-
-    virtual Object getNativeObject(ObjectType type) { return nullptr; }
 
     IResource(const IResource&) = delete;
     IResource(const IResource&&) = delete;

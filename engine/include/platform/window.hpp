@@ -16,7 +16,7 @@ struct WindowDesc
     int height = 0;
 };
 
-class IWindow : public core::memory::IResource
+class IWindow : public core::memory::IObject
 {
 public:
     virtual void pollEvents() const = 0;
@@ -27,7 +27,5 @@ public:
     virtual ::vk::SurfaceKHR createSurface(const ::vk::Instance& instance) const = 0;
 #endif
 };
-
-typedef core::memory::RefCountPtr<IWindow> WindowHandle;
 
 }  // namespace mental::platform

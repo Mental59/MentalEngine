@@ -71,7 +71,7 @@ private:
 class DeviceFactory
 {
 public:
-    DeviceHandle create(const InstanceInfo& instanceInfo, const ::vk::SurfaceKHR& surface) const;
+    Device* create(const InstanceInfo& instanceInfo, const ::vk::SurfaceKHR& surface) const;
     InstanceInfo createInstance() const;
 
 private:

@@ -2,7 +2,6 @@
 
 #include <render/rhi/rhi.hpp>
 #include <vulkan/vulkan.hpp>
-#include <core/memory.hpp>
 #include <unordered_set>
 #include <string>
 #include <vector>
@@ -49,13 +48,13 @@ struct Context
     void destroy();
 };
 
-class Device : public core::memory::RefCounter<IDevice>
+class Device : public IDevice
 {
 public:
     Device(const DeviceDesc& desc);
-    virtual ~Device() override;
+    virtual void destroy() override;
 
-    virtual void WaitIdle() override;
+    virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
 
 private:
@@ -65,5 +64,5 @@ private:
     int mGraphicsQueueIndex = -1;
 };
 
-DeviceHandle createDevice(const DeviceDesc& desc);
+Device* createDevice(const DeviceDesc& desc);
 }  // namespace mental::rhi::vk

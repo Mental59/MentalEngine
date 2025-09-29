@@ -1,12 +1,19 @@
 #include <render/render.hpp>
 #include <render/rhi/rhi.hpp>
 #include <platform/window.hpp>
+#include <core/log.hpp>
 
 namespace mental::render
 {
-bool RenderSystem::init(const platform::IWindow* const window)
+RenderSystem::RenderSystem(const mental::platform::IWindow* const window) : mDevice(rhi::createDevice(rhi::GraphicsApi::Vulkan, window))
 {
-    mDevice = rhi::createDevice(rhi::GraphicsApi::Vulkan, window);
-    return true;
+    mental::core::log::info("Render system initialized");
 }
+
+RenderSystem::~RenderSystem()
+{
+    mDevice->destroy();
+    mental::core::log::info("Render system destroyed");
+}
+
 }  // namespace mental::render

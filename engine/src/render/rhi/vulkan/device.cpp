@@ -46,13 +46,13 @@ Device::Device(const DeviceDesc& desc)
     mental::core::log::info("Vulkan device initialized");
 }
 
-Device::~Device()
+void Device::destroy()
 {
     mContext.destroy();
     mental::core::log::info("Vulkan device destroyed");
 }
 
-void Device::WaitIdle()
+void Device::waitIdle()
 {
     mContext.mDevice.waitIdle();
 }
@@ -62,10 +62,10 @@ GraphicsApi Device::getGraphicsApi()
     return GraphicsApi::Vulkan;
 }
 
-DeviceHandle createDevice(const DeviceDesc& desc)
+Device* createDevice(const DeviceDesc& desc)
 {
-    Device* device = new Device(desc);
-    return DeviceHandle::Create(device);
+    static Device device(desc);
+    return &device;
 }
 
 }  // namespace mental::rhi::vk

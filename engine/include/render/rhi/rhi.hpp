@@ -14,15 +14,17 @@ enum class GraphicsApi : uint8_t
     Vulkan
 };
 
-class IDevice : public core::memory::IResource
+const char* graphicsApiToString(GraphicsApi api);
+
+class IDevice : public core::memory::IObject
 {
-    virtual void WaitIdle() = 0;
+public:
+    virtual void waitIdle() = 0;
+    virtual void destroy() = 0;
     virtual GraphicsApi getGraphicsApi() = 0;
 
     // TODO: extend interface
 };
 
-typedef core::memory::RefCountPtr<IDevice> DeviceHandle;
-
-DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* const window);
+IDevice* createDevice(GraphicsApi api, const mental::platform::IWindow* const window);
 }  // namespace mental::rhi

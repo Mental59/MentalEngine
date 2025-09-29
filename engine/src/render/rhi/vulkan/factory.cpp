@@ -70,7 +70,7 @@ DebugMessenger DeviceFactory::createDebugMessenger(::vk::Instance instance) cons
 }
 #endif
 
-DeviceHandle DeviceFactory::create(const InstanceInfo& instanceInfo, const ::vk::SurfaceKHR& surface) const
+Device* DeviceFactory::create(const InstanceInfo& instanceInfo, const ::vk::SurfaceKHR& surface) const
 {
     DebugMessenger debugMessenger{};
 #if defined(_DEBUG)

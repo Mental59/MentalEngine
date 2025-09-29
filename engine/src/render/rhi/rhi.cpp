@@ -7,7 +7,7 @@
 
 namespace mental::rhi
 {
-static const char* graphicsApiToString(GraphicsApi api)
+const char* graphicsApiToString(GraphicsApi api)
 {
     switch (api)
     {
@@ -22,9 +22,9 @@ static const char* graphicsApiToString(GraphicsApi api)
     }
 }
 
-DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* const window)
+IDevice* createDevice(GraphicsApi api, const mental::platform::IWindow* const window)
 {
-    DeviceHandle device;
+    IDevice* device;
 
     switch (api)
     {
