@@ -19,6 +19,12 @@ const char* graphicsApiToString(GraphicsApi api);
 class IDevice : public core::memory::IObject
 {
 public:
+    IDevice() = default;
+    IDevice(const IDevice&) = delete;
+    IDevice(const IDevice&&) = delete;
+    IDevice& operator=(const IDevice&) = delete;
+    IDevice& operator=(const IDevice&&) = delete;
+
     virtual void waitIdle() = 0;
     virtual void destroy() = 0;
     virtual GraphicsApi getGraphicsApi() = 0;
