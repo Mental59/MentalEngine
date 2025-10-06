@@ -62,7 +62,7 @@ GraphicsApi Device::getGraphicsApi()
     return GraphicsApi::Vulkan;
 }
 
-Device* createDevice(const DeviceDesc& desc)
+Device* Device::create(const DeviceDesc& desc)
 {
     static Device device(desc);
     return &device;

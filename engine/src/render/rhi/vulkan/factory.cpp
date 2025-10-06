@@ -91,7 +91,7 @@ Device* DeviceFactory::create(const InstanceInfo& instanceInfo, const ::vk::Surf
         .instanceExtensions = instanceInfo.getExtensions(),
         .deviceExtensions = physicalDeviceInfo.getRequiredExtensions()};
 
-    return createDevice(desc);
+    return Device::create(desc);
 }
 
 InstanceInfo DeviceFactory::createInstance() const

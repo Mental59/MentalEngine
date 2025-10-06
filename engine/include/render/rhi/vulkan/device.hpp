@@ -51,18 +51,19 @@ struct Context
 class Device : public IDevice
 {
 public:
-    Device(const DeviceDesc& desc);
+    static Device* create(const DeviceDesc& desc);
+
     virtual void destroy() override;
 
     virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
 
 private:
+    Device(const DeviceDesc& desc);
     Context mContext;
 
     ::vk::Queue mGraphicsQueue;
     int mGraphicsQueueIndex = -1;
 };
 
-Device* createDevice(const DeviceDesc& desc);
 }  // namespace mental::rhi::vk
