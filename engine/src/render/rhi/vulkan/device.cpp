@@ -1,4 +1,5 @@
 #include <render/rhi/vulkan/device.hpp>
+#include <render/rhi/vulkan/buffer.hpp>
 #include <core/log.hpp>
 
 namespace mental::rhi::vk
@@ -60,6 +61,12 @@ void Device::waitIdle()
 GraphicsApi Device::getGraphicsApi()
 {
     return GraphicsApi::Vulkan;
+}
+
+BufferHandle Device::createBuffer(BufferDesc desc)
+{
+    Buffer* buffer = new Buffer(desc);
+    return BufferHandle::create(buffer);
 }
 
 Device* Device::create(const DeviceDesc& desc)

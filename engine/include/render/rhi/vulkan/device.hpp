@@ -57,6 +57,7 @@ public:
 
     virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
+    virtual BufferHandle createBuffer(BufferDesc desc) override;
 
 private:
     Device(const DeviceDesc& desc);

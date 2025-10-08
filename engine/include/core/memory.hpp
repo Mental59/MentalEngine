@@ -37,8 +37,8 @@ protected:
     virtual ~IResource() = default;
 
 public:
-    virtual unsigned long AddRef() = 0;
-    virtual unsigned long Release() = 0;
+    virtual unsigned long addRef() = 0;
+    virtual unsigned long release() = 0;
 
     IResource(const IResource&) = delete;
     IResource(const IResource&&) = delete;
@@ -55,15 +55,15 @@ public:
 protected:
     InterfaceType* ptr_;
 
-    void InternalAddRef() const noexcept
+    void internalAddRef() const noexcept
     {
         if (ptr_ != nullptr)
         {
-            ptr_->AddRef();
+            ptr_->addRef();
         }
     }
 
-    unsigned long InternalRelease() noexcept
+    unsigned long internalRelease() noexcept
     {
         unsigned long ref = 0;
         T* temp = ptr_;
@@ -71,7 +71,7 @@ protected:
         if (temp != nullptr)
         {
             ptr_ = nullptr;
-            ref = temp->Release();
+            ref = temp->release();
         }
 
         return ref;
@@ -85,24 +85,24 @@ public:
     template <class U>
     RefCountPtr(U* other) noexcept : ptr_(other)
     {
-        InternalAddRef();
+        internalAddRef();
     }
 
-    RefCountPtr(const RefCountPtr& other) noexcept : ptr_(other.ptr_) { InternalAddRef(); }
+    RefCountPtr(const RefCountPtr& other) noexcept : ptr_(other.ptr_) { internalAddRef(); }
 
     RefCountPtr(RefCountPtr&& other) noexcept : ptr_(nullptr)
     {
         if (this != reinterpret_cast<RefCountPtr*>(&reinterpret_cast<unsigned char&>(other)))
         {
-            Swap(other);
+            swap(other);
         }
     }
 
-    ~RefCountPtr() noexcept { InternalRelease(); }
+    ~RefCountPtr() noexcept { internalRelease(); }
 
     RefCountPtr& operator=(std::nullptr_t) noexcept
     {
-        InternalRelease();
+        internalRelease();
         return *this;
     }
 
@@ -110,7 +110,7 @@ public:
     {
         if (ptr_ != other)
         {
-            RefCountPtr(other).Swap(*this);
+            RefCountPtr(other).swap(*this);
         }
         return *this;
     }
@@ -118,7 +118,7 @@ public:
     template <typename U>
     RefCountPtr& operator=(U* other) noexcept
     {
-        RefCountPtr(other).Swap(*this);
+        RefCountPtr(other).swap(*this);
         return *this;
     }
 
@@ -126,7 +126,7 @@ public:
     {
         if (ptr_ != other.ptr_)
         {
-            RefCountPtr(other).Swap(*this);
+            RefCountPtr(other).swap(*this);
         }
         return *this;
     }
@@ -134,13 +134,13 @@ public:
     template <class U>
     RefCountPtr& operator=(const RefCountPtr<U>& other) noexcept
     {
-        RefCountPtr(other).Swap(*this);
+        RefCountPtr(other).swap(*this);
         return *this;
     }
 
     RefCountPtr& operator=(RefCountPtr&& other) noexcept
     {
-        RefCountPtr(static_cast<RefCountPtr&&>(other)).Swap(*this);
+        RefCountPtr(static_cast<RefCountPtr&&>(other)).swap(*this);
         return *this;
     }
 
@@ -151,21 +151,21 @@ public:
         return *this;
     }
 
-    void Swap(RefCountPtr&& r) noexcept
+    void swap(RefCountPtr&& r) noexcept
     {
         T* tmp = ptr_;
         ptr_ = r.ptr_;
         r.ptr_ = tmp;
     }
 
-    void Swap(RefCountPtr& r) noexcept
+    void swap(RefCountPtr& r) noexcept
     {
         T* tmp = ptr_;
         ptr_ = r.ptr_;
         r.ptr_ = tmp;
     }
 
-    [[nodiscard]] T* Get() const noexcept { return ptr_; }
+    [[nodiscard]] T* get() const noexcept { return ptr_; }
 
     operator T*() const { return ptr_; }
 
@@ -173,17 +173,17 @@ public:
 
     T** operator&() { return &ptr_; }
 
-    [[nodiscard]] T* const* GetAddressOf() const noexcept { return &ptr_; }
+    [[nodiscard]] T* const* getAddressOf() const noexcept { return &ptr_; }
 
-    [[nodiscard]] T** GetAddressOf() noexcept { return &ptr_; }
+    [[nodiscard]] T** getAddressOf() noexcept { return &ptr_; }
 
-    [[nodiscard]] T** ReleaseAndGetAddressOf() noexcept
+    [[nodiscard]] T** releaseAndGetAddressOf() noexcept
     {
-        InternalRelease();
+        internalRelease();
         return &ptr_;
     }
 
-    T* Detach() noexcept
+    T* detach() noexcept
     {
         T* ptr = ptr_;
         ptr_ = nullptr;
@@ -191,11 +191,11 @@ public:
     }
 
     // Set the pointer while keeping the object's reference count unchanged
-    void Attach(InterfaceType* other)
+    void attach(InterfaceType* other)
     {
         if (ptr_ != nullptr)
         {
-            auto ref = ptr_->Release();
+            auto ref = ptr_->release();
             (void)ref;
 
             // Attaching to the same object only works if duplicate references are being coalesced. Otherwise
@@ -207,14 +207,14 @@ public:
     }
 
     // Create a wrapper around a raw object while keeping the object's reference count unchanged
-    static RefCountPtr<T> Create(T* other)
+    static RefCountPtr<T> create(T* other)
     {
         RefCountPtr<T> Ptr;
-        Ptr.Attach(other);
+        Ptr.attach(other);
         return Ptr;
     }
 
-    unsigned long Reset() { return InternalRelease(); }
+    unsigned long reset() { return internalRelease(); }
 };
 
 template <class T>
@@ -224,9 +224,9 @@ private:
     std::atomic<unsigned long> m_refCount = 1;
 
 public:
-    virtual unsigned long AddRef() override { return ++m_refCount; }
+    virtual unsigned long addRef() override { return ++m_refCount; }
 
-    virtual unsigned long Release() override
+    virtual unsigned long release() override
     {
         unsigned long result = --m_refCount;
         if (result == 0)

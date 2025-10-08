@@ -16,6 +16,24 @@ enum class GraphicsApi : uint8_t
 
 const char* graphicsApiToString(GraphicsApi api);
 
+enum class BufferType : uint8_t
+{
+    DeviceLocal = 0,
+    Upload
+};
+
+struct BufferDesc
+{
+    BufferType type;
+};
+
+class IBuffer : public core::memory::IResource
+{
+public:
+    virtual const BufferDesc& getDesc() const = 0;
+};
+typedef core::memory::RefCountPtr<IBuffer> BufferHandle;
+
 class IDevice : public core::memory::IObject
 {
 public:
@@ -29,8 +47,11 @@ public:
     virtual void destroy() = 0;
     virtual GraphicsApi getGraphicsApi() = 0;
 
+    virtual BufferHandle createBuffer(BufferDesc desc) = 0;
+
     // TODO: extend interface
 };
 
 IDevice* createDevice(GraphicsApi api, const mental::platform::IWindow* const window);
+
 }  // namespace mental::rhi
