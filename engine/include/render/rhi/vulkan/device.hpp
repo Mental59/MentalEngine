@@ -2,6 +2,7 @@
 
 #include <render/rhi/rhi.hpp>
 #include <vulkan/vulkan.hpp>
+#include <vma/vk_mem_alloc.h>
 #include <unordered_set>
 #include <string>
 #include <vector>
@@ -14,6 +15,7 @@ struct DeviceDesc
     ::vk::SurfaceKHR surface;
     ::vk::PhysicalDevice physicalDevice;
     ::vk::Device device;
+    uint32_t apiVersion;
 
     ::vk::Queue graphicsQueue;
     int graphicsQueueIndex = -1;
@@ -31,6 +33,7 @@ struct Context
     ::vk::SurfaceKHR mSurface;
     ::vk::PhysicalDevice mPhysicalDevice;
     ::vk::Device mDevice;
+    VmaAllocator mAllocator;
 
     ::vk::DebugReportCallbackEXT mDebugReportCallback;
     ::vk::DebugUtilsMessengerEXT mDebugUtilsMessenger;
@@ -43,7 +46,7 @@ struct Context
     std::unordered_set<std::string> mDeviceExtensions;
 
     Context(::vk::Instance instance, ::vk::SurfaceKHR surface, ::vk::PhysicalDevice physicalDevice, ::vk::Device device,
-        ::vk::DebugReportCallbackEXT debugReportCallback, ::vk::DebugUtilsMessengerEXT debugUtilsMessenger,
+        uint32_t apiVersion, ::vk::DebugReportCallbackEXT debugReportCallback, ::vk::DebugUtilsMessengerEXT debugUtilsMessenger,
         const std::vector<const char*>& instanceExtensions, const std::vector<const char*>& deviceExtensions);
     void destroy();
 };

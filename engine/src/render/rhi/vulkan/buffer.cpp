@@ -8,5 +8,6 @@ mental::rhi::vk::Buffer::Buffer(const BufferDesc& desc) : mDesc(desc)
 
 mental::rhi::vk::Buffer::~Buffer()
 {
+    vmaDestroyBuffer(mAllocator, mBuffer, mAllocation);
     mental::core::log::info("Vulkan buffer destroyed");
 }

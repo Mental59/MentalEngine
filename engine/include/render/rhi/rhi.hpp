@@ -18,13 +18,17 @@ const char* graphicsApiToString(GraphicsApi api);
 
 enum class BufferType : uint8_t
 {
-    DeviceLocal = 0,
-    Upload
+    eStorage,
+    eUniform,
+    eNone
 };
 
 struct BufferDesc
 {
-    BufferType type;
+    BufferType type = BufferType::eStorage;
+    uint64_t byteSize = 0;
+    bool isTransferDst = false;
+    bool isTransferSrc = false;
 };
 
 class IBuffer : public core::memory::IResource

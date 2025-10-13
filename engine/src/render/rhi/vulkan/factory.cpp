@@ -1,7 +1,6 @@
 #include <render/rhi/vulkan/factory.hpp>
 #include <render/rhi/vulkan/device.hpp>
 #include <render/rhi/vulkan/extensionManager.hpp>
-#include <platform/window.hpp>
 #include <Volk/volk.h>
 #include <vulkan/vulkan.hpp>
 #include <core/log.hpp>

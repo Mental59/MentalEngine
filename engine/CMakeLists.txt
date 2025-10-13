@@ -28,4 +28,4 @@ add_subdirectory(deps/glfw)
 
 target_include_directories(MentalEngine PUBLIC include ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(MentalEngine PRIVATE Vulkan::Vulkan glfw)
-target_compile_definitions(MentalEngine PRIVATE VULKAN_HPP_NO_EXCEPTIONS MENTAL_WITH_VULKAN VK_NO_PROTOTYPES VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1)
+target_compile_definitions(MentalEngine PRIVATE VULKAN_HPP_NO_EXCEPTIONS MENTAL_WITH_VULKAN VK_NO_PROTOTYPES VULKAN_HPP_DISPATCH_LOADER_DYNAMIC=1 VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0)
