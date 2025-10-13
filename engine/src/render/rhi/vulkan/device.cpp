@@ -84,6 +84,8 @@ GraphicsApi Device::getGraphicsApi()
 
 BufferHandle Device::createBuffer(BufferDesc desc)
 {
+    if (desc.byteSize == 0) return nullptr;
+
     ::vk::BufferUsageFlags usageFlags;
     switch (desc.type)
     {
