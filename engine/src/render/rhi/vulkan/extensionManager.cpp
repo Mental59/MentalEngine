@@ -1,6 +1,6 @@
 #include <render/rhi/vulkan/extensionManager.hpp>
 #include <core/log.hpp>
-#include <vulkan/vulkan.hpp>
+#include <volk/volk.h>
 
 std::vector<const char*> mental::rhi::vk::ExtensionManager::getRequiredInstanceExtensions()
 {

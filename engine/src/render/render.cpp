@@ -12,7 +12,6 @@ RenderSystem::RenderSystem(const mental::platform::IWindow* const window) : mDev
 
 RenderSystem::~RenderSystem()
 {
-    mDevice->destroy();
     mental::core::log::info("Render system destroyed");
 }
 

@@ -1,41 +1,42 @@
 #pragma once
 #include <render/rhi/vulkan/device.hpp>
-#include <vulkan/vulkan.hpp>
+#include <volk/volk.h>
 #include <vector>
 
 namespace mental::rhi::vk
 {
 struct DebugMessenger
 {
-    ::vk::DebugUtilsMessengerEXT utilsMessenger = nullptr;
-    ::vk::DebugReportCallbackEXT reportCallback = nullptr;
+    VkDebugUtilsMessengerEXT utilsMessenger;
+    VkDebugReportCallbackEXT reportCallback;
 };
 
 struct SwapchainSupportDetails
 {
-    ::vk::SurfaceCapabilitiesKHR capabilities{};
-    std::vector<::vk::SurfaceFormatKHR> formats{};
-    std::vector<::vk::PresentModeKHR> presentModes{};
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
 };
 
 class PhysicalDeviceInfo
 {
 public:
     PhysicalDeviceInfo() = default;
-    PhysicalDeviceInfo(const ::vk::PhysicalDevice& physicalDevice, const ::vk::SurfaceKHR& surface,
-        const std::vector<const char*>& requiredExtensions, const ::vk::PhysicalDeviceFeatures& features);
+    PhysicalDeviceInfo(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, const std::vector<const char*>& requiredExtensions,
+        const VkPhysicalDeviceFeatures& features);
 
-    bool isDiscreteGPU() const { return mPhysicalDevice.getProperties().deviceType == ::vk::PhysicalDeviceType::eDiscreteGpu; }
-    bool isIntegratedGPU() const { return mPhysicalDevice.getProperties().deviceType == ::vk::PhysicalDeviceType::eIntegratedGpu; }
+    bool isDiscreteGPU() const;
+    bool isIntegratedGPU() const;
     bool isGPU() const { return isDiscreteGPU() || isIntegratedGPU(); }
     bool areExtensionsSupported() const { return mAreExtensionsSupported; }
     bool isSuitable() const { return mScore > 0; }
 
     int getScore() const { return mScore; }
-    ::vk::PhysicalDevice getPhysicalDevice() const { return mPhysicalDevice; };
+    VkPhysicalDevice getPhysicalDevice() const { return mPhysicalDevice; };
     int getGraphicsQueueFamily() const { return mGraphicsQueueFamily; }
     const std::vector<const char*>& getRequiredExtensions() const { return mRequiredExtensions; }
-    const ::vk::PhysicalDeviceFeatures& getRequiredFeatures() const { return mRequiredFeatures; }
+    const VkPhysicalDeviceFeatures& getRequiredFeatures() const { return mRequiredFeatures; }
+    const SwapchainSupportDetails& getSwapchainSupportDetails() const { return mSwapchainSupportDetails; }
 
 private:
     bool checkDeviceExtensionSupport(const std::vector<const char*>& extensions) const;
@@ -43,46 +44,46 @@ private:
     SwapchainSupportDetails querySwapchainSupport() const;
     int calculateScore() const;
 
-    ::vk::PhysicalDevice mPhysicalDevice = nullptr;
-    ::vk::SurfaceKHR mSurface = nullptr;
+    VkPhysicalDevice mPhysicalDevice = VK_NULL_HANDLE;
+    VkSurfaceKHR mSurface = VK_NULL_HANDLE;
     std::vector<const char*> mRequiredExtensions{};
 
     int mGraphicsQueueFamily = -1;
     SwapchainSupportDetails mSwapchainSupportDetails{};
     bool mAreExtensionsSupported = false;
     int mScore = 0;
-    ::vk::PhysicalDeviceFeatures mRequiredFeatures{};
+    VkPhysicalDeviceFeatures mRequiredFeatures{};
 };
 
 class InstanceInfo
 {
 public:
     InstanceInfo() = default;
-    InstanceInfo(::vk::Instance instance, const std::vector<const char*>& extensions) : mInstance(instance), mExtensions(extensions) {}
+    InstanceInfo(VkInstance instance, const std::vector<const char*>& extensions) : mInstance(instance), mExtensions(extensions) {}
 
-    ::vk::Instance getInstance() const { return mInstance; }
+    VkInstance getInstance() const { return mInstance; }
     const std::vector<const char*>& getExtensions() const { return mExtensions; };
 
 private:
-    ::vk::Instance mInstance = nullptr;
+    VkInstance mInstance = VK_NULL_HANDLE;
     std::vector<const char*> mExtensions;
 };
 
 class DeviceFactory
 {
 public:
-    Device* create(const InstanceInfo& instanceInfo, const ::vk::SurfaceKHR& surface) const;
-    InstanceInfo createInstance() const;
+    rhi::Result create(const InstanceInfo& instanceInfo, VkSurfaceKHR surface, DeviceHandle& device) const;
+    rhi::Result createInstance(InstanceInfo& info) const;
 
 private:
     bool checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const;
     bool checkInstanceLayerSupport(const std::vector<const char*>& layers) const;
 
-    PhysicalDeviceInfo choosePhysicalDevice(const ::vk::Instance& instance, const ::vk::SurfaceKHR& surface) const;
-    ::vk::Device createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo) const;
+    rhi::Result choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceInfo& physicalDeviceInfo) const;
+    rhi::Result createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo, VkDevice& device) const;
 
 #if defined(_DEBUG)
-    DebugMessenger createDebugMessenger(::vk::Instance instance) const;
+    DebugMessenger createDebugMessenger(VkInstance instance) const;
 #endif
 };
 }  // namespace mental::rhi::vk

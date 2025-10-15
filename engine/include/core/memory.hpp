@@ -221,14 +221,14 @@ template <class T>
 class RefCounter : public T
 {
 private:
-    std::atomic<unsigned long> m_refCount = 1;
+    std::atomic<unsigned long> mRefCount = 1;
 
 public:
-    virtual unsigned long addRef() override { return ++m_refCount; }
+    virtual unsigned long addRef() override { return ++mRefCount; }
 
     virtual unsigned long release() override
     {
-        unsigned long result = --m_refCount;
+        unsigned long result = --mRefCount;
         if (result == 0)
         {
             delete this;

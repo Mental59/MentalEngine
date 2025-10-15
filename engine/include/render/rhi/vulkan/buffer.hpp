@@ -2,7 +2,7 @@
 
 #include <render/rhi/rhi.hpp>
 #include <core/memory.hpp>
-#include <vulkan/vulkan.hpp>
+#include <volk/volk.h>
 #include <vma/vk_mem_alloc.h>
 
 namespace mental::rhi::vk
@@ -14,8 +14,9 @@ public:
     virtual ~Buffer() override;
 
     virtual const BufferDesc& getDesc() const override { return mDesc; };
+    virtual Result upload(void* data, uint64_t size) override;
 
-    Buffer& setBuffer(::vk::Buffer buffer)
+    Buffer& setBuffer(VkBuffer buffer)
     {
         mBuffer = buffer;
         return *this;
@@ -30,12 +31,18 @@ public:
         mAllocation = allocation;
         return *this;
     }
+    Buffer& setAllocationInfo(const VmaAllocationInfo& allocationInfo)
+    {
+        mAllocationInfo = allocationInfo;
+        return *this;
+    }
 
 private:
     BufferDesc mDesc;
-    ::vk::Buffer mBuffer;
+    VkBuffer mBuffer;
     VmaAllocator mAllocator;
     VmaAllocation mAllocation;
+    VmaAllocationInfo mAllocationInfo;
 };
 
 }  // namespace mental::rhi::vk

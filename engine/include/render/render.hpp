@@ -21,6 +21,6 @@ public:
     ~RenderSystem();
 
 private:
-    mental::rhi::IDevice* mDevice;
+    mental::rhi::DeviceHandle mDevice;
 };
 }  // namespace mental::render

@@ -16,7 +16,7 @@ public:
     virtual bool shouldClose() const override;
 
 #if defined(MENTAL_WITH_VULKAN)
-    virtual ::vk::SurfaceKHR createSurface(const ::vk::Instance& instance) const override;
+    virtual VkSurfaceKHR createSurface(VkInstance instance) const override;
 #endif
 
 private:

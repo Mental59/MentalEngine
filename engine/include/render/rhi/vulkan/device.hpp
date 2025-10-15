@@ -1,7 +1,7 @@
 #pragma once
 
 #include <render/rhi/rhi.hpp>
-#include <vulkan/vulkan.hpp>
+#include <volk/volk.h>
 #include <vma/vk_mem_alloc.h>
 #include <unordered_set>
 #include <string>
@@ -11,17 +11,21 @@ namespace mental::rhi::vk
 {
 struct DeviceDesc
 {
-    ::vk::Instance instance;
-    ::vk::SurfaceKHR surface;
-    ::vk::PhysicalDevice physicalDevice;
-    ::vk::Device device;
+    VkInstance instance;
+    VkSurfaceKHR surface;
+    VkPhysicalDevice physicalDevice;
+    VkDevice device;
     uint32_t apiVersion;
 
-    ::vk::Queue graphicsQueue;
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
+
+    VkQueue graphicsQueue;
     int graphicsQueueIndex = -1;
 
-    ::vk::DebugUtilsMessengerEXT debugUtilsMessenger;
-    ::vk::DebugReportCallbackEXT debugReportCallback;
+    VkDebugUtilsMessengerEXT debugUtilsMessenger;
+    VkDebugReportCallbackEXT debugReportCallback;
 
     std::vector<const char*> instanceExtensions;
     std::vector<const char*> deviceExtensions;
@@ -29,44 +33,46 @@ struct DeviceDesc
 
 struct Context
 {
-    ::vk::Instance mInstance;
-    ::vk::SurfaceKHR mSurface;
-    ::vk::PhysicalDevice mPhysicalDevice;
-    ::vk::Device mDevice;
+    VkInstance mInstance;
+    VkSurfaceKHR mSurface;
+    VkPhysicalDevice mPhysicalDevice;
+    VkDevice mDevice;
     VmaAllocator mAllocator;
 
-    ::vk::DebugReportCallbackEXT mDebugReportCallback;
-    ::vk::DebugUtilsMessengerEXT mDebugUtilsMessenger;
+    VkDebugReportCallbackEXT mDebugReportCallback;
+    VkDebugUtilsMessengerEXT mDebugUtilsMessenger;
 
-    ::vk::SurfaceCapabilitiesKHR mCapabilities;
-    std::vector<::vk::SurfaceFormatKHR> mFormats;
-    std::vector<::vk::PresentModeKHR> mPresentModes;
+    VkSurfaceCapabilitiesKHR mCapabilities;
+    std::vector<VkSurfaceFormatKHR> mFormats;
+    std::vector<VkPresentModeKHR> mPresentModes;
 
     std::unordered_set<std::string> mInstanceExtensions;
     std::unordered_set<std::string> mDeviceExtensions;
 
-    Context(::vk::Instance instance, ::vk::SurfaceKHR surface, ::vk::PhysicalDevice physicalDevice, ::vk::Device device,
-        uint32_t apiVersion, ::vk::DebugReportCallbackEXT debugReportCallback, ::vk::DebugUtilsMessengerEXT debugUtilsMessenger,
+    Context(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t apiVersion,
+        VkDebugReportCallbackEXT debugReportCallback, VkDebugUtilsMessengerEXT debugUtilsMessenger, VkSurfaceCapabilitiesKHR capabilities,
+        const std::vector<VkSurfaceFormatKHR>& formats, const std::vector<VkPresentModeKHR>& presentModes,
         const std::vector<const char*>& instanceExtensions, const std::vector<const char*>& deviceExtensions);
     void destroy();
 };
 
-class Device : public IDevice
+class Device : public core::memory::RefCounter<IDevice>
 {
 public:
-    static Device* create(const DeviceDesc& desc);
+    static DeviceHandle create(const DeviceDesc& desc);
 
-    virtual void destroy() override;
+    virtual ~Device() override;
 
     virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
-    virtual BufferHandle createBuffer(BufferDesc desc) override;
+    virtual rhi::Result createBuffer(BufferDesc desc, BufferHandle& buffer) override;
 
 private:
     Device(const DeviceDesc& desc);
+
     Context mContext;
 
-    ::vk::Queue mGraphicsQueue;
+    VkQueue mGraphicsQueue;
     int mGraphicsQueueIndex = -1;
 };
 

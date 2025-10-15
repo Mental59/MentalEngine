@@ -3,7 +3,7 @@
 #include <core/memory.hpp>
 
 #if defined(MENTAL_WITH_VULKAN)
-#include <vulkan/vulkan.hpp>
+#include <volk/volk.h>
 #endif
 
 namespace mental::platform
@@ -30,7 +30,7 @@ public:
     virtual bool shouldClose() const = 0;
 
 #if defined(MENTAL_WITH_VULKAN)
-    virtual ::vk::SurfaceKHR createSurface(const ::vk::Instance& instance) const = 0;
+    virtual VkSurfaceKHR createSurface(VkInstance instance) const = 0;
 #endif
 };
 
