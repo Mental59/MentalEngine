@@ -14,7 +14,9 @@ public:
     virtual ~Buffer() override;
 
     virtual const BufferDesc& getDesc() const override { return mDesc; };
-    virtual Result upload(void* data, uint64_t size) override;
+    virtual rhi::Result map(void** mappedData) override;
+    virtual rhi::Result unmap() override;
+    virtual rhi::Result copy(void* data, uint64_t size, uint64_t offset = 0) override;
 
     Buffer& setBuffer(VkBuffer buffer)
     {

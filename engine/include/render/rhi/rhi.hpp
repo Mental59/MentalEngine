@@ -15,7 +15,9 @@ enum class Result
     eInstanceInitializationFailed,
     ePhysicalDeviceInitializationFailed,
     eLogicalDeviceInitializationFailed,
+    eSurfaceInitializationFailed,
     eBufferInitializationFailed,
+    eBufferMapFailed,
     eBufferUploadFailed
 };
 
@@ -37,9 +39,17 @@ enum BufferUsageFlagBits : uint32_t
 };
 typedef uint32_t BufferUsageFlags;
 
+enum class BufferCpuAccess : uint8_t
+{
+    None = 0,
+    Write,
+    ReadWrite
+};
+
 struct BufferDesc
 {
     BufferUsageFlags usage = 0;
+    BufferCpuAccess cpuAccess = BufferCpuAccess::None;
     uint64_t byteSize = 0;
 };
 
@@ -47,7 +57,9 @@ class IBuffer : public core::memory::IResource
 {
 public:
     virtual const BufferDesc& getDesc() const = 0;
-    virtual Result upload(void* data, uint64_t size) = 0;
+    virtual rhi::Result map(void** mappedData) = 0;
+    virtual rhi::Result unmap() = 0;
+    virtual rhi::Result copy(void* data, uint64_t size, uint64_t offset = 0) = 0;
 };
 typedef core::memory::RefCountPtr<IBuffer> BufferHandle;
 

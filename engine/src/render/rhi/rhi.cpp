@@ -15,7 +15,9 @@ const char* resultToString(Result res)
         case mental::rhi::Result::eInstanceInitializationFailed: return "RHI_INSTANCE_INITIALIZATION_FAILED";
         case mental::rhi::Result::ePhysicalDeviceInitializationFailed: return "RHI_PHYSICAL_DEVICE_INITIALIZATION_FAILED";
         case mental::rhi::Result::eLogicalDeviceInitializationFailed: return "RHI_LOGICAL_DEVICE_INITIALIZATION_FAILED";
+        case mental::rhi::Result::eSurfaceInitializationFailed: return "RHI_SURFACE_INITIALIZATION_FAILED";
         case mental::rhi::Result::eBufferInitializationFailed: return "RHI_BUFFER_INITIALIZATION_FAILED";
+        case mental::rhi::Result::eBufferMapFailed: return "RHI_BUFFER_MAP_FAILED";
         case mental::rhi::Result::eBufferUploadFailed: return "RHI_BUFFER_UPLOAD_FAILED";
 
         default:
@@ -51,7 +53,6 @@ DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* cons
 #if defined MENTAL_WITH_VULKAN
         case GraphicsApi::Vulkan:
         {
-
             rhi::Result res;
             rhi::vk::DeviceFactory factory;
 
@@ -59,7 +60,10 @@ DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* cons
             res = factory.createInstance(instanceInfo);
             if (res != rhi::Result::eSuccess) mental::core::log::fatal("Failed to create vulkan instance. Error: %s", resultToString(res));
 
-            VkSurfaceKHR surface = window->createSurface(instanceInfo.getInstance());
+            VkSurfaceKHR surface;
+            res = window->createSurface(instanceInfo.getInstance(), surface);
+            if (res != rhi::Result::eSuccess) mental::core::log::fatal("Failed to create vulkan surface. Error: %s", resultToString(res));
+
             res = factory.create(instanceInfo, surface, device);
             if (res != rhi::Result::eSuccess) mental::core::log::fatal("Failed to create vulkan device. Error: %s", resultToString(res));
 

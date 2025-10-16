@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/memory.hpp>
+#include <render/rhi/rhi.hpp>
 
 #if defined(MENTAL_WITH_VULKAN)
 #include <volk/volk.h>
@@ -30,7 +31,7 @@ public:
     virtual bool shouldClose() const = 0;
 
 #if defined(MENTAL_WITH_VULKAN)
-    virtual VkSurfaceKHR createSurface(VkInstance instance) const = 0;
+    virtual rhi::Result createSurface(VkInstance instance, VkSurfaceKHR& surface) const = 0;
 #endif
 };
 

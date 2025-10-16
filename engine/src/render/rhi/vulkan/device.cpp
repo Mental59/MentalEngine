@@ -86,11 +86,17 @@ rhi::Result Device::createBuffer(BufferDesc desc, BufferHandle& buffer)
     bufferCreateInfo.usage = usage;
     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    VmaAllocationCreateInfo allocInfo{.usage = VMA_MEMORY_USAGE_AUTO};
+    VmaAllocationCreateInfo allocInfo{};
+    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+    switch (desc.cpuAccess)
+    {
+        case BufferCpuAccess::Write: allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT; break;
+        case BufferCpuAccess::ReadWrite: allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT; break;
+    }
+
     VkBuffer vkBuffer;
     VmaAllocation allocation;
-    VmaAllocationInfo allocationInfo;
-    VkResult createBufferRes = vmaCreateBuffer(mContext.mAllocator, &bufferCreateInfo, &allocInfo, &vkBuffer, &allocation, &allocationInfo);
+    VkResult createBufferRes = vmaCreateBuffer(mContext.mAllocator, &bufferCreateInfo, &allocInfo, &vkBuffer, &allocation, nullptr);
 
     if (createBufferRes != VK_SUCCESS)
     {
@@ -99,7 +105,7 @@ rhi::Result Device::createBuffer(BufferDesc desc, BufferHandle& buffer)
     }
 
     Buffer* pBuffer = new Buffer(desc);
-    pBuffer->setBuffer(vkBuffer).setAllocator(mContext.mAllocator).setAllocation(allocation).setAllocationInfo(allocationInfo);
+    pBuffer->setBuffer(vkBuffer).setAllocator(mContext.mAllocator).setAllocation(allocation);
     buffer = BufferHandle::create(pBuffer);
     return Result::eSuccess;
 }

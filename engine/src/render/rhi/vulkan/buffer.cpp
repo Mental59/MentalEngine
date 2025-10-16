@@ -1,4 +1,5 @@
 #include <render/rhi/vulkan/buffer.hpp>
+#include <render/rhi/vulkan/core.hpp>
 #include <core/log.hpp>
 
 mental::rhi::vk::Buffer::Buffer(const BufferDesc& desc)
@@ -13,27 +14,55 @@ mental::rhi::vk::Buffer::~Buffer()
     mental::core::log::info("Vulkan buffer destroyed");
 }
 
-mental::rhi::Result mental::rhi::vk::Buffer::upload(void* data, uint64_t size)
+mental::rhi::Result mental::rhi::vk::Buffer::map(void** mappedData)
 {
-    VkBufferCreateInfo bufCreateInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-    bufCreateInfo.size = size;
-    bufCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    VkResult res = vmaMapMemory(mAllocator, mAllocation, mappedData);
+    VK_RHI_RETURN_IF_NOT_SUCCESS(res, rhi::Result::eBufferMapFailed);
+    return rhi::Result::eSuccess;
+}
 
-    VmaAllocationCreateInfo allocCreateInfo{};
-    allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
-    allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+mental::rhi::Result mental::rhi::vk::Buffer::unmap()
+{
+    vmaUnmapMemory(mAllocator, mAllocation);
+    return rhi::Result::eSuccess;
+}
 
-    VkResult res;
-    VkBuffer stagingBuf;
-    VmaAllocation stagingAlloc;
-    VmaAllocationInfo stagingAllocInfo;
-    res = vmaCreateBuffer(mAllocator, &bufCreateInfo, &allocCreateInfo, &stagingBuf, &stagingAlloc, &stagingAllocInfo);
-    if (res != VK_SUCCESS) return Result::eBufferUploadFailed;
+mental::rhi::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, uint64_t offset)
+{
+    switch (mDesc.cpuAccess)
+    {
+        case BufferCpuAccess::None:
+        {
+            VkBufferCreateInfo bufCreateInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
+            bufCreateInfo.size = size;
+            bufCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-    memcpy(stagingAllocInfo.pMappedData, data, size);
+            VmaAllocationCreateInfo allocCreateInfo{};
+            allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+            allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-    // TODO: begin single time command to copy from staging buffer to the current buffer
+            VkResult res;
+            VkBuffer stagingBuf;
+            VmaAllocation stagingAlloc;
+            VmaAllocationInfo stagingAllocInfo;
+            res = vmaCreateBuffer(mAllocator, &bufCreateInfo, &allocCreateInfo, &stagingBuf, &stagingAlloc, &stagingAllocInfo);
+            if (res != VK_SUCCESS) return Result::eBufferUploadFailed;
 
-    vmaDestroyBuffer(mAllocator, stagingBuf, stagingAlloc);
+            memcpy(stagingAllocInfo.pMappedData, data, size);
+
+            // TODO: begin single time command to copy from staging buffer to the current buffer
+
+            vmaDestroyBuffer(mAllocator, stagingBuf, stagingAlloc);
+            break;
+        }
+
+        case BufferCpuAccess::Write:
+        case BufferCpuAccess::ReadWrite:
+        {
+            vmaGetAllocationInfo(mAllocator, mAllocation, &mAllocationInfo);
+            memcpy((unsigned char*)mAllocationInfo.pMappedData + offset, data, size);
+            break;
+        }
+    }
     return Result::eSuccess;
 }

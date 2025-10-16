@@ -48,14 +48,17 @@ bool mental::platform::GLFWwindow::shouldClose() const
     return glfwWindowShouldClose(mWindow);
 }
 
-#if defined(MENTAL_WITH_VULKAN)
-VkSurfaceKHR mental::platform::GLFWwindow::createSurface(VkInstance instance) const
+mental::rhi::Result mental::platform::GLFWwindow::createSurface(VkInstance instance, VkSurfaceKHR& surface) const
 {
-    VkSurfaceKHR surface;
     VkResult res = glfwCreateWindowSurface(instance, mWindow, VK_NULL_HANDLE, &surface);
-
-    if (res != VK_SUCCESS) core::log::fatal("Failed to create Vulkan surface");
-
-    return surface;
+    if (res != VK_SUCCESS)
+    {
+        mental::core::log::error("Failed to create Vulkan surface");
+        return mental::rhi::Result::eSurfaceInitializationFailed;
+    }
+    return mental::rhi::Result::eSuccess;
 }
+
+#if defined(MENTAL_WITH_VULKAN)
+
 #endif
