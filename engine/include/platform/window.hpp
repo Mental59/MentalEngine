@@ -17,7 +17,7 @@ struct WindowDesc
     int height = 0;
 };
 
-class IWindow : public core::memory::ISingleResource
+class IWindow : public core::memory::IResource
 {
 public:
     virtual void pollEvents() const = 0;

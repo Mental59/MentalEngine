@@ -54,7 +54,7 @@ struct BufferDesc
     uint64_t byteSize = 0;
 };
 
-class IBuffer : public core::memory::IResource
+class IBuffer : public core::memory::IHeapResource
 {
 public:
     virtual const BufferDesc& getDesc() const = 0;
@@ -64,7 +64,7 @@ public:
 };
 typedef core::memory::RefCountPtr<IBuffer> BufferHandle;
 
-class IDevice : public core::memory::ISingleResource
+class IDevice : public core::memory::IResource
 {
 public:
     virtual void waitIdle() = 0;
@@ -75,7 +75,7 @@ public:
     // TODO: extend interface
 };
 
-class ICommandQueue : public core::memory::ISingleResource
+class ICommandQueue : public core::memory::IResource
 {
     // TODO
 };

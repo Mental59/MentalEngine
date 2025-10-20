@@ -30,32 +30,32 @@ public:
     virtual Object getNativeObject(uint32_t type) { return nullptr; }
 };
 
-class IResource : public IObject
+class IHeapResource : public IObject
 {
 protected:
-    IResource() = default;
-    virtual ~IResource() = default;
+    IHeapResource() = default;
+    virtual ~IHeapResource() = default;
 
 public:
     virtual unsigned long addRef() = 0;
     virtual unsigned long release() = 0;
 
+    IHeapResource(const IHeapResource&) = delete;
+    IHeapResource(const IHeapResource&&) = delete;
+    IHeapResource& operator=(const IHeapResource&) = delete;
+    IHeapResource& operator=(const IHeapResource&&) = delete;
+};
+
+class IResource : public IObject
+{
+protected:
+    IResource() = default;
+
+public:
     IResource(const IResource&) = delete;
     IResource(const IResource&&) = delete;
     IResource& operator=(const IResource&) = delete;
     IResource& operator=(const IResource&&) = delete;
-};
-
-class ISingleResource : public IObject
-{
-protected:
-    ISingleResource() = default;
-
-public:
-    ISingleResource(const ISingleResource&) = delete;
-    ISingleResource(const ISingleResource&&) = delete;
-    ISingleResource& operator=(const ISingleResource&) = delete;
-    ISingleResource& operator=(const ISingleResource&&) = delete;
 };
 
 template <typename T>
@@ -249,5 +249,5 @@ public:
     }
 };
 
-typedef RefCountPtr<IResource> ResourceHandle;
+typedef RefCountPtr<IHeapResource> ResourceHandle;
 }  // namespace mental::core::memory
