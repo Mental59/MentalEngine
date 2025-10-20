@@ -14,6 +14,7 @@ const char* resultToString(Result res)
     switch (res)
     {
         case mental::rhi::Result::eSuccess: return "RHI_SUCCESS";
+        case mental::rhi::Result::eDeviceInitializationFailed: return "RHI_DEVICE_INITIALIZATION_FAILED";
         case mental::rhi::Result::eInstanceInitializationFailed: return "RHI_INSTANCE_INITIALIZATION_FAILED";
         case mental::rhi::Result::ePhysicalDeviceInitializationFailed: return "RHI_PHYSICAL_DEVICE_INITIALIZATION_FAILED";
         case mental::rhi::Result::eLogicalDeviceInitializationFailed: return "RHI_LOGICAL_DEVICE_INITIALIZATION_FAILED";
