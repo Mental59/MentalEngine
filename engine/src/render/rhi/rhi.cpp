@@ -7,6 +7,8 @@
 
 namespace mental::rhi
 {
+static IDevice* gDevice = nullptr;
+
 const char* resultToString(Result res)
 {
     switch (res)
@@ -44,10 +46,8 @@ const char* graphicsApiToString(GraphicsApi api)
     }
 }
 
-DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* const window)
+void initDevice(GraphicsApi api, const mental::platform::IWindow* const window)
 {
-    DeviceHandle device{};
-
     switch (api)
     {
 #if defined MENTAL_WITH_VULKAN
@@ -64,9 +64,10 @@ DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* cons
             res = window->createSurface(instanceInfo.getInstance(), surface);
             if (res != rhi::Result::eSuccess) mental::core::log::fatal("Failed to create vulkan surface. Error: %s", resultToString(res));
 
-            res = factory.create(instanceInfo, surface, device);
+            res = factory.initDevice(instanceInfo, surface);
             if (res != rhi::Result::eSuccess) mental::core::log::fatal("Failed to create vulkan device. Error: %s", resultToString(res));
 
+            gDevice = &rhi::vk::Device::instance();
             break;
         }
 #endif
@@ -76,7 +77,11 @@ DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* cons
             mental::core::log::fatal("Unsupported graphics api %s", graphicsApiToString(api));
         }
     }
-
-    return device;
 }
+
+IDevice& getDevice()
+{
+    return *gDevice;
+}
+
 }  // namespace mental::rhi

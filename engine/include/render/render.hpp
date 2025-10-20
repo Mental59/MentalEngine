@@ -19,8 +19,5 @@ public:
 
     RenderSystem(const mental::platform::IWindow* const window);
     ~RenderSystem();
-
-private:
-    mental::rhi::DeviceHandle mDevice;
 };
 }  // namespace mental::render

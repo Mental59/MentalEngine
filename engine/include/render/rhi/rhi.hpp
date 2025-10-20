@@ -12,6 +12,7 @@ namespace mental::rhi
 enum class Result
 {
     eSuccess = 0,
+    eDeviceInitializationFailed,
     eInstanceInitializationFailed,
     ePhysicalDeviceInitializationFailed,
     eLogicalDeviceInitializationFailed,
@@ -63,7 +64,7 @@ public:
 };
 typedef core::memory::RefCountPtr<IBuffer> BufferHandle;
 
-class IDevice : public core::memory::IResource
+class IDevice : public core::memory::ISingleResource
 {
 public:
     virtual void waitIdle() = 0;
@@ -73,8 +74,13 @@ public:
 
     // TODO: extend interface
 };
-typedef core::memory::RefCountPtr<IDevice> DeviceHandle;
 
-DeviceHandle createDevice(GraphicsApi api, const mental::platform::IWindow* const window);
+class ICommandQueue : public core::memory::ISingleResource
+{
+    // TODO
+};
+
+void initDevice(GraphicsApi api, const mental::platform::IWindow* const window);
+IDevice& getDevice();
 
 }  // namespace mental::rhi

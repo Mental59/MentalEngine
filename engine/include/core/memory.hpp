@@ -46,6 +46,18 @@ public:
     IResource& operator=(const IResource&&) = delete;
 };
 
+class ISingleResource : public IObject
+{
+protected:
+    ISingleResource() = default;
+
+public:
+    ISingleResource(const ISingleResource&) = delete;
+    ISingleResource(const ISingleResource&&) = delete;
+    ISingleResource& operator=(const ISingleResource&) = delete;
+    ISingleResource& operator=(const ISingleResource&&) = delete;
+};
+
 template <typename T>
 class RefCountPtr
 {

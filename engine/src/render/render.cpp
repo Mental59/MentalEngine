@@ -5,8 +5,9 @@
 
 namespace mental::render
 {
-RenderSystem::RenderSystem(const mental::platform::IWindow* const window) : mDevice(rhi::createDevice(rhi::GraphicsApi::Vulkan, window))
+RenderSystem::RenderSystem(const mental::platform::IWindow* const window)
 {
+    rhi::initDevice(rhi::GraphicsApi::Vulkan, window);
     mental::core::log::info("Render system initialized");
 }
 

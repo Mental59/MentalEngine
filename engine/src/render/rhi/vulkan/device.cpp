@@ -8,17 +8,27 @@
 namespace mental::rhi::vk
 {
 
-Context::Context(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t apiVersion,
+rhi::Result Context::init(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t apiVersion,
     VkDebugReportCallbackEXT debugReportCallback, VkDebugUtilsMessengerEXT debugUtilsMessenger, VkSurfaceCapabilitiesKHR capabilities,
     const std::vector<VkSurfaceFormatKHR>& formats, const std::vector<VkPresentModeKHR>& presentModes,
     const std::vector<const char*>& instanceExtensions, const std::vector<const char*>& deviceExtensions)
-    : mInstance(instance), mSurface(surface), mPhysicalDevice(physicalDevice), mDevice(device), mCapabilities(capabilities),
-      mFormats(formats), mPresentModes(presentModes), mDebugReportCallback(debugReportCallback), mDebugUtilsMessenger(debugUtilsMessenger)
+
 {
-    if (!instance) mental::core::log::fatal("Vulkan instance is null");
-    if (!surface) mental::core::log::fatal("Vulkan surface is null");
-    if (!physicalDevice) mental::core::log::fatal("Vulkan physical device is null");
-    if (!device) mental::core::log::fatal("Vulkan device is null");
+    mInstance = instance;
+    mSurface = surface;
+    mPhysicalDevice = physicalDevice;
+    mDevice = device;
+    mCapabilities = capabilities;
+    mFormats = formats;
+    mPresentModes = presentModes;
+    mDebugReportCallback = debugReportCallback;
+    mDebugUtilsMessenger = debugUtilsMessenger;
+
+    if (!instance) mental::core::log::error("Vulkan instance is null");
+    if (!surface) mental::core::log::error("Vulkan surface is null");
+    if (!physicalDevice) mental::core::log::error("Vulkan physical device is null");
+    if (!device) mental::core::log::error("Vulkan device is null");
+    if (!instance || !surface || !physicalDevice || !device) return rhi::Result::eDeviceInitializationFailed;
 
     for (const char* extensionName : instanceExtensions)
         mInstanceExtensions.insert(extensionName);
@@ -33,12 +43,22 @@ Context::Context(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice phy
 
     VmaVulkanFunctions vulkanFunctions;
     VkResult importRes = vmaImportVulkanFunctionsFromVolk(&allocatorCreateInfo, &vulkanFunctions);
-    if (importRes != VK_SUCCESS) mental::core::log::fatal("Failed to import vulkan functions");
+    if (importRes != VK_SUCCESS)
+    {
+        mental::core::log::error("Failed to import vulkan functions");
+        return rhi::Result::eDeviceInitializationFailed;
+    }
 
     allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
 
     VkResult createAllocatorRes = vmaCreateAllocator(&allocatorCreateInfo, &mAllocator);
-    if (createAllocatorRes != VK_SUCCESS) mental::core::log::fatal("Failed to create vulkan allocator");
+    if (createAllocatorRes != VK_SUCCESS)
+    {
+        mental::core::log::error("Failed to create vulkan allocator");
+        return rhi::Result::eDeviceInitializationFailed;
+    }
+
+    return rhi::Result::eSuccess;
 }
 
 void Context::destroy()
@@ -49,16 +69,6 @@ void Context::destroy()
     if (mDebugUtilsMessenger) vkDestroyDebugUtilsMessengerEXT(mInstance, mDebugUtilsMessenger, VK_NULL_HANDLE);
     if (mDebugReportCallback) vkDestroyDebugReportCallbackEXT(mInstance, mDebugReportCallback, VK_NULL_HANDLE);
     vkDestroyInstance(mInstance, VK_NULL_HANDLE);
-}
-
-Device::Device(const DeviceDesc& desc)
-    : mContext(desc.instance, desc.surface, desc.physicalDevice, desc.device, desc.apiVersion, desc.debugReportCallback,
-          desc.debugUtilsMessenger, desc.capabilities, desc.formats, desc.presentModes, desc.instanceExtensions, desc.deviceExtensions),
-      mGraphicsQueue(desc.graphicsQueue), mGraphicsQueueIndex(desc.graphicsQueueIndex)
-{
-    if (!desc.graphicsQueue || desc.graphicsQueueIndex < 0) mental::core::log::fatal("Vulkan graphics queue is invalid");
-
-    mental::core::log::info("Vulkan device initialized");
 }
 
 void Device::waitIdle()
@@ -110,10 +120,29 @@ rhi::Result Device::createBuffer(BufferDesc desc, BufferHandle& buffer)
     return Result::eSuccess;
 }
 
-DeviceHandle Device::create(const DeviceDesc& desc)
+Device& Device::instance()
 {
-    Device* pDevice = new Device(desc);
-    return DeviceHandle::create(pDevice);
+    static Device device;
+    return device;
+}
+
+rhi::Result Device::init(const DeviceDesc& desc)
+{
+    rhi::Result res =
+        mContext.init(desc.instance, desc.surface, desc.physicalDevice, desc.device, desc.apiVersion, desc.debugReportCallback,
+            desc.debugUtilsMessenger, desc.capabilities, desc.formats, desc.presentModes, desc.instanceExtensions, desc.deviceExtensions);
+    if (res != rhi::Result::eSuccess) return res;
+
+    mGraphicsQueue = desc.graphicsQueue;
+    mGraphicsQueueIndex = desc.graphicsQueueIndex;
+    if (!desc.graphicsQueue || desc.graphicsQueueIndex < 0)
+    {
+        mental::core::log::error("Vulkan graphics queue is invalid");
+        return rhi::Result::eDeviceInitializationFailed;
+    }
+
+    mental::core::log::info("Vulkan device initialized");
+    return rhi::Result::eSuccess;
 }
 
 Device::~Device()

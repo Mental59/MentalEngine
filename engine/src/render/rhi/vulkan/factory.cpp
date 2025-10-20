@@ -63,7 +63,7 @@ DebugMessenger DeviceFactory::createDebugMessenger(VkInstance instance) const
 }
 #endif
 
-rhi::Result DeviceFactory::create(const InstanceInfo& instanceInfo, VkSurfaceKHR surface, DeviceHandle& device) const
+rhi::Result DeviceFactory::initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const
 {
     rhi::Result res;
 
@@ -97,8 +97,7 @@ rhi::Result DeviceFactory::create(const InstanceInfo& instanceInfo, VkSurfaceKHR
         .instanceExtensions = instanceInfo.getExtensions(),
         .deviceExtensions = physicalDeviceInfo.getRequiredExtensions()};
 
-    device = Device::create(desc);
-    return rhi::Result::eSuccess;
+    return Device::instance().init(desc);
 }
 
 rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const

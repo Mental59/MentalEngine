@@ -72,7 +72,7 @@ private:
 class DeviceFactory
 {
 public:
-    rhi::Result create(const InstanceInfo& instanceInfo, VkSurfaceKHR surface, DeviceHandle& device) const;
+    rhi::Result initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const;
     rhi::Result createInstance(InstanceInfo& info) const;
 
 private:

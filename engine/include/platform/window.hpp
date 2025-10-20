@@ -17,15 +17,9 @@ struct WindowDesc
     int height = 0;
 };
 
-class IWindow : public core::memory::IObject
+class IWindow : public core::memory::ISingleResource
 {
 public:
-    IWindow() = default;
-    IWindow(const IWindow&) = delete;
-    IWindow(const IWindow&&) = delete;
-    IWindow& operator=(const IWindow&) = delete;
-    IWindow& operator=(const IWindow&&) = delete;
-
     virtual void pollEvents() const = 0;
     virtual double getTime() const = 0;
     virtual bool shouldClose() const = 0;

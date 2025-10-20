@@ -49,27 +49,28 @@ struct Context
     std::unordered_set<std::string> mInstanceExtensions;
     std::unordered_set<std::string> mDeviceExtensions;
 
-    Context(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t apiVersion,
+    Context() = default;
+
+    rhi::Result init(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t apiVersion,
         VkDebugReportCallbackEXT debugReportCallback, VkDebugUtilsMessengerEXT debugUtilsMessenger, VkSurfaceCapabilitiesKHR capabilities,
         const std::vector<VkSurfaceFormatKHR>& formats, const std::vector<VkPresentModeKHR>& presentModes,
         const std::vector<const char*>& instanceExtensions, const std::vector<const char*>& deviceExtensions);
+
     void destroy();
 };
 
-class Device : public core::memory::RefCounter<IDevice>
+class Device : public IDevice
 {
 public:
-    static DeviceHandle create(const DeviceDesc& desc);
-
-    virtual ~Device() override;
+    static Device& instance();
+    rhi::Result init(const DeviceDesc& desc);
+    ~Device();
 
     virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
     virtual rhi::Result createBuffer(BufferDesc desc, BufferHandle& buffer) override;
 
 private:
-    Device(const DeviceDesc& desc);
-
     Context mContext;
 
     VkQueue mGraphicsQueue;

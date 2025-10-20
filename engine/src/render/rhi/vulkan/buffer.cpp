@@ -48,7 +48,7 @@ mental::rhi::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, uin
             res = vmaCreateBuffer(mAllocator, &bufCreateInfo, &allocCreateInfo, &stagingBuf, &stagingAlloc, &stagingAllocInfo);
             if (res != VK_SUCCESS) return Result::eBufferUploadFailed;
 
-            memcpy(stagingAllocInfo.pMappedData, data, size);
+            memcpy((byte*)stagingAllocInfo.pMappedData + offset, data, size);
 
             // TODO: begin single time command to copy from staging buffer to the current buffer
 
@@ -60,7 +60,7 @@ mental::rhi::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, uin
         case BufferCpuAccess::ReadWrite:
         {
             vmaGetAllocationInfo(mAllocator, mAllocation, &mAllocationInfo);
-            memcpy((unsigned char*)mAllocationInfo.pMappedData + offset, data, size);
+            memcpy((byte*)mAllocationInfo.pMappedData + offset, data, size);
             break;
         }
     }
