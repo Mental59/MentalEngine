@@ -120,6 +120,16 @@ rhi::Result Device::createBuffer(BufferDesc desc, BufferHandle& buffer)
     return Result::eSuccess;
 }
 
+ICommandQueue* Device::getGraphicsQueue()
+{
+    return &mGraphicsQueue;
+}
+
+vk::CommandQueue& Device::getVulkanGraphicsQueue()
+{
+    return mGraphicsQueue;
+}
+
 Device& Device::instance()
 {
     static Device device;
@@ -133,13 +143,12 @@ rhi::Result Device::init(const DeviceDesc& desc)
             desc.debugUtilsMessenger, desc.capabilities, desc.formats, desc.presentModes, desc.instanceExtensions, desc.deviceExtensions);
     if (res != rhi::Result::eSuccess) return res;
 
-    mGraphicsQueue = desc.graphicsQueue;
-    mGraphicsQueueIndex = desc.graphicsQueueIndex;
     if (!desc.graphicsQueue || desc.graphicsQueueIndex < 0)
     {
         mental::core::log::error("Vulkan graphics queue is invalid");
         return rhi::Result::eDeviceInitializationFailed;
     }
+    mGraphicsQueue.init(desc.graphicsQueue, desc.graphicsQueueIndex);
 
     mental::core::log::info("Vulkan device initialized");
     return rhi::Result::eSuccess;

@@ -3,7 +3,7 @@
 #include <core/log.hpp>
 
 mental::rhi::vk::Buffer::Buffer(const BufferDesc& desc)
-    : mDesc(desc), mBuffer(VK_NULL_HANDLE), mAllocator(VK_NULL_HANDLE), mAllocation(VK_NULL_HANDLE), mAllocationInfo()
+    : mDesc(desc), mBuffer(VK_NULL_HANDLE), mAllocator(VK_NULL_HANDLE), mAllocation(VK_NULL_HANDLE)
 {
     mental::core::log::info("Vulkan buffer created");
 }
@@ -59,8 +59,9 @@ mental::rhi::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, uin
         case BufferCpuAccess::Write:
         case BufferCpuAccess::ReadWrite:
         {
-            vmaGetAllocationInfo(mAllocator, mAllocation, &mAllocationInfo);
-            memcpy((byte*)mAllocationInfo.pMappedData + offset, data, size);
+            VmaAllocationInfo allocationInfo;
+            vmaGetAllocationInfo(mAllocator, mAllocation, &allocationInfo);
+            memcpy((byte*)allocationInfo.pMappedData + offset, data, size);
             break;
         }
     }

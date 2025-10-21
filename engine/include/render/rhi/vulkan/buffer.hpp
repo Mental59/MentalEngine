@@ -33,18 +33,12 @@ public:
         mAllocation = allocation;
         return *this;
     }
-    Buffer& setAllocationInfo(const VmaAllocationInfo& allocationInfo)
-    {
-        mAllocationInfo = allocationInfo;
-        return *this;
-    }
 
 private:
     BufferDesc mDesc;
     VkBuffer mBuffer;
     VmaAllocator mAllocator;
     VmaAllocation mAllocation;
-    VmaAllocationInfo mAllocationInfo;
 };
 
 }  // namespace mental::rhi::vk

@@ -6,6 +6,7 @@
 #include <unordered_set>
 #include <string>
 #include <vector>
+#include <render/rhi/vulkan/commandQueue.hpp>
 
 namespace mental::rhi::vk
 {
@@ -69,12 +70,12 @@ public:
     virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
     virtual rhi::Result createBuffer(BufferDesc desc, BufferHandle& buffer) override;
+    virtual ICommandQueue* getGraphicsQueue() override;
+    vk::CommandQueue& getVulkanGraphicsQueue();
 
 private:
     Context mContext;
-
-    VkQueue mGraphicsQueue;
-    int mGraphicsQueueIndex = -1;
+    CommandQueue mGraphicsQueue;
 };
 
 }  // namespace mental::rhi::vk

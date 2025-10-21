@@ -64,6 +64,11 @@ public:
 };
 typedef core::memory::RefCountPtr<IBuffer> BufferHandle;
 
+class ICommandQueue : public core::memory::IResource
+{
+    // TODO
+};
+
 class IDevice : public core::memory::IResource
 {
 public:
@@ -72,12 +77,9 @@ public:
 
     virtual rhi::Result createBuffer(BufferDesc desc, BufferHandle& buffer) = 0;
 
-    // TODO: extend interface
-};
+    virtual ICommandQueue* getGraphicsQueue() = 0;
 
-class ICommandQueue : public core::memory::IResource
-{
-    // TODO
+    // TODO: extend interface
 };
 
 void initDevice(GraphicsApi api, const mental::platform::IWindow* const window);

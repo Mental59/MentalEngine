@@ -24,13 +24,7 @@ struct Object
     }
 };
 
-class IObject
-{
-public:
-    virtual Object getNativeObject(uint32_t type) { return nullptr; }
-};
-
-class IHeapResource : public IObject
+class IHeapResource
 {
 protected:
     IHeapResource() = default;
@@ -46,7 +40,7 @@ public:
     IHeapResource& operator=(const IHeapResource&&) = delete;
 };
 
-class IResource : public IObject
+class IResource
 {
 protected:
     IResource() = default;
