@@ -17,7 +17,7 @@ mental::rhi::vk::Buffer::~Buffer()
 mental::rhi::Result mental::rhi::vk::Buffer::map(void** mappedData)
 {
     VkResult res = vmaMapMemory(mAllocator, mAllocation, mappedData);
-    VK_RHI_RETURN_IF_NOT_SUCCESS(res, rhi::Result::eBufferMapFailed);
+    if (res != VK_SUCCESS) return rhi::Result::eBufferMapFailed;
     return rhi::Result::eSuccess;
 }
 

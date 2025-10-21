@@ -105,7 +105,7 @@ rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
     VkResult vkRes;
 
     vkRes = volkInitialize();
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, rhi::Result::eInstanceInitializationFailed);
+    if (vkRes != VK_SUCCESS) return rhi::Result::eInstanceInitializationFailed;
 
     VkApplicationInfo appInfo{VK_STRUCTURE_TYPE_APPLICATION_INFO};
     appInfo.pApplicationName = "Mental App";
@@ -114,7 +114,7 @@ rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
     vkRes = vkEnumerateInstanceVersion(&appInfo.apiVersion);
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, rhi::Result::eInstanceInitializationFailed);
+    if (vkRes != VK_SUCCESS) return rhi::Result::eInstanceInitializationFailed;
 
     const uint32_t minimumVulkanVersion = VK_MAKE_API_VERSION(0, 1, 3, 0);
 
@@ -147,7 +147,7 @@ rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
 
     VkInstance instance;
     vkRes = vkCreateInstance(&instanceCreateInfo, VK_NULL_HANDLE, &instance);
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, rhi::Result::eInstanceInitializationFailed);
+    if (vkRes != VK_SUCCESS) return rhi::Result::eInstanceInitializationFailed;
 
     volkLoadInstance(instance);
 
@@ -161,11 +161,11 @@ bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>
 
     uint32_t availableExtensionCount = 0;
     vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr);
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, false);
+    if (vkRes != VK_SUCCESS) return false;
 
     std::vector<VkExtensionProperties> availableExtensions(availableExtensionCount);
     vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.data());
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, false);
+    if (vkRes != VK_SUCCESS) return false;
 
     std::set<std::string> requiredSet(extensions.begin(), extensions.end());
     for (const VkExtensionProperties& extension : availableExtensions)
@@ -182,11 +182,11 @@ bool DeviceFactory::checkInstanceLayerSupport(const std::vector<const char*>& la
 
     uint32_t layersCount;
     vkRes = vkEnumerateInstanceLayerProperties(&layersCount, nullptr);
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, false);
+    if (vkRes != VK_SUCCESS) return false;
 
     std::vector<VkLayerProperties> availableLayers(layersCount);
     vkRes = vkEnumerateInstanceLayerProperties(&layersCount, availableLayers.data());
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, false);
+    if (vkRes != VK_SUCCESS) return false;
 
     std::set<std::string> requiredSet(layers.begin(), layers.end());
     for (const VkLayerProperties& layer : availableLayers)
@@ -209,7 +209,7 @@ rhi::Result DeviceFactory::choosePhysicalDevice(VkInstance instance, VkSurfaceKH
 
     std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
     vkRes = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, rhi::Result::ePhysicalDeviceInitializationFailed);
+    if (vkRes != VK_SUCCESS) return rhi::Result::ePhysicalDeviceInitializationFailed;
 
     PhysicalDeviceInfo bestPhysicalDeviceInfo;
     std::vector<const char*> requiredExtensions = ExtensionManager::getRequiredDeviceExtensions();
@@ -251,7 +251,7 @@ rhi::Result DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physica
     createInfo.pEnabledFeatures = &physicalDeviceInfo.getRequiredFeatures();
 
     vkRes = vkCreateDevice(physicalDeviceInfo.getPhysicalDevice(), &createInfo, VK_NULL_HANDLE, &device);
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, rhi::Result::eLogicalDeviceInitializationFailed);
+    if (vkRes != VK_SUCCESS) return rhi::Result::eLogicalDeviceInitializationFailed;
 
     volkLoadDevice(device);
 
@@ -286,11 +286,11 @@ bool PhysicalDeviceInfo::checkDeviceExtensionSupport(const std::vector<const cha
 
     uint32_t extensionCount;
     vkRes = vkEnumerateDeviceExtensionProperties(mPhysicalDevice, nullptr, &extensionCount, nullptr);
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, false);
+    if (vkRes != VK_SUCCESS) return false;
 
     std::vector<VkExtensionProperties> extensionProperties(extensionCount);
     vkRes = vkEnumerateDeviceExtensionProperties(mPhysicalDevice, nullptr, &extensionCount, extensionProperties.data());
-    VK_RHI_RETURN_IF_NOT_SUCCESS(vkRes, false);
+    if (vkRes != VK_SUCCESS) return false;
 
     std::set<std::string> requiredSet(extensions.begin(), extensions.end());
     for (const VkExtensionProperties& property : extensionProperties)
