@@ -1,5 +1,5 @@
 #include <render/rhi/vulkan/buffer.hpp>
-#include <render/rhi/vulkan/core.hpp>
+#include <render/rhi/vulkan/constants.hpp>
 #include <core/log.hpp>
 
 mental::rhi::vk::Buffer::Buffer(const BufferDesc& desc)
@@ -48,7 +48,7 @@ mental::rhi::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, uin
             res = vmaCreateBuffer(mAllocator, &bufCreateInfo, &allocCreateInfo, &stagingBuf, &stagingAlloc, &stagingAllocInfo);
             if (res != VK_SUCCESS) return Result::eBufferUploadFailed;
 
-            memcpy((byte*)stagingAllocInfo.pMappedData + offset, data, size);
+            memcpy((uint8_t*)stagingAllocInfo.pMappedData + offset, data, size);
 
             // TODO: begin single time command to copy from staging buffer to the current buffer
 
@@ -61,7 +61,7 @@ mental::rhi::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, uin
         {
             VmaAllocationInfo allocationInfo;
             vmaGetAllocationInfo(mAllocator, mAllocation, &allocationInfo);
-            memcpy((byte*)allocationInfo.pMappedData + offset, data, size);
+            memcpy((uint8_t*)allocationInfo.pMappedData + offset, data, size);
             break;
         }
     }

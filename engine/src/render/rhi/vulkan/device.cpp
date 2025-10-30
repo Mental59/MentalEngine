@@ -2,7 +2,7 @@
 #include <vma/vk_mem_alloc.h>
 #include <render/rhi/vulkan/device.hpp>
 #include <render/rhi/vulkan/buffer.hpp>
-#include <render/rhi/vulkan/core.hpp>
+#include <render/rhi/vulkan/constants.hpp>
 #include <core/log.hpp>
 
 namespace mental::rhi::vk
