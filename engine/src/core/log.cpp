@@ -1,223 +1,65 @@
-#include <cstdarg>
-#include <cstdio>
-#include <iterator>
 #include <mutex>
 #include <core/log.hpp>
+#include <iostream>
+#include <chrono>
 #if _WIN32
 #include <Windows.h>
 #endif
 
 namespace mental::core::log
 {
-static constexpr size_t gMessageBufferSize = 4096;
-
-static std::string gErrorMessageCaption = "Error";
-
-static bool gOutputToMessageBox = true;
-static bool gOutputToDebug = false;
-static bool gOutputToConsole = true;
-
 static std::mutex gLogMutex;
 
-void defaultCallback(Severity severity, const char* message)
+constexpr const char* levelToString(Level level)
 {
-    const char* severityText = "";
-    switch (severity)
+    switch (level)
     {
-        case Severity::Debug:
-        {
-            severityText = "DEBUG";
-            break;
-        }
-
-        case Severity::Info:
-        {
-            severityText = "INFO";
-            break;
-        }
-
-        case Severity::Warning:
-        {
-            severityText = "WARNING";
-            break;
-        }
-
-        case Severity::Error:
-        {
-            severityText = "ERROR";
-            break;
-        }
-
-        case Severity::Fatal:
-        {
-            severityText = "FATAL ERROR";
-            break;
-        }
+        case Level::eFatal: return "FATAL";
+        case Level::eError: return "ERROR";
+        case Level::eWarn: return "WARN";
+        case Level::eInfo: return "INFO";
+        case Level::eDebug: return "DEBUG";
+        case Level::eTrace: return "TRACE";
     }
+}
+Logger& Logger::getInstance()
+{
+    static Logger logger;
+    return logger;
+}
 
-    char buf[gMessageBufferSize];
-    snprintf(buf, std::size(buf), "[%s] %s", severityText, message);
+Logger::~Logger()
+{
+    flush();
+}
 
-    {
-        std::lock_guard<std::mutex> lockGuard(gLogMutex);
+void Logger::log(Level level, const std::string& message, const std::source_location& location)
+{
+    auto timestamp = std::chrono::system_clock::now();
+    auto time_t = std::chrono::system_clock::to_time_t(timestamp);
+    auto tm = std::localtime(&time_t);
+
+    std::lock_guard<std::mutex> guard(gLogMutex);
+
+    std::string formatStr = std::format("[{:02}:{:02}:{:02}] [{}] {} ({}:{})\n", tm->tm_hour, tm->tm_min, tm->tm_sec, levelToString(level),
+        message, location.file_name(), location.line());
+    std::cout << formatStr;
 
 #if _WIN32
-        if (gOutputToDebug)
-        {
-            OutputDebugStringA(buf);
-            OutputDebugStringA("\n");
-        }
-
-        if (gOutputToMessageBox)
-        {
-            if (severity == Severity::Error || severity == Severity::Fatal)
-            {
-                MessageBoxA(0, buf, gErrorMessageCaption.c_str(), MB_ICONERROR);
-            }
-        }
-
-#endif
-        if (gOutputToConsole)
-        {
-            if (severity == Severity::Error || severity == Severity::Fatal)
-                fprintf(stderr, "%s\n", buf);
-            else
-                fprintf(stdout, "%s\n", buf);
-        }
+    if (mOutputToDebug)
+    {
+        OutputDebugStringA(formatStr.c_str());
     }
-
-    if (severity == Severity::Fatal) abort();
+#endif
 }
 
-void setErrorMessageCaption(const char* caption)
+void Logger::enableOutputToDebug(bool enable)
 {
-    gErrorMessageCaption = (caption) ? caption : "";
+    mOutputToDebug = enable;
 }
 
-static Callback gCallback = &defaultCallback;
-static Severity gMinSeverity = Severity::Info;
-
-void setMinSeverity(Severity severity)
+void Logger::flush()
 {
-    gMinSeverity = severity;
-}
-
-void setCallback(Callback func)
-{
-    gCallback = func;
-}
-
-Callback getCallback()
-{
-    return gCallback;
-}
-
-void resetCallback()
-{
-    gCallback = &defaultCallback;
-}
-
-void enableOutputToMessageBox(bool enable)
-{
-    gOutputToMessageBox = enable;
-}
-
-void enableOutputToConsole(bool enable)
-{
-    gOutputToConsole = enable;
-}
-
-void enableOutputToDebug(bool enable)
-{
-    gOutputToDebug = enable;
-}
-
-void consoleApplicationMode()
-{
-    gOutputToConsole = true;
-    gOutputToDebug = true;
-    gOutputToMessageBox = false;
-}
-
-void message(Severity severity, const char* fmt...)
-{
-    if (static_cast<int>(gMinSeverity) > static_cast<int>(severity)) return;
-
-    char buffer[gMessageBufferSize];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buffer, std::size(buffer), fmt, args);
-
-    gCallback(severity, buffer);
-
-    va_end(args);
-}
-
-void debug(const char* fmt...)
-{
-    if (static_cast<int>(gMinSeverity) > static_cast<int>(Severity::Debug)) return;
-
-    char buffer[gMessageBufferSize];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buffer, std::size(buffer), fmt, args);
-
-    gCallback(Severity::Debug, buffer);
-
-    va_end(args);
-}
-
-void info(const char* fmt...)
-{
-    if (static_cast<int>(gMinSeverity) > static_cast<int>(Severity::Info)) return;
-
-    char buffer[gMessageBufferSize];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buffer, std::size(buffer), fmt, args);
-
-    gCallback(Severity::Info, buffer);
-
-    va_end(args);
-}
-
-void warning(const char* fmt...)
-{
-    if (static_cast<int>(gMinSeverity) > static_cast<int>(Severity::Warning)) return;
-
-    char buffer[gMessageBufferSize];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buffer, std::size(buffer), fmt, args);
-
-    gCallback(Severity::Warning, buffer);
-
-    va_end(args);
-}
-
-void error(const char* fmt...)
-{
-    if (static_cast<int>(gMinSeverity) > static_cast<int>(Severity::Error)) return;
-
-    char buffer[gMessageBufferSize];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buffer, std::size(buffer), fmt, args);
-
-    gCallback(Severity::Error, buffer);
-
-    va_end(args);
-}
-
-void fatal(const char* fmt...)
-{
-    char buffer[gMessageBufferSize];
-    va_list args;
-    va_start(args, fmt);
-    vsnprintf(buffer, std::size(buffer), fmt, args);
-
-    gCallback(Severity::Fatal, buffer);
-
-    va_end(args);
+    std::cout.flush();
 }
 }  // namespace mental::core::log

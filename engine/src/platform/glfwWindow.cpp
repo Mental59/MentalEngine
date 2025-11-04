@@ -11,10 +11,7 @@ mental::platform::GLFWwindow::GLFWwindow(const WindowDesc& desc)
 
     mWindow = glfwCreateWindow(desc.width, desc.height, desc.title, nullptr, nullptr);
 
-    if (!mWindow)
-    {
-        core::log::fatal("Failed to create GLFW window");
-    }
+    MENTAL_ASSERT_MESSAGE(mWindow != nullptr, "Failed to create GLFW window");
 
     glfwSetKeyCallback(mWindow,
         [](::GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -22,7 +19,7 @@ mental::platform::GLFWwindow::GLFWwindow(const WindowDesc& desc)
             if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
         });
 
-    core::log::info("GLFW window initialized");
+    MENTAL_INFO("GLFW window initialized");
 }
 
 mental::platform::GLFWwindow::~GLFWwindow()
@@ -30,7 +27,7 @@ mental::platform::GLFWwindow::~GLFWwindow()
     glfwDestroyWindow(mWindow);
     glfwTerminate();
 
-    core::log::info("GLFW window destroyed");
+    MENTAL_INFO("GLFW window destroyed");
 }
 
 void mental::platform::GLFWwindow::pollEvents() const

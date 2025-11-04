@@ -1,6 +1,7 @@
 #include <render/rhi/rhi.hpp>
 #include <core/log.hpp>
 #include <platform/window.hpp>
+#include <format>
 #if defined MENTAL_WITH_VULKAN
 #include <render/rhi/vulkan/factory.hpp>
 #endif
@@ -59,14 +60,17 @@ void initDevice(GraphicsApi api, const mental::platform::IWindow* const window)
 
             rhi::vk::InstanceInfo instanceInfo;
             res = factory.createInstance(instanceInfo);
-            if (res != rhi::Result::eSuccess) mental::core::log::fatal("Failed to create vulkan instance. Error: %s", resultToString(res));
+            MENTAL_ASSERT_MESSAGE(
+                res == rhi::Result::eSuccess, std::format("Failed to create vulkan instance. Error: {}", resultToString(res)));
 
             VkSurfaceKHR surface;
             res = window->createSurface(instanceInfo.getInstance(), surface);
-            if (res != rhi::Result::eSuccess) mental::core::log::fatal("Failed to create vulkan surface. Error: %s", resultToString(res));
+            MENTAL_ASSERT_MESSAGE(
+                res == rhi::Result::eSuccess, std::format("Failed to create vulkan surface. Error: {}", resultToString(res)));
 
             res = factory.initDevice(instanceInfo, surface);
-            if (res != rhi::Result::eSuccess) mental::core::log::fatal("Failed to create vulkan device. Error: %s", resultToString(res));
+            MENTAL_ASSERT_MESSAGE(
+                res == rhi::Result::eSuccess, std::format("Failed to create vulkan device. Error: {}", resultToString(res)));
 
             gDevice = &rhi::vk::Device::instance();
             break;
@@ -75,7 +79,7 @@ void initDevice(GraphicsApi api, const mental::platform::IWindow* const window)
 
         default:
         {
-            mental::core::log::fatal("Unsupported graphics api %s", graphicsApiToString(api));
+            MENTAL_ASSERT_MESSAGE(false, std::format("Unsupported graphics api {}", graphicsApiToString(api)));
         }
     }
 }

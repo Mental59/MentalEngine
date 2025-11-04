@@ -1,54 +1,165 @@
 #pragma once
-#include <functional>
+#include <string>
+#include <source_location>
+#include <format>
 
 namespace mental::core::log
 {
-enum class Severity
+enum class Level : uint8_t
 {
-    None = 0,
-    Debug,
-    Info,
-    Warning,
-    Error,
-    Fatal
+    eFatal = 0,
+    eError,
+    eWarn,
+    eInfo,
+    eDebug,
+    eTrace
 };
 
-using Callback = std::function<void(Severity, char const*)>;
+constexpr const char* levelToString(Level level);
 
-void setMinSeverity(Severity severity);
-void setCallback(Callback func);
-Callback getCallback();
-void resetCallback();
+class Logger
+{
+public:
+    static Logger& getInstance();
 
-// Windows: enables or disables future log messages to be shown as
-// MessageBox'es. This is the default mode. Linux: no effect, log messages are
-// always printed to the console.
-void enableOutputToMessageBox(bool enable);
+    ~Logger();
 
-// Windows: enables or disables future log messages to be printed to stdout or
-// stderr, depending on severity. Linux: no effect, log messages are always
-// printed to the console.
-void enableOutputToConsole(bool enable);
+    void log(Level level, const std::string& message, const std::source_location& location = std::source_location::current());
+    void enableOutputToDebug(bool enable);
 
-// Windows: enables or disables future log messages to be printed using
-// OutputDebugString. Linux: no effect, log messages are always printed to the
-// console.
-void enableOutputToDebug(bool enable);
+    void flush();
 
-// Windows: sets the caption to be used by the error message boxes.
-// Linux: no effect.
-void setErrorMessageCaption(const char* caption);
+    template <typename... Args>
+    void fatal(const std::string& format, Args&&... args)
+    {
+        log(Level::eFatal, std::vformat(format, std::make_format_args(args...)));
+    }
 
-// Equivalent to the following sequence of calls:
-// - enableOutputToConsole(true);
-// - enableOutputToDebug(true);
-// - enableOutputToMessageBox(false);
-void consoleApplicationMode();
+    template <typename... Args>
+    void error(const std::string& format, Args&&... args)
+    {
+        log(Level::eError, std::vformat(format, std::make_format_args(args...)));
+    }
 
-void message(Severity severity, const char* fmt...);
-void debug(const char* fmt...);
-void info(const char* fmt...);
-void warning(const char* fmt...);
-void error(const char* fmt...);
-void fatal(const char* fmt...);
+    template <typename... Args>
+    void warn(const std::string& format, Args&&... args)
+    {
+        log(Level::eWarn, std::vformat(format, std::make_format_args(args...)));
+    }
+
+    template <typename... Args>
+    void info(const std::string& format, Args&&... args)
+    {
+        log(Level::eInfo, std::vformat(format, std::make_format_args(args...)));
+    }
+
+    template <typename... Args>
+    void debug(const std::string& format, Args&&... args)
+    {
+        log(Level::eDebug, std::vformat(format, std::make_format_args(args...)));
+    }
+
+    template <typename... Args>
+    void trace(const std::string& format, Args&&... args)
+    {
+        log(Level::eTrace, std::vformat(format, std::make_format_args(args...)));
+    }
+
+    void assertion_failed(const std::string& expr, const std::string& message)
+    {
+        log(Level::eFatal, std::format("Assertion failure: {}, message: '{}'", expr, message));
+    }
+
+private:
+    Logger() = default;
+    bool mOutputToDebug = false;
+};
 }  // namespace mental::core::log
+
+#define MENTAL_FATAL(message, ...) mental::core::log::Logger::getInstance().fatal(message, __VA_ARGS__)
+
+#define MENTAL_ERROR(message, ...) mental::core::log::Logger::getInstance().error(message, __VA_ARGS__)
+
+#ifdef MENTAL_LOG_WARNINGS
+#define MENTAL_WARN(message, ...) mental::core::log::Logger::getInstance().warn(message, __VA_ARGS__)
+#else
+#define MENTAL_WARN(message, ...)
+#endif
+
+#ifdef MENTAL_LOG_INFO
+#define MENTAL_INFO(message, ...) mental::core::log::Logger::getInstance().info(message, __VA_ARGS__)
+#else
+#define MENTAL_INFO(message, ...)
+#endif
+
+#ifdef _DEBUG
+#define MENTAL_DEBUG(message, ...) mental::core::log::Logger::getInstance().debug(message, __VA_ARGS__)
+#else
+#define MENTAL_DEBUG(message, ...)
+#endif
+
+#ifdef MENTAL_LOG_TRACES
+#define MENTAL_TRACE(message, ...) mental::core::log::Logger::getInstance().trace(message, __VA_ARGS__)
+#else
+#define MENTAL_TRACE(message, ...)
+#endif
+
+#ifdef MENTAL_ASSERTS
+
+#if defined(_MSC_VER)
+#include <intrin.h>
+#define MENTAL_DEBUG_BREAK() __debugbreak()
+#elif defined(__GNUC__)
+#define MENTAL_DEBUG_BREAK() __builtin_trap()
+#else
+#include <signal.h>
+#ifdef SIGTRAP
+#define MENTAL_DEBUG_BREAK() raise(SIGTRAP)
+#else
+#define MENTAL_DEBUG_BREAK() raise(SIGABRT)
+#endif
+#endif
+
+#define MENTAL_ASSERT(expr)                                                                                                                \
+    {                                                                                                                                      \
+        if (expr)                                                                                                                          \
+        {                                                                                                                                  \
+        }                                                                                                                                  \
+        else                                                                                                                               \
+        {                                                                                                                                  \
+            mental::core::log::Logger::getInstance().assertion_failed(#expr, "");                                                          \
+            MENTAL_DEBUG_BREAK();                                                                                                          \
+        }                                                                                                                                  \
+    }
+#define MENTAL_ASSERT_MESSAGE(expr, message)                                                                                               \
+    {                                                                                                                                      \
+        if (expr)                                                                                                                          \
+        {                                                                                                                                  \
+        }                                                                                                                                  \
+        else                                                                                                                               \
+        {                                                                                                                                  \
+            mental::core::log::Logger::getInstance().assertion_failed(#expr, message);                                                     \
+            MENTAL_DEBUG_BREAK();                                                                                                          \
+        }                                                                                                                                  \
+    }
+#ifdef _DEBUG
+#define MENTAL_ASSERT_DEBUG(expr)                                                                                                          \
+    {                                                                                                                                      \
+        if (expr)                                                                                                                          \
+        {                                                                                                                                  \
+        }                                                                                                                                  \
+        else                                                                                                                               \
+        {                                                                                                                                  \
+            mental::core::log::Logger::getInstance().assertion_failed(#expr, "");                                                          \
+            MENTAL_DEBUG_BREAK();                                                                                                          \
+        }                                                                                                                                  \
+    }
+#endif
+
+#else
+
+#define MENTAL_ASSERT(expr)
+#define MENTAL_ASSERT_MESSAGE(expr, message, ...)
+#define MENTAL_ASSERT_DEBUG(expr)
+
+#endif

@@ -14,14 +14,14 @@ namespace mental::rhi::vk
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-    mental::core::log::info("Debug callback: %s", pCallbackData->pMessage);
+    MENTAL_DEBUG("Debug callback: {}", pCallbackData->pMessage);
     return VK_FALSE;
 }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL reportCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object,
     size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* UserData)
 {
-    mental::core::log::info("Report callback (%s): %s", pLayerPrefix, pMessage);
+    MENTAL_DEBUG("Report callback ({}): {}", pLayerPrefix, pMessage);
     return VK_FALSE;
 }
 
@@ -52,12 +52,12 @@ DebugMessenger DeviceFactory::createDebugMessenger(VkInstance instance) const
     VkDebugUtilsMessengerCreateInfoEXT createDebugMessengerInfo = getDebugMessengerCreateInfo();
     VkDebugUtilsMessengerEXT debugMessenger;
     vkRes = vkCreateDebugUtilsMessengerEXT(instance, &createDebugMessengerInfo, VK_NULL_HANDLE, &debugMessenger);
-    if (vkRes != VK_SUCCESS) mental::core::log::warning("Failed to call createDebugUtilsMessengerEXT");
+    if (vkRes != VK_SUCCESS) MENTAL_ERROR("Failed to call createDebugUtilsMessengerEXT");
 
     VkDebugReportCallbackCreateInfoEXT createReportCallbackInfo = getReportCallbackCreateInfo();
     VkDebugReportCallbackEXT reportCallback;
     vkRes = vkCreateDebugReportCallbackEXT(instance, &createReportCallbackInfo, VK_NULL_HANDLE, &reportCallback);
-    if (vkRes != VK_SUCCESS) mental::core::log::warning("Failed to call createDebugReportCallbackEXT");
+    if (vkRes != VK_SUCCESS) MENTAL_ERROR("Failed to call createDebugReportCallbackEXT");
 
     return {debugMessenger, reportCallback};
 }
@@ -120,7 +120,7 @@ rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
 
     if (appInfo.apiVersion < minimumVulkanVersion)
     {
-        mental::core::log::error("The Vulkan API version supported on the system (%d.%d.%d) is too low, at least %d.%d.%d is required.",
+        MENTAL_ERROR("The Vulkan API version supported on the system ({}.{}.{}) is too low, at least {}.{}.{} is required.",
             VK_API_VERSION_MAJOR(appInfo.apiVersion), VK_API_VERSION_MINOR(appInfo.apiVersion), VK_API_VERSION_PATCH(appInfo.apiVersion),
             VK_API_VERSION_MAJOR(minimumVulkanVersion), VK_API_VERSION_MINOR(minimumVulkanVersion),
             VK_API_VERSION_PATCH(minimumVulkanVersion));
@@ -130,8 +130,17 @@ rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
     std::vector<const char*> instanceExtensions = ExtensionManager::getRequiredInstanceExtensions();
     std::vector<const char*> validationLayers = ExtensionManager::getValidationLayers();
 
-    if (!checkInstanceExtensionSupport(instanceExtensions)) mental::core::log::fatal("Required extensions not supported");
-    if (!checkInstanceLayerSupport(validationLayers)) mental::core::log::fatal("Validation layers not supported");
+    if (!checkInstanceExtensionSupport(instanceExtensions))
+    {
+        MENTAL_ERROR("Required extensions not supported");
+        return rhi::Result::eInstanceInitializationFailed;
+    }
+
+    if (!checkInstanceLayerSupport(validationLayers))
+    {
+        MENTAL_ERROR("Validation layers not supported");
+        return rhi::Result::eInstanceInitializationFailed;
+    }
 
     VkInstanceCreateInfo instanceCreateInfo{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
     instanceCreateInfo.pApplicationInfo = &appInfo;

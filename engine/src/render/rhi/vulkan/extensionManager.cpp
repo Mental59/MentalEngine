@@ -11,7 +11,7 @@ std::vector<const char*> mental::rhi::vk::ExtensionManager::getRequiredInstanceE
 #elif defined(MENTAL_LINUX)
     extensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
 #else
-    mental::core::log::fatal("Unsupported platform");
+    MENTAL_ASSERT_MESSAGE(false, "Unsupported platform");
 #endif
 
     extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);

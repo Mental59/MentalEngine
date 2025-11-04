@@ -8,12 +8,12 @@ namespace mental::render
 RenderSystem::RenderSystem(const mental::platform::IWindow* const window)
 {
     rhi::initDevice(rhi::GraphicsApi::Vulkan, window);
-    mental::core::log::info("Render system initialized");
+    MENTAL_INFO("Render system initialized");
 }
 
 RenderSystem::~RenderSystem()
 {
-    mental::core::log::info("Render system destroyed");
+    MENTAL_INFO("Render system destroyed");
 }
 
 }  // namespace mental::render

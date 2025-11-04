@@ -24,11 +24,11 @@ rhi::Result Context::init(VkInstance instance, VkSurfaceKHR surface, VkPhysicalD
     mDebugReportCallback = debugReportCallback;
     mDebugUtilsMessenger = debugUtilsMessenger;
 
-    if (!instance) mental::core::log::error("Vulkan instance is null");
-    if (!surface) mental::core::log::error("Vulkan surface is null");
-    if (!physicalDevice) mental::core::log::error("Vulkan physical device is null");
-    if (!device) mental::core::log::error("Vulkan device is null");
-    if (!instance || !surface || !physicalDevice || !device) return rhi::Result::eDeviceInitializationFailed;
+    MENTAL_ASSERT(instance != VK_NULL_HANDLE);
+    MENTAL_ASSERT(surface != VK_NULL_HANDLE);
+    MENTAL_ASSERT(physicalDevice != VK_NULL_HANDLE);
+    MENTAL_ASSERT(device != VK_NULL_HANDLE);
+    MENTAL_ASSERT(instance != VK_NULL_HANDLE);
 
     for (const char* extensionName : instanceExtensions)
         mInstanceExtensions.insert(extensionName);
@@ -45,7 +45,7 @@ rhi::Result Context::init(VkInstance instance, VkSurfaceKHR surface, VkPhysicalD
     VkResult importRes = vmaImportVulkanFunctionsFromVolk(&allocatorCreateInfo, &vulkanFunctions);
     if (importRes != VK_SUCCESS)
     {
-        mental::core::log::error("Failed to import vulkan functions");
+        MENTAL_ERROR("Failed to import vulkan functions");
         return rhi::Result::eDeviceInitializationFailed;
     }
 
@@ -54,7 +54,7 @@ rhi::Result Context::init(VkInstance instance, VkSurfaceKHR surface, VkPhysicalD
     VkResult createAllocatorRes = vmaCreateAllocator(&allocatorCreateInfo, &mAllocator);
     if (createAllocatorRes != VK_SUCCESS)
     {
-        mental::core::log::error("Failed to create vulkan allocator");
+        MENTAL_ERROR("Failed to create vulkan allocator");
         return rhi::Result::eDeviceInitializationFailed;
     }
 
@@ -110,7 +110,7 @@ rhi::Result Device::createBuffer(BufferDesc desc, core::memory::SharedHandle<IBu
 
     if (createBufferRes != VK_SUCCESS)
     {
-        mental::core::log::warning("Failed to create buffer %s", vkResultToString(createBufferRes));
+        MENTAL_ERROR("Failed to create buffer {}", vkResultToString(createBufferRes));
         return Result::eBufferInitializationFailed;
     }
 
@@ -125,9 +125,9 @@ ICommandQueue* Device::getGraphicsQueue()
     return &mGraphicsQueue;
 }
 
-vk::CommandQueue& Device::getVulkanGraphicsQueue()
+vk::CommandQueue* Device::getVulkanGraphicsQueue()
 {
-    return mGraphicsQueue;
+    return &mGraphicsQueue;
 }
 
 Device& Device::instance()
@@ -145,19 +145,19 @@ rhi::Result Device::init(const DeviceDesc& desc)
 
     if (!desc.graphicsQueue || desc.graphicsQueueIndex < 0)
     {
-        mental::core::log::error("Vulkan graphics queue is invalid");
+        MENTAL_ERROR("Vulkan graphics queue is invalid");
         return rhi::Result::eDeviceInitializationFailed;
     }
     mGraphicsQueue.init(desc.graphicsQueue, desc.graphicsQueueIndex);
 
-    mental::core::log::info("Vulkan device initialized");
+    MENTAL_INFO("Vulkan device initialized");
     return rhi::Result::eSuccess;
 }
 
 Device::~Device()
 {
     mContext.destroy();
-    mental::core::log::info("Vulkan device destroyed");
+    MENTAL_INFO("Vulkan device destroyed");
 }
 
 }  // namespace mental::rhi::vk

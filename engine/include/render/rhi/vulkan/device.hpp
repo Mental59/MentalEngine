@@ -71,7 +71,7 @@ public:
     virtual GraphicsApi getGraphicsApi() override;
     virtual rhi::Result createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer) override;
     virtual ICommandQueue* getGraphicsQueue() override;
-    vk::CommandQueue& getVulkanGraphicsQueue();
+    vk::CommandQueue* getVulkanGraphicsQueue();
 
 private:
     Context mContext;

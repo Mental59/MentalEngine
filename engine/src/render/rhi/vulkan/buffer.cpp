@@ -5,13 +5,13 @@
 mental::rhi::vk::Buffer::Buffer(const BufferDesc& desc)
     : mDesc(desc), mBuffer(VK_NULL_HANDLE), mAllocator(VK_NULL_HANDLE), mAllocation(VK_NULL_HANDLE)
 {
-    mental::core::log::info("Vulkan buffer created");
+    MENTAL_INFO("Vulkan buffer created");
 }
 
 mental::rhi::vk::Buffer::~Buffer()
 {
     vmaDestroyBuffer(mAllocator, mBuffer, mAllocation);
-    mental::core::log::info("Vulkan buffer destroyed");
+    MENTAL_INFO("Vulkan buffer destroyed");
 }
 
 mental::rhi::Result mental::rhi::vk::Buffer::map(void** mappedData)
