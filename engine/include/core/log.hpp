@@ -131,6 +131,7 @@ private:
             MENTAL_DEBUG_BREAK();                                                                                                          \
         }                                                                                                                                  \
     }
+
 #define MENTAL_ASSERT_MESSAGE(expr, message)                                                                                               \
     {                                                                                                                                      \
         if (expr)                                                                                                                          \
@@ -142,6 +143,7 @@ private:
             MENTAL_DEBUG_BREAK();                                                                                                          \
         }                                                                                                                                  \
     }
+
 #ifdef _DEBUG
 #define MENTAL_ASSERT_DEBUG(expr)                                                                                                          \
     {                                                                                                                                      \
@@ -154,6 +156,8 @@ private:
             MENTAL_DEBUG_BREAK();                                                                                                          \
         }                                                                                                                                  \
     }
+#else
+#define MENTAL_ASSERT_DEBUG(expr)
 #endif
 
 #else
