@@ -38,7 +38,7 @@ enum BufferUsageFlagBits : uint32_t
     eTransferSrc = 4,
     eTransferDst = 8
 };
-typedef uint32_t BufferUsageFlags;
+using BufferUsageFlags = uint32_t;
 
 enum class BufferCpuAccess : uint8_t
 {
@@ -54,7 +54,7 @@ struct BufferDesc
     uint64_t byteSize = 0;
 };
 
-class IBuffer : public core::memory::IHeapResource
+class IBuffer
 {
 public:
     virtual const BufferDesc& getDesc() const = 0;
@@ -62,20 +62,20 @@ public:
     virtual rhi::Result unmap() = 0;
     virtual rhi::Result copy(void* data, uint64_t size, uint64_t offset = 0) = 0;
 };
-typedef core::memory::RefCountPtr<IBuffer> BufferHandle;
+using BufferHandle = core::memory::SharedHandle<IBuffer>;
 
-class ICommandQueue : public core::memory::IResource
+class ICommandQueue
 {
     // TODO
 };
 
-class IDevice : public core::memory::IResource
+class IDevice
 {
 public:
     virtual void waitIdle() = 0;
     virtual GraphicsApi getGraphicsApi() = 0;
 
-    virtual rhi::Result createBuffer(BufferDesc desc, BufferHandle& buffer) = 0;
+    virtual rhi::Result createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer) = 0;
 
     virtual ICommandQueue* getGraphicsQueue() = 0;
 

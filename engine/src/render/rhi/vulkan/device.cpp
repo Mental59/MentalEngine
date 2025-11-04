@@ -81,7 +81,7 @@ GraphicsApi Device::getGraphicsApi()
     return GraphicsApi::Vulkan;
 }
 
-rhi::Result Device::createBuffer(BufferDesc desc, BufferHandle& buffer)
+rhi::Result Device::createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer)
 {
     if (desc.byteSize == 0) return Result::eBufferInitializationFailed;
 
@@ -114,9 +114,9 @@ rhi::Result Device::createBuffer(BufferDesc desc, BufferHandle& buffer)
         return Result::eBufferInitializationFailed;
     }
 
-    Buffer* pBuffer = new Buffer(desc);
-    pBuffer->setBuffer(vkBuffer).setAllocator(mContext.mAllocator).setAllocation(allocation);
-    buffer = BufferHandle::create(pBuffer);
+    core::memory::SharedHandle<Buffer> buffer = core::memory::makeShared<Buffer>(desc);
+    buffer->setBuffer(vkBuffer).setAllocator(mContext.mAllocator).setAllocation(allocation);
+    outBuffer = std::move(buffer);
     return Result::eSuccess;
 }
 

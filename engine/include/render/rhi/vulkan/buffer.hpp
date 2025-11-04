@@ -7,11 +7,11 @@
 
 namespace mental::rhi::vk
 {
-class Buffer : public core::memory::RefCounter<IBuffer>
+class Buffer : public IBuffer
 {
 public:
     explicit Buffer(const BufferDesc& desc);
-    virtual ~Buffer() override;
+    virtual ~Buffer();
 
     virtual const BufferDesc& getDesc() const override { return mDesc; };
     virtual rhi::Result map(void** mappedData) override;
