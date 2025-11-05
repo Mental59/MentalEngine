@@ -24,50 +24,50 @@ public:
 
     ~Logger();
 
-    void log(Level level, const std::string& message, const std::source_location& location = std::source_location::current());
+    void log(Level level, const std::string& message, const std::source_location& location);
     void enableOutputToDebug(bool enable);
 
     void flush();
 
     template <typename... Args>
-    void fatal(const std::string& format, Args&&... args)
+    void fatal(const std::source_location& location, const std::string& format, Args&&... args)
     {
-        log(Level::eFatal, std::vformat(format, std::make_format_args(args...)));
+        log(Level::eFatal, std::vformat(format, std::make_format_args(args...)), location);
     }
 
     template <typename... Args>
-    void error(const std::string& format, Args&&... args)
+    void error(const std::source_location& location, const std::string& format, Args&&... args)
     {
-        log(Level::eError, std::vformat(format, std::make_format_args(args...)));
+        log(Level::eError, std::vformat(format, std::make_format_args(args...)), location);
     }
 
     template <typename... Args>
-    void warn(const std::string& format, Args&&... args)
+    void warn(const std::source_location& location, const std::string& format, Args&&... args)
     {
-        log(Level::eWarn, std::vformat(format, std::make_format_args(args...)));
+        log(Level::eWarn, std::vformat(format, std::make_format_args(args...)), location);
     }
 
     template <typename... Args>
-    void info(const std::string& format, Args&&... args)
+    void info(const std::source_location& location, const std::string& format, Args&&... args)
     {
-        log(Level::eInfo, std::vformat(format, std::make_format_args(args...)));
+        log(Level::eInfo, std::vformat(format, std::make_format_args(args...)), location);
     }
 
     template <typename... Args>
-    void debug(const std::string& format, Args&&... args)
+    void debug(const std::source_location& location, const std::string& format, Args&&... args)
     {
-        log(Level::eDebug, std::vformat(format, std::make_format_args(args...)));
+        log(Level::eDebug, std::vformat(format, std::make_format_args(args...)), location);
     }
 
     template <typename... Args>
-    void trace(const std::string& format, Args&&... args)
+    void trace(const std::source_location& location, const std::string& format, Args&&... args)
     {
-        log(Level::eTrace, std::vformat(format, std::make_format_args(args...)));
+        log(Level::eTrace, std::vformat(format, std::make_format_args(args...)), location);
     }
 
-    void assertion_failed(const std::string& expr, const std::string& message)
+    void assertion_failed(const std::source_location& location, const std::string& expr, const std::string& message)
     {
-        log(Level::eFatal, std::format("Assertion failure: {}, message: '{}'", expr, message));
+        log(Level::eFatal, std::format("Assertion failure: {}, message: '{}'", expr, message), location);
     }
 
 private:
@@ -76,30 +76,30 @@ private:
 };
 }  // namespace mental::core::log
 
-#define MENTAL_FATAL(message, ...) mental::core::log::Logger::getInstance().fatal(message, __VA_ARGS__)
+#define MENTAL_FATAL(message, ...) mental::core::log::Logger::getInstance().fatal(std::source_location::current(), message, __VA_ARGS__)
 
-#define MENTAL_ERROR(message, ...) mental::core::log::Logger::getInstance().error(message, __VA_ARGS__)
+#define MENTAL_ERROR(message, ...) mental::core::log::Logger::getInstance().error(std::source_location::current(), message, __VA_ARGS__)
 
 #ifdef MENTAL_LOG_WARNINGS
-#define MENTAL_WARN(message, ...) mental::core::log::Logger::getInstance().warn(message, __VA_ARGS__)
+#define MENTAL_WARN(message, ...) mental::core::log::Logger::getInstance().warn(std::source_location::current(), message, __VA_ARGS__)
 #else
 #define MENTAL_WARN(message, ...)
 #endif
 
 #ifdef MENTAL_LOG_INFO
-#define MENTAL_INFO(message, ...) mental::core::log::Logger::getInstance().info(message, __VA_ARGS__)
+#define MENTAL_INFO(message, ...) mental::core::log::Logger::getInstance().info(std::source_location::current(), message, __VA_ARGS__)
 #else
 #define MENTAL_INFO(message, ...)
 #endif
 
 #ifdef _DEBUG
-#define MENTAL_DEBUG(message, ...) mental::core::log::Logger::getInstance().debug(message, __VA_ARGS__)
+#define MENTAL_DEBUG(message, ...) mental::core::log::Logger::getInstance().debug(std::source_location::current(), message, __VA_ARGS__)
 #else
 #define MENTAL_DEBUG(message, ...)
 #endif
 
 #ifdef MENTAL_LOG_TRACES
-#define MENTAL_TRACE(message, ...) mental::core::log::Logger::getInstance().trace(message, __VA_ARGS__)
+#define MENTAL_TRACE(message, ...) mental::core::log::Logger::getInstance().trace(std::source_location::current(), message, __VA_ARGS__)
 #else
 #define MENTAL_TRACE(message, ...)
 #endif
@@ -127,7 +127,7 @@ private:
         }                                                                                                                                  \
         else                                                                                                                               \
         {                                                                                                                                  \
-            mental::core::log::Logger::getInstance().assertion_failed(#expr, "");                                                          \
+            mental::core::log::Logger::getInstance().assertion_failed(std::source_location::current(), #expr, "");                         \
             MENTAL_DEBUG_BREAK();                                                                                                          \
         }                                                                                                                                  \
     }
@@ -139,7 +139,7 @@ private:
         }                                                                                                                                  \
         else                                                                                                                               \
         {                                                                                                                                  \
-            mental::core::log::Logger::getInstance().assertion_failed(#expr, message);                                                     \
+            mental::core::log::Logger::getInstance().assertion_failed(std::source_location::current(), #expr, message);                    \
             MENTAL_DEBUG_BREAK();                                                                                                          \
         }                                                                                                                                  \
     }
@@ -152,7 +152,7 @@ private:
         }                                                                                                                                  \
         else                                                                                                                               \
         {                                                                                                                                  \
-            mental::core::log::Logger::getInstance().assertion_failed(#expr, "");                                                          \
+            mental::core::log::Logger::getInstance().assertion_failed(std::source_location::current(), #expr, "");                         \
             MENTAL_DEBUG_BREAK();                                                                                                          \
         }                                                                                                                                  \
     }

@@ -35,14 +35,14 @@ Logger::~Logger()
 
 void Logger::log(Level level, const std::string& message, const std::source_location& location)
 {
-    auto timestamp = std::chrono::system_clock::now();
-    auto time_t = std::chrono::system_clock::to_time_t(timestamp);
-    auto tm = std::localtime(&time_t);
+    std::chrono::system_clock::time_point timestamp = std::chrono::system_clock::now();
+    time_t time = std::chrono::system_clock::to_time_t(timestamp);
+    tm* localTime = std::localtime(&time);
 
     std::lock_guard<std::mutex> guard(gLogMutex);
 
-    std::string formatStr = std::format("[{:02}:{:02}:{:02}] [{}] {} ({}:{})\n", tm->tm_hour, tm->tm_min, tm->tm_sec, levelToString(level),
-        message, location.file_name(), location.line());
+    std::string formatStr = std::format("[{:02}:{:02}:{:02}] [{}] {} ({}:{})\n", localTime->tm_hour, localTime->tm_min, localTime->tm_sec,
+        levelToString(level), message, location.file_name(), location.line());
     std::cout << formatStr;
 
 #if _WIN32
