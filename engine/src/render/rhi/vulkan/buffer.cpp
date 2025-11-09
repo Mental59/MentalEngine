@@ -16,8 +16,8 @@ mental::rhi::vk::Buffer::~Buffer()
 
 mental::core::resource::Object mental::rhi::vk::Buffer::getNativeObject(core::resource::ObjectType objectType)
 {
-    if (objectType == core::resource::ObjectTypes::vkBuffer) return mBuffer;
-    return nullptr;
+    if (objectType == core::resource::ObjectType::eVkBuffer) return mBuffer;
+    return mBuffer;
 }
 
 mental::rhi::Result mental::rhi::vk::Buffer::map(void** mappedData)

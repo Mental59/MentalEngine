@@ -22,17 +22,15 @@ struct Object
     }
 };
 
-using ObjectType = uint32_t;
-
-namespace ObjectTypes
+enum class ObjectType : uint8_t
 {
-constexpr ObjectType vkCommandBuffer = 1;
-constexpr ObjectType vkQueue = 2;
-constexpr ObjectType vkCommandPool = 3;
-constexpr ObjectType vkBuffer = 4;
-constexpr ObjectType vkSemaphore = 5;
-constexpr ObjectType vkFence = 6;
-}  // namespace ObjectTypes
+    eVkCommandBuffer = 0,
+    eVkQueue,
+    eVkCommandPool,
+    eVkBuffer,
+    eVkSemaphore,
+    eVkFence
+};
 
 class IResource : public core::memory::NonCopyable
 {

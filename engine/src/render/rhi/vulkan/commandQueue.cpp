@@ -17,12 +17,12 @@ mental::rhi::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& info
     if (info.waitSemaphore)
     {
         submitInfo.waitSemaphoreCount = 1;
-        submitInfo.pWaitSemaphores = info.waitSemaphore->getNativeObject(core::resource::ObjectTypes::vkSemaphore);
+        submitInfo.pWaitSemaphores = info.waitSemaphore->getNativeObject(core::resource::ObjectType::eVkSemaphore);
     }
     if (info.signalSemaphore)
     {
         submitInfo.signalSemaphoreCount = 1;
-        submitInfo.pSignalSemaphores = info.signalSemaphore->getNativeObject(core::resource::ObjectTypes::vkSemaphore);
+        submitInfo.pSignalSemaphores = info.signalSemaphore->getNativeObject(core::resource::ObjectType::eVkSemaphore);
     }
 
     MENTAL_ASSERT(info.cmdListCount <= gMaxSubmitCmdListCount);
@@ -30,7 +30,7 @@ mental::rhi::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& info
     std::array<VkCommandBuffer, gMaxSubmitCmdListCount> commandBuffers{};
     for (uint32_t i = 0; i < info.cmdListCount; i++)
     {
-        commandBuffers[i] = info.cmdLists[i]->getNativeObject(core::resource::ObjectTypes::vkCommandBuffer);
+        commandBuffers[i] = info.cmdLists[i]->getNativeObject(core::resource::ObjectType::eVkCommandBuffer);
     }
     submitInfo.commandBufferCount = info.cmdListCount;
     submitInfo.pCommandBuffers = commandBuffers.data();
@@ -38,7 +38,7 @@ mental::rhi::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& info
     VkFence fence = VK_NULL_HANDLE;
     if (info.signalFence)
     {
-        fence = info.signalFence->getNativeObject(core::resource::ObjectTypes::vkFence);
+        fence = info.signalFence->getNativeObject(core::resource::ObjectType::eVkFence);
     }
 
     VkResult res = vkQueueSubmit(mQueue, 1, &submitInfo, fence);
@@ -54,9 +54,9 @@ void mental::rhi::vk::CommandQueue::waitIdle()
 
 mental::core::resource::Object mental::rhi::vk::CommandQueue::getNativeObject(core::resource::ObjectType objectType)
 {
-    if (objectType == core::resource::ObjectTypes::vkQueue) return mQueue;
-    if (objectType == core::resource::ObjectTypes::vkCommandPool) return mCommandPool;
-    return nullptr;
+    if (objectType == core::resource::ObjectType::eVkQueue) return mQueue;
+    if (objectType == core::resource::ObjectType::eVkCommandPool) return mCommandPool;
+    return mQueue;
 }
 
 mental::rhi::Result mental::rhi::vk::CommandQueue::createCommandPool(uint32_t queueFamilyIndex)
