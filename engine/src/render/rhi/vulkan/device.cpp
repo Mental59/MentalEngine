@@ -157,6 +157,7 @@ rhi::Result Device::init(const DeviceDesc& desc)
 
 Device::~Device()
 {
+    mGraphicsQueue.destroy();
     mContext.destroy();
     MENTAL_INFO("Vulkan device destroyed");
 }

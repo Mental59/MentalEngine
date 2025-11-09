@@ -81,5 +81,9 @@ private:
     Context mContext;
     CommandQueue mGraphicsQueue;
 };
+inline Device& getDevice()
+{
+    return Device::instance();
+}
 
 }  // namespace mental::rhi::vk

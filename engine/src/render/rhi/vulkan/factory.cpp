@@ -97,7 +97,7 @@ rhi::Result DeviceFactory::initDevice(const InstanceInfo& instanceInfo, VkSurfac
         .instanceExtensions = instanceInfo.getExtensions(),
         .deviceExtensions = physicalDeviceInfo.getRequiredExtensions()};
 
-    return Device::instance().init(desc);
+    return getDevice().init(desc);
 }
 
 rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const

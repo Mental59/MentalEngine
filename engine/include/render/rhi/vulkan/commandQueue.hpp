@@ -9,6 +9,7 @@ class CommandQueue : public rhi::ICommandQueue
 {
 public:
     rhi::Result init(VkQueue queue, uint32_t index);
+    void destroy();
 
     virtual rhi::Result submit(const SubmitInfo& info) override;
     virtual void waitIdle() override;

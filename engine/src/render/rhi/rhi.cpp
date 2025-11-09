@@ -75,7 +75,7 @@ void initDevice(GraphicsApi api, const mental::platform::IWindow* const window)
             MENTAL_ASSERT_MESSAGE(
                 res == rhi::Result::eSuccess, std::format("Failed to create vulkan device. Error: {}", resultToString(res)));
 
-            gDevice = &rhi::vk::Device::instance();
+            gDevice = &rhi::vk::getDevice();
             break;
         }
 #endif
