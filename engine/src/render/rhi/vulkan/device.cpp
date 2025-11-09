@@ -148,7 +148,8 @@ rhi::Result Device::init(const DeviceDesc& desc)
         MENTAL_ERROR("Vulkan graphics queue is invalid");
         return rhi::Result::eDeviceInitializationFailed;
     }
-    mGraphicsQueue.init(desc.graphicsQueue, desc.graphicsQueueIndex);
+    res = mGraphicsQueue.init(desc.graphicsQueue, desc.graphicsQueueIndex);
+    if (res != rhi::Result::eSuccess) return res;
 
     MENTAL_INFO("Vulkan device initialized");
     return rhi::Result::eSuccess;
@@ -158,6 +159,11 @@ Device::~Device()
 {
     mContext.destroy();
     MENTAL_INFO("Vulkan device destroyed");
+}
+
+core::resource::Object Device::getNativeObject(core::resource::ObjectType objectType)
+{
+    return nullptr;
 }
 
 }  // namespace mental::rhi::vk

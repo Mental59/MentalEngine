@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/memory.hpp>
+#include <core/resource.hpp>
 
 namespace mental::platform
 {
@@ -9,6 +9,7 @@ class IWindow;
 
 namespace mental::rhi
 {
+
 enum class Result
 {
     eSuccess = 0,
@@ -19,7 +20,10 @@ enum class Result
     eSurfaceInitializationFailed,
     eBufferInitializationFailed,
     eBufferMapFailed,
-    eBufferUploadFailed
+    eBufferCopyFailed,
+    eCommandQueueInitializationFailed,
+    eQueueSubmitFailed,
+    eSemaphoreInitializationFailed
 };
 
 const char* resultToString(Result res);
@@ -54,7 +58,7 @@ struct BufferDesc
     uint64_t byteSize = 0;
 };
 
-class IBuffer
+class IBuffer : public core::resource::IResource
 {
 public:
     virtual const BufferDesc& getDesc() const = 0;
@@ -64,12 +68,46 @@ public:
 };
 using BufferHandle = core::memory::SharedHandle<IBuffer>;
 
-class ICommandQueue
+class ISemaphore : public core::resource::IResource
 {
     // TODO
 };
 
-class IDevice
+class IFence : public core::resource::IResource
+{
+    // TODO
+};
+
+class ICommandList : public core::resource::IResource
+{
+    // TODO
+};
+
+enum class PipelineStage : uint8_t
+{
+    eColorAttachmentOutput = 0
+};
+
+constexpr uint32_t gMaxSubmitCmdListCount = 8;
+class ICommandQueue : public core::resource::IResource
+{
+public:
+    struct SubmitInfo
+    {
+        ICommandList* const* cmdLists;
+        uint32_t cmdListCount;
+        ISemaphore* const waitSemaphore;    // Semaphore to wait on before execution
+        PipelineStage waitStage;            // Stage at which to wait
+        ISemaphore* const signalSemaphore;  // Semaphore to signal after execution
+        IFence* const signalFence;          // Fence to signal after execution
+    };
+
+    virtual rhi::Result submit(const SubmitInfo& info) = 0;
+    virtual void waitIdle() = 0;
+    // TODO
+};
+
+class IDevice : public core::resource::IResource
 {
 public:
     virtual void waitIdle() = 0;

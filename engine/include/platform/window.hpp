@@ -17,7 +17,7 @@ struct WindowDesc
     int height = 0;
 };
 
-class IWindow
+class IWindow : public core::memory::NonCopyable
 {
 public:
     virtual void pollEvents() const = 0;

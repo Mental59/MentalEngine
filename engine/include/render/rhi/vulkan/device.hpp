@@ -67,11 +67,15 @@ public:
     rhi::Result init(const DeviceDesc& desc);
     ~Device();
 
+    virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
+
     virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
     virtual rhi::Result createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer) override;
     virtual ICommandQueue* getGraphicsQueue() override;
     vk::CommandQueue* getVulkanGraphicsQueue();
+
+    VkDevice getVkDevice() const { return mContext.mDevice; }
 
 private:
     Context mContext;

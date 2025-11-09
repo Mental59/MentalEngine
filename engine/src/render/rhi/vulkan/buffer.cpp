@@ -3,7 +3,7 @@
 #include <core/log.hpp>
 
 mental::rhi::vk::Buffer::Buffer(const BufferDesc& desc)
-    : mDesc(desc), mBuffer(VK_NULL_HANDLE), mAllocator(VK_NULL_HANDLE), mAllocation(VK_NULL_HANDLE)
+    : mDesc(desc), mBuffer(VK_NULL_HANDLE), mAllocator(VK_NULL_HANDLE), mAllocation(VK_NULL_HANDLE), mIsMapped(false)
 {
     MENTAL_INFO("Vulkan buffer created");
 }
@@ -14,56 +14,42 @@ mental::rhi::vk::Buffer::~Buffer()
     MENTAL_INFO("Vulkan buffer destroyed");
 }
 
+mental::core::resource::Object mental::rhi::vk::Buffer::getNativeObject(core::resource::ObjectType objectType)
+{
+    if (objectType == core::resource::ObjectTypes::vkBuffer) return mBuffer;
+    return nullptr;
+}
+
 mental::rhi::Result mental::rhi::vk::Buffer::map(void** mappedData)
 {
     VkResult res = vmaMapMemory(mAllocator, mAllocation, mappedData);
-    if (res != VK_SUCCESS) return rhi::Result::eBufferMapFailed;
+    if (res != VK_SUCCESS)
+    {
+        MENTAL_ERROR("Vulkan buffer map failed, error: {}", vkResultToString(res));
+        return rhi::Result::eBufferMapFailed;
+    }
+    mIsMapped = true;
     return rhi::Result::eSuccess;
 }
 
 mental::rhi::Result mental::rhi::vk::Buffer::unmap()
 {
     vmaUnmapMemory(mAllocator, mAllocation);
+    mIsMapped = false;
     return rhi::Result::eSuccess;
 }
 
 mental::rhi::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, uint64_t offset)
 {
-    switch (mDesc.cpuAccess)
+    if (!mIsMapped)
     {
-        case BufferCpuAccess::None:
-        {
-            VkBufferCreateInfo bufCreateInfo{VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
-            bufCreateInfo.size = size;
-            bufCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-
-            VmaAllocationCreateInfo allocCreateInfo{};
-            allocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
-            allocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
-
-            VkResult res;
-            VkBuffer stagingBuf;
-            VmaAllocation stagingAlloc;
-            VmaAllocationInfo stagingAllocInfo;
-            res = vmaCreateBuffer(mAllocator, &bufCreateInfo, &allocCreateInfo, &stagingBuf, &stagingAlloc, &stagingAllocInfo);
-            if (res != VK_SUCCESS) return Result::eBufferUploadFailed;
-
-            memcpy((uint8_t*)stagingAllocInfo.pMappedData + offset, data, size);
-
-            // TODO: begin single time command to copy from staging buffer to the current buffer
-
-            vmaDestroyBuffer(mAllocator, stagingBuf, stagingAlloc);
-            break;
-        }
-
-        case BufferCpuAccess::Write:
-        case BufferCpuAccess::ReadWrite:
-        {
-            VmaAllocationInfo allocationInfo;
-            vmaGetAllocationInfo(mAllocator, mAllocation, &allocationInfo);
-            memcpy((uint8_t*)allocationInfo.pMappedData + offset, data, size);
-            break;
-        }
+        MENTAL_ERROR("Buffer is not mapped");
+        return rhi::Result::eBufferCopyFailed;
     }
+
+    VmaAllocationInfo allocationInfo;
+    vmaGetAllocationInfo(mAllocator, mAllocation, &allocationInfo);
+    memcpy((uint8_t*)allocationInfo.pMappedData + offset, data, size);
+
     return Result::eSuccess;
 }

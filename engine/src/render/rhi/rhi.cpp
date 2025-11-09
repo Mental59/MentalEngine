@@ -22,7 +22,10 @@ const char* resultToString(Result res)
         case mental::rhi::Result::eSurfaceInitializationFailed: return "RHI_SURFACE_INITIALIZATION_FAILED";
         case mental::rhi::Result::eBufferInitializationFailed: return "RHI_BUFFER_INITIALIZATION_FAILED";
         case mental::rhi::Result::eBufferMapFailed: return "RHI_BUFFER_MAP_FAILED";
-        case mental::rhi::Result::eBufferUploadFailed: return "RHI_BUFFER_UPLOAD_FAILED";
+        case mental::rhi::Result::eBufferCopyFailed: return "RHI_BUFFER_COPY_FAILED";
+        case mental::rhi::Result::eCommandQueueInitializationFailed: return "RHI_COMMAND_QUEUE_INITIALIZATION_FAILED";
+        case mental::rhi::Result::eQueueSubmitFailed: return "RHI_QUEUE_SUBMIT_FAILED";
+        case mental::rhi::Result::eSemaphoreInitializationFailed: return "RHI_SEMAPHORE_INITIALIZATION_FAILED";
 
         default:
         {

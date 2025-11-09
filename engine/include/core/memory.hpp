@@ -25,4 +25,11 @@ UniqueHandle<T> makeUnique(Args&&... args)
     return std::make_unique<T>(std::forward<Args>(args)...);
 }
 
+class NonCopyable
+{
+public:
+    NonCopyable() = default;
+    NonCopyable(const NonCopyable& other) = delete;
+    NonCopyable& operator=(const NonCopyable& other) = delete;
+};
 }  // namespace mental::core::memory

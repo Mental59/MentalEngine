@@ -1,7 +1,7 @@
 #pragma once
 
 #include <render/rhi/rhi.hpp>
-#include <core/memory.hpp>
+#include <core/resource.hpp>
 #include <volk/volk.h>
 #include <vma/vk_mem_alloc.h>
 
@@ -12,6 +12,8 @@ class Buffer : public IBuffer
 public:
     explicit Buffer(const BufferDesc& desc);
     virtual ~Buffer();
+
+    virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
 
     virtual const BufferDesc& getDesc() const override { return mDesc; };
     virtual rhi::Result map(void** mappedData) override;
@@ -39,6 +41,7 @@ private:
     VkBuffer mBuffer;
     VmaAllocator mAllocator;
     VmaAllocation mAllocation;
+    bool mIsMapped;
 };
 
 }  // namespace mental::rhi::vk
