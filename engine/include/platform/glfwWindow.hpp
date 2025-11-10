@@ -5,9 +5,9 @@ class GLFWwindow;
 
 namespace mental::platform
 {
-class GLFWwindow : public IWindow
-{
-public:
+  class GLFWwindow : public IWindow
+  {
+   public:
     GLFWwindow(const WindowDesc& desc);
     virtual ~GLFWwindow();
 
@@ -19,7 +19,7 @@ public:
     virtual rhi::Result createSurface(VkInstance instance, VkSurfaceKHR& surface) const override;
 #endif
 
-private:
+   private:
     ::GLFWwindow* mWindow;
-};
+  };
 }  // namespace mental::platform

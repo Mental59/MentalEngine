@@ -1,13 +1,14 @@
 #pragma once
 
-#include <render/rhi/rhi.hpp>
 #include <volk/volk.h>
+
+#include <render/rhi/rhi.hpp>
 
 namespace mental::rhi::vk
 {
-class CommandQueue : public rhi::ICommandQueue
-{
-public:
+  class CommandQueue : public rhi::ICommandQueue
+  {
+   public:
     rhi::Result init(VkQueue queue, uint32_t index);
     void destroy();
 
@@ -16,11 +17,11 @@ public:
 
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
 
-private:
+   private:
     rhi::Result createCommandPool(uint32_t queueFamilyIndex);
 
     VkQueue mQueue;
     VkCommandPool mCommandPool;
     uint32_t mIndex;
-};
+  };
 }  // namespace mental::rhi::vk

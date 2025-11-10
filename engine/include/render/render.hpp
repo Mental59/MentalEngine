@@ -4,14 +4,14 @@
 
 namespace mental::platform
 {
-class IWindow;
+  class IWindow;
 }
 
 namespace mental::render
 {
-class RenderSystem
-{
-public:
+  class RenderSystem
+  {
+   public:
     RenderSystem(const RenderSystem&) = delete;
     RenderSystem(const RenderSystem&&) = delete;
     RenderSystem& operator=(const RenderSystem&) = delete;
@@ -19,5 +19,5 @@ public:
 
     RenderSystem(const mental::platform::IWindow* const window);
     ~RenderSystem();
-};
+  };
 }  // namespace mental::render

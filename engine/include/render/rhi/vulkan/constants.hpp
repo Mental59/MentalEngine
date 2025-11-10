@@ -3,5 +3,5 @@
 
 namespace mental::rhi::vk
 {
-const char* vkResultToString(VkResult result);
+  const char* vkResultToString(VkResult result);
 }  // namespace mental::rhi::vk

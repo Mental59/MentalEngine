@@ -1,17 +1,18 @@
 #pragma once
 
-#include <render/rhi/rhi.hpp>
-#include <volk/volk.h>
 #include <vma/vk_mem_alloc.h>
-#include <unordered_set>
-#include <string>
-#include <vector>
+#include <volk/volk.h>
+
+#include <render/rhi/rhi.hpp>
 #include <render/rhi/vulkan/commandQueue.hpp>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 namespace mental::rhi::vk
 {
-struct DeviceDesc
-{
+  struct DeviceDesc
+  {
     VkInstance instance;
     VkSurfaceKHR surface;
     VkPhysicalDevice physicalDevice;
@@ -30,10 +31,10 @@ struct DeviceDesc
 
     std::vector<const char*> instanceExtensions;
     std::vector<const char*> deviceExtensions;
-};
+  };
 
-struct Context
-{
+  struct Context
+  {
     VkInstance mInstance;
     VkSurfaceKHR mSurface;
     VkPhysicalDevice mPhysicalDevice;
@@ -52,17 +53,26 @@ struct Context
 
     Context() = default;
 
-    rhi::Result init(VkInstance instance, VkSurfaceKHR surface, VkPhysicalDevice physicalDevice, VkDevice device, uint32_t apiVersion,
-        VkDebugReportCallbackEXT debugReportCallback, VkDebugUtilsMessengerEXT debugUtilsMessenger, VkSurfaceCapabilitiesKHR capabilities,
-        const std::vector<VkSurfaceFormatKHR>& formats, const std::vector<VkPresentModeKHR>& presentModes,
-        const std::vector<const char*>& instanceExtensions, const std::vector<const char*>& deviceExtensions);
+    rhi::Result init(
+        VkInstance instance,
+        VkSurfaceKHR surface,
+        VkPhysicalDevice physicalDevice,
+        VkDevice device,
+        uint32_t apiVersion,
+        VkDebugReportCallbackEXT debugReportCallback,
+        VkDebugUtilsMessengerEXT debugUtilsMessenger,
+        VkSurfaceCapabilitiesKHR capabilities,
+        const std::vector<VkSurfaceFormatKHR>& formats,
+        const std::vector<VkPresentModeKHR>& presentModes,
+        const std::vector<const char*>& instanceExtensions,
+        const std::vector<const char*>& deviceExtensions);
 
     void destroy();
-};
+  };
 
-class Device : public IDevice
-{
-public:
+  class Device : public IDevice
+  {
+   public:
     static Device& instance();
     rhi::Result init(const DeviceDesc& desc);
     ~Device();
@@ -75,15 +85,18 @@ public:
     virtual ICommandQueue* getGraphicsQueue() override;
     vk::CommandQueue* getVulkanGraphicsQueue();
 
-    VkDevice getVkDevice() const { return mContext.mDevice; }
+    VkDevice getVkDevice() const
+    {
+      return mContext.mDevice;
+    }
 
-private:
+   private:
     Context mContext;
     CommandQueue mGraphicsQueue;
-};
-inline Device& getDevice()
-{
+  };
+  inline Device& getDevice()
+  {
     return Device::instance();
-}
+  }
 
 }  // namespace mental::rhi::vk

@@ -1,9 +1,10 @@
-#include <render/rhi/vulkan/factory.hpp>
+#include <Volk/volk.h>
+
+#include <core/log.hpp>
+#include <render/rhi/vulkan/constants.hpp>
 #include <render/rhi/vulkan/device.hpp>
 #include <render/rhi/vulkan/extensionManager.hpp>
-#include <render/rhi/vulkan/constants.hpp>
-#include <Volk/volk.h>
-#include <core/log.hpp>
+#include <render/rhi/vulkan/factory.hpp>
 #include <set>
 #include <vector>
 
@@ -11,60 +12,73 @@ namespace mental::rhi::vk
 {
 
 #if defined(_DEBUG)
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
-{
+  static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+      VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+      VkDebugUtilsMessageTypeFlagsEXT messageType,
+      const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+      void* pUserData)
+  {
     MENTAL_DEBUG("Debug callback: {}", pCallbackData->pMessage);
     return VK_FALSE;
-}
+  }
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL reportCallback(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object,
-    size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* UserData)
-{
+  static VKAPI_ATTR VkBool32 VKAPI_CALL reportCallback(
+      VkDebugReportFlagsEXT flags,
+      VkDebugReportObjectTypeEXT objectType,
+      uint64_t object,
+      size_t location,
+      int32_t messageCode,
+      const char* pLayerPrefix,
+      const char* pMessage,
+      void* UserData)
+  {
     MENTAL_DEBUG("Report callback ({}): {}", pLayerPrefix, pMessage);
     return VK_FALSE;
-}
+  }
 
-static VkDebugUtilsMessengerCreateInfoEXT getDebugMessengerCreateInfo()
-{
-    VkDebugUtilsMessengerCreateInfoEXT createInfo{VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
-    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+  static VkDebugUtilsMessengerCreateInfoEXT getDebugMessengerCreateInfo()
+  {
+    VkDebugUtilsMessengerCreateInfoEXT createInfo{ VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+                                 VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
                                  VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
     createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
                              VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     createInfo.pfnUserCallback = debugCallback;
     return createInfo;
-}
+  }
 
-static VkDebugReportCallbackCreateInfoEXT getReportCallbackCreateInfo()
-{
-    VkDebugReportCallbackCreateInfoEXT createInfo{VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT};
-    createInfo.flags = VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT | VK_DEBUG_REPORT_ERROR_BIT_EXT |
-                       VK_DEBUG_REPORT_DEBUG_BIT_EXT;
+  static VkDebugReportCallbackCreateInfoEXT getReportCallbackCreateInfo()
+  {
+    VkDebugReportCallbackCreateInfoEXT createInfo{ VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT };
+    createInfo.flags = VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT |
+                       VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_DEBUG_BIT_EXT;
     createInfo.pfnCallback = reportCallback;
     return createInfo;
-}
+  }
 
-DebugMessenger DeviceFactory::createDebugMessenger(VkInstance instance) const
-{
+  DebugMessenger DeviceFactory::createDebugMessenger(VkInstance instance) const
+  {
     VkResult vkRes;
 
     VkDebugUtilsMessengerCreateInfoEXT createDebugMessengerInfo = getDebugMessengerCreateInfo();
     VkDebugUtilsMessengerEXT debugMessenger;
     vkRes = vkCreateDebugUtilsMessengerEXT(instance, &createDebugMessengerInfo, VK_NULL_HANDLE, &debugMessenger);
-    if (vkRes != VK_SUCCESS) MENTAL_ERROR("Failed to call createDebugUtilsMessengerEXT");
+    if (vkRes != VK_SUCCESS)
+      MENTAL_ERROR("Failed to call createDebugUtilsMessengerEXT");
 
     VkDebugReportCallbackCreateInfoEXT createReportCallbackInfo = getReportCallbackCreateInfo();
     VkDebugReportCallbackEXT reportCallback;
     vkRes = vkCreateDebugReportCallbackEXT(instance, &createReportCallbackInfo, VK_NULL_HANDLE, &reportCallback);
-    if (vkRes != VK_SUCCESS) MENTAL_ERROR("Failed to call createDebugReportCallbackEXT");
+    if (vkRes != VK_SUCCESS)
+      MENTAL_ERROR("Failed to call createDebugReportCallbackEXT");
 
-    return {debugMessenger, reportCallback};
-}
+    return { debugMessenger, reportCallback };
+  }
 #endif
 
-rhi::Result DeviceFactory::initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const
-{
+  rhi::Result DeviceFactory::initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const
+  {
     rhi::Result res;
 
     DebugMessenger debugMessenger{};
@@ -74,57 +88,65 @@ rhi::Result DeviceFactory::initDevice(const InstanceInfo& instanceInfo, VkSurfac
 
     PhysicalDeviceInfo physicalDeviceInfo;
     res = choosePhysicalDevice(instanceInfo.getInstance(), surface, physicalDeviceInfo);
-    if (res != rhi::Result::eSuccess) return res;
+    if (res != rhi::Result::eSuccess)
+      return res;
 
     VkDevice vkDevice;
     res = createLogicalDevice(physicalDeviceInfo, vkDevice);
-    if (res != rhi::Result::eSuccess) return res;
+    if (res != rhi::Result::eSuccess)
+      return res;
 
     VkQueue graphicsQueue;
     vkGetDeviceQueue(vkDevice, physicalDeviceInfo.getGraphicsQueueFamily(), 0, &graphicsQueue);
 
-    DeviceDesc desc{.instance = instanceInfo.getInstance(),
-        .surface = surface,
-        .physicalDevice = physicalDeviceInfo.getPhysicalDevice(),
-        .device = vkDevice,
-        .capabilities = physicalDeviceInfo.getSwapchainSupportDetails().capabilities,
-        .formats = physicalDeviceInfo.getSwapchainSupportDetails().formats,
-        .presentModes = physicalDeviceInfo.getSwapchainSupportDetails().presentModes,
-        .graphicsQueue = graphicsQueue,
-        .graphicsQueueIndex = physicalDeviceInfo.getGraphicsQueueFamily(),
-        .debugUtilsMessenger = debugMessenger.utilsMessenger,
-        .debugReportCallback = debugMessenger.reportCallback,
-        .instanceExtensions = instanceInfo.getExtensions(),
-        .deviceExtensions = physicalDeviceInfo.getRequiredExtensions()};
+    DeviceDesc desc{ .instance = instanceInfo.getInstance(),
+                     .surface = surface,
+                     .physicalDevice = physicalDeviceInfo.getPhysicalDevice(),
+                     .device = vkDevice,
+                     .capabilities = physicalDeviceInfo.getSwapchainSupportDetails().capabilities,
+                     .formats = physicalDeviceInfo.getSwapchainSupportDetails().formats,
+                     .presentModes = physicalDeviceInfo.getSwapchainSupportDetails().presentModes,
+                     .graphicsQueue = graphicsQueue,
+                     .graphicsQueueIndex = physicalDeviceInfo.getGraphicsQueueFamily(),
+                     .debugUtilsMessenger = debugMessenger.utilsMessenger,
+                     .debugReportCallback = debugMessenger.reportCallback,
+                     .instanceExtensions = instanceInfo.getExtensions(),
+                     .deviceExtensions = physicalDeviceInfo.getRequiredExtensions() };
 
     return getDevice().init(desc);
-}
+  }
 
-rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
-{
+  rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
+  {
     VkResult vkRes;
 
     vkRes = volkInitialize();
-    if (vkRes != VK_SUCCESS) return rhi::Result::eInstanceInitializationFailed;
+    if (vkRes != VK_SUCCESS)
+      return rhi::Result::eInstanceInitializationFailed;
 
-    VkApplicationInfo appInfo{VK_STRUCTURE_TYPE_APPLICATION_INFO};
+    VkApplicationInfo appInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
     appInfo.pApplicationName = "Mental App";
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "Mental Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
     vkRes = vkEnumerateInstanceVersion(&appInfo.apiVersion);
-    if (vkRes != VK_SUCCESS) return rhi::Result::eInstanceInitializationFailed;
+    if (vkRes != VK_SUCCESS)
+      return rhi::Result::eInstanceInitializationFailed;
 
     const uint32_t minimumVulkanVersion = VK_MAKE_API_VERSION(0, 1, 3, 0);
 
     if (appInfo.apiVersion < minimumVulkanVersion)
     {
-        MENTAL_ERROR("The Vulkan API version supported on the system ({}.{}.{}) is too low, at least {}.{}.{} is required.",
-            VK_API_VERSION_MAJOR(appInfo.apiVersion), VK_API_VERSION_MINOR(appInfo.apiVersion), VK_API_VERSION_PATCH(appInfo.apiVersion),
-            VK_API_VERSION_MAJOR(minimumVulkanVersion), VK_API_VERSION_MINOR(minimumVulkanVersion),
-            VK_API_VERSION_PATCH(minimumVulkanVersion));
-        return rhi::Result::eInstanceInitializationFailed;
+      MENTAL_ERROR(
+          "The Vulkan API version supported on the system ({}.{}.{}) is too low, at least {}.{}.{} is required.",
+          VK_API_VERSION_MAJOR(appInfo.apiVersion),
+          VK_API_VERSION_MINOR(appInfo.apiVersion),
+          VK_API_VERSION_PATCH(appInfo.apiVersion),
+          VK_API_VERSION_MAJOR(minimumVulkanVersion),
+          VK_API_VERSION_MINOR(minimumVulkanVersion),
+          VK_API_VERSION_PATCH(minimumVulkanVersion));
+      return rhi::Result::eInstanceInitializationFailed;
     }
 
     std::vector<const char*> instanceExtensions = ExtensionManager::getRequiredInstanceExtensions();
@@ -132,17 +154,17 @@ rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
 
     if (!checkInstanceExtensionSupport(instanceExtensions))
     {
-        MENTAL_ERROR("Required extensions not supported");
-        return rhi::Result::eInstanceInitializationFailed;
+      MENTAL_ERROR("Required extensions not supported");
+      return rhi::Result::eInstanceInitializationFailed;
     }
 
     if (!checkInstanceLayerSupport(validationLayers))
     {
-        MENTAL_ERROR("Validation layers not supported");
-        return rhi::Result::eInstanceInitializationFailed;
+      MENTAL_ERROR("Validation layers not supported");
+      return rhi::Result::eInstanceInitializationFailed;
     }
 
-    VkInstanceCreateInfo instanceCreateInfo{VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
+    VkInstanceCreateInfo instanceCreateInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
     instanceCreateInfo.pApplicationInfo = &appInfo;
     instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
     instanceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
@@ -156,69 +178,79 @@ rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
 
     VkInstance instance;
     vkRes = vkCreateInstance(&instanceCreateInfo, VK_NULL_HANDLE, &instance);
-    if (vkRes != VK_SUCCESS) return rhi::Result::eInstanceInitializationFailed;
+    if (vkRes != VK_SUCCESS)
+      return rhi::Result::eInstanceInitializationFailed;
 
     volkLoadInstance(instance);
 
     instanceInfo = InstanceInfo(instance, instanceExtensions);
     return rhi::Result::eSuccess;
-}
+  }
 
-bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const
-{
+  bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const
+  {
     VkResult vkRes;
 
     uint32_t availableExtensionCount = 0;
     vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr);
-    if (vkRes != VK_SUCCESS) return false;
+    if (vkRes != VK_SUCCESS)
+      return false;
 
     std::vector<VkExtensionProperties> availableExtensions(availableExtensionCount);
     vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.data());
-    if (vkRes != VK_SUCCESS) return false;
+    if (vkRes != VK_SUCCESS)
+      return false;
 
     std::set<std::string> requiredSet(extensions.begin(), extensions.end());
     for (const VkExtensionProperties& extension : availableExtensions)
     {
-        requiredSet.erase(extension.extensionName);
+      requiredSet.erase(extension.extensionName);
     }
 
     return requiredSet.empty();
-}
+  }
 
-bool DeviceFactory::checkInstanceLayerSupport(const std::vector<const char*>& layers) const
-{
+  bool DeviceFactory::checkInstanceLayerSupport(const std::vector<const char*>& layers) const
+  {
     VkResult vkRes;
 
     uint32_t layersCount;
     vkRes = vkEnumerateInstanceLayerProperties(&layersCount, nullptr);
-    if (vkRes != VK_SUCCESS) return false;
+    if (vkRes != VK_SUCCESS)
+      return false;
 
     std::vector<VkLayerProperties> availableLayers(layersCount);
     vkRes = vkEnumerateInstanceLayerProperties(&layersCount, availableLayers.data());
-    if (vkRes != VK_SUCCESS) return false;
+    if (vkRes != VK_SUCCESS)
+      return false;
 
     std::set<std::string> requiredSet(layers.begin(), layers.end());
     for (const VkLayerProperties& layer : availableLayers)
     {
-        requiredSet.erase(layer.layerName);
+      requiredSet.erase(layer.layerName);
     }
 
     return requiredSet.empty();
-}
+  }
 
-rhi::Result DeviceFactory::choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceInfo& physicalDeviceInfo) const
-{
+  rhi::Result DeviceFactory::choosePhysicalDevice(
+      VkInstance instance,
+      VkSurfaceKHR surface,
+      PhysicalDeviceInfo& physicalDeviceInfo) const
+  {
     VkResult vkRes;
 
     std::vector<const char*> extensions = ExtensionManager::getRequiredDeviceExtensions();
 
     uint32_t physicalDeviceCount = 0;
     vkRes = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
-    if (!physicalDeviceCount || vkRes != VK_SUCCESS) return rhi::Result::ePhysicalDeviceInitializationFailed;
+    if (!physicalDeviceCount || vkRes != VK_SUCCESS)
+      return rhi::Result::ePhysicalDeviceInitializationFailed;
 
     std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
     vkRes = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
-    if (vkRes != VK_SUCCESS) return rhi::Result::ePhysicalDeviceInitializationFailed;
+    if (vkRes != VK_SUCCESS)
+      return rhi::Result::ePhysicalDeviceInitializationFailed;
 
     PhysicalDeviceInfo bestPhysicalDeviceInfo;
     std::vector<const char*> requiredExtensions = ExtensionManager::getRequiredDeviceExtensions();
@@ -227,32 +259,33 @@ rhi::Result DeviceFactory::choosePhysicalDevice(VkInstance instance, VkSurfaceKH
 
     for (const VkPhysicalDevice& physicalDevice : physicalDevices)
     {
-        PhysicalDeviceInfo physicalDeviceInfo(physicalDevice, surface, requiredExtensions, requiredFeatures);
-        if (physicalDeviceInfo.getScore() > bestPhysicalDeviceInfo.getScore())
-        {
-            bestPhysicalDeviceInfo = physicalDeviceInfo;
-            break;
-        }
+      PhysicalDeviceInfo physicalDeviceInfo(physicalDevice, surface, requiredExtensions, requiredFeatures);
+      if (physicalDeviceInfo.getScore() > bestPhysicalDeviceInfo.getScore())
+      {
+        bestPhysicalDeviceInfo = physicalDeviceInfo;
+        break;
+      }
     }
 
-    if (!bestPhysicalDeviceInfo.isSuitable()) return rhi::Result::ePhysicalDeviceInitializationFailed;
+    if (!bestPhysicalDeviceInfo.isSuitable())
+      return rhi::Result::ePhysicalDeviceInitializationFailed;
 
     physicalDeviceInfo = bestPhysicalDeviceInfo;
     return rhi::Result::eSuccess;
-}
+  }
 
-rhi::Result DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo, VkDevice& device) const
-{
+  rhi::Result DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo, VkDevice& device) const
+  {
     VkResult vkRes;
 
-    VkDeviceQueueCreateInfo graphicsQueueCreateInfo{VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
+    VkDeviceQueueCreateInfo graphicsQueueCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
     float graphicsQueuePriority = 1.0f;
     graphicsQueueCreateInfo.queueFamilyIndex = physicalDeviceInfo.getGraphicsQueueFamily();
     graphicsQueueCreateInfo.queueCount = 1;
     graphicsQueueCreateInfo.pQueuePriorities = &graphicsQueuePriority;
 
     std::vector<const char*> physicalDeviceExtensions = physicalDeviceInfo.getRequiredExtensions();
-    VkDeviceCreateInfo createInfo{VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
+    VkDeviceCreateInfo createInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     createInfo.queueCreateInfoCount = 1;
     createInfo.pQueueCreateInfos = &graphicsQueueCreateInfo;
     createInfo.ppEnabledExtensionNames = physicalDeviceExtensions.data();
@@ -260,58 +293,69 @@ rhi::Result DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physica
     createInfo.pEnabledFeatures = &physicalDeviceInfo.getRequiredFeatures();
 
     vkRes = vkCreateDevice(physicalDeviceInfo.getPhysicalDevice(), &createInfo, VK_NULL_HANDLE, &device);
-    if (vkRes != VK_SUCCESS) return rhi::Result::eLogicalDeviceInitializationFailed;
+    if (vkRes != VK_SUCCESS)
+      return rhi::Result::eLogicalDeviceInitializationFailed;
 
     volkLoadDevice(device);
 
     return rhi::Result::eSuccess;
-}
+  }
 
-PhysicalDeviceInfo::PhysicalDeviceInfo(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface,
-    const std::vector<const char*>& requiredExtensions, const VkPhysicalDeviceFeatures& features)
-    : mPhysicalDevice(physicalDevice), mSurface(surface), mAreExtensionsSupported(checkDeviceExtensionSupport(requiredExtensions)),
-      mGraphicsQueueFamily(findGraphicsQueueFamily()), mSwapchainSupportDetails(querySwapchainSupport()), mScore(calculateScore()),
-      mRequiredExtensions(requiredExtensions), mRequiredFeatures(features)
-{
-}
+  PhysicalDeviceInfo::PhysicalDeviceInfo(
+      VkPhysicalDevice physicalDevice,
+      VkSurfaceKHR surface,
+      const std::vector<const char*>& requiredExtensions,
+      const VkPhysicalDeviceFeatures& features)
+      : mPhysicalDevice(physicalDevice),
+        mSurface(surface),
+        mAreExtensionsSupported(checkDeviceExtensionSupport(requiredExtensions)),
+        mGraphicsQueueFamily(findGraphicsQueueFamily()),
+        mSwapchainSupportDetails(querySwapchainSupport()),
+        mScore(calculateScore()),
+        mRequiredExtensions(requiredExtensions),
+        mRequiredFeatures(features)
+  {
+  }
 
-bool PhysicalDeviceInfo::isDiscreteGPU() const
-{
+  bool PhysicalDeviceInfo::isDiscreteGPU() const
+  {
     VkPhysicalDeviceProperties properties;
     vkGetPhysicalDeviceProperties(mPhysicalDevice, &properties);
     return properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
-}
+  }
 
-bool PhysicalDeviceInfo::isIntegratedGPU() const
-{
+  bool PhysicalDeviceInfo::isIntegratedGPU() const
+  {
     VkPhysicalDeviceProperties properties;
     vkGetPhysicalDeviceProperties(mPhysicalDevice, &properties);
     return properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
-}
+  }
 
-bool PhysicalDeviceInfo::checkDeviceExtensionSupport(const std::vector<const char*>& extensions) const
-{
+  bool PhysicalDeviceInfo::checkDeviceExtensionSupport(const std::vector<const char*>& extensions) const
+  {
     VkResult vkRes;
 
     uint32_t extensionCount;
     vkRes = vkEnumerateDeviceExtensionProperties(mPhysicalDevice, nullptr, &extensionCount, nullptr);
-    if (vkRes != VK_SUCCESS) return false;
+    if (vkRes != VK_SUCCESS)
+      return false;
 
     std::vector<VkExtensionProperties> extensionProperties(extensionCount);
     vkRes = vkEnumerateDeviceExtensionProperties(mPhysicalDevice, nullptr, &extensionCount, extensionProperties.data());
-    if (vkRes != VK_SUCCESS) return false;
+    if (vkRes != VK_SUCCESS)
+      return false;
 
     std::set<std::string> requiredSet(extensions.begin(), extensions.end());
     for (const VkExtensionProperties& property : extensionProperties)
     {
-        requiredSet.erase(property.extensionName);
+      requiredSet.erase(property.extensionName);
     }
 
     return requiredSet.empty();
-}
+  }
 
-int PhysicalDeviceInfo::findGraphicsQueueFamily() const
-{
+  int PhysicalDeviceInfo::findGraphicsQueueFamily() const
+  {
     uint32_t familyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties(mPhysicalDevice, &familyCount, nullptr);
     std::vector<VkQueueFamilyProperties> queueFamilyProperties(familyCount);
@@ -320,20 +364,21 @@ int PhysicalDeviceInfo::findGraphicsQueueFamily() const
     VkQueueFlags desiredFlags = VK_QUEUE_GRAPHICS_BIT;
     for (uint32_t i = 0; i < queueFamilyProperties.size(); i++)
     {
-        VkBool32 isPresentSupported = VK_FALSE;
-        vkGetPhysicalDeviceSurfaceSupportKHR(mPhysicalDevice, i, mSurface, &isPresentSupported);
+      VkBool32 isPresentSupported = VK_FALSE;
+      vkGetPhysicalDeviceSurfaceSupportKHR(mPhysicalDevice, i, mSurface, &isPresentSupported);
 
-        if (queueFamilyProperties[i].queueCount > 0 && queueFamilyProperties[i].queueFlags & desiredFlags && isPresentSupported)
-        {
-            return i;
-        }
+      if (queueFamilyProperties[i].queueCount > 0 && queueFamilyProperties[i].queueFlags & desiredFlags &&
+          isPresentSupported)
+      {
+        return i;
+      }
     }
 
     return -1;
-}
+  }
 
-SwapchainSupportDetails PhysicalDeviceInfo::querySwapchainSupport() const
-{
+  SwapchainSupportDetails PhysicalDeviceInfo::querySwapchainSupport() const
+  {
     SwapchainSupportDetails supportDetails{};
 
     vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mPhysicalDevice, mSurface, &supportDetails.capabilities);
@@ -342,27 +387,27 @@ SwapchainSupportDetails PhysicalDeviceInfo::querySwapchainSupport() const
     vkGetPhysicalDeviceSurfaceFormatsKHR(mPhysicalDevice, mSurface, &formatsCount, VK_NULL_HANDLE);
     if (formatsCount > 0)
     {
-        supportDetails.formats.resize(formatsCount);
-        vkGetPhysicalDeviceSurfaceFormatsKHR(mPhysicalDevice, mSurface, &formatsCount, supportDetails.formats.data());
+      supportDetails.formats.resize(formatsCount);
+      vkGetPhysicalDeviceSurfaceFormatsKHR(mPhysicalDevice, mSurface, &formatsCount, supportDetails.formats.data());
     }
 
     uint32_t modesCount = 0;
     vkGetPhysicalDeviceSurfacePresentModesKHR(mPhysicalDevice, mSurface, &modesCount, VK_NULL_HANDLE);
     if (modesCount > 0)
     {
-        supportDetails.presentModes.resize(modesCount);
-        vkGetPhysicalDeviceSurfacePresentModesKHR(mPhysicalDevice, mSurface, &modesCount, supportDetails.presentModes.data());
+      supportDetails.presentModes.resize(modesCount);
+      vkGetPhysicalDeviceSurfacePresentModesKHR(mPhysicalDevice, mSurface, &modesCount, supportDetails.presentModes.data());
     }
 
     return supportDetails;
-}
+  }
 
-int PhysicalDeviceInfo::calculateScore() const
-{
+  int PhysicalDeviceInfo::calculateScore() const
+  {
     if (!mAreExtensionsSupported || !isGPU() || mGraphicsQueueFamily < 0 || mSwapchainSupportDetails.formats.empty() ||
         mSwapchainSupportDetails.presentModes.empty())
     {
-        return 0;
+      return 0;
     }
 
     // TODO: should be expanded, only checking geometry shader support
@@ -370,16 +415,16 @@ int PhysicalDeviceInfo::calculateScore() const
     vkGetPhysicalDeviceFeatures(mPhysicalDevice, &features);
     if (mRequiredFeatures.geometryShader && !features.geometryShader)
     {
-        return 0;
+      return 0;
     }
 
     int score = 1;
     if (isDiscreteGPU())
     {
-        score += 10;
+      score += 10;
     }
 
     return score;
-}
+  }
 
 }  // namespace mental::rhi::vk
