@@ -30,9 +30,9 @@ mental::rhi::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& info
         submitInfo.pSignalSemaphores = info.signalSemaphore->getNativeObject(core::resource::ObjectType::eVkSemaphore);
     }
 
-    MENTAL_ASSERT(info.cmdListCount <= gMaxSubmitCmdListCount);
+    MENTAL_ASSERT(info.cmdListCount <= kMaxSubmitCmdListCount);
 
-    std::array<VkCommandBuffer, gMaxSubmitCmdListCount> commandBuffers{};
+    std::array<VkCommandBuffer, kMaxSubmitCmdListCount> commandBuffers{};
     for (uint32_t i = 0; i < info.cmdListCount; i++)
     {
         commandBuffers[i] = info.cmdLists[i]->getNativeObject(core::resource::ObjectType::eVkCommandBuffer);

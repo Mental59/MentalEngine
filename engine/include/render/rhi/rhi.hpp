@@ -88,7 +88,7 @@ enum class PipelineStage : uint8_t
     eColorAttachmentOutput = 0
 };
 
-constexpr uint32_t gMaxSubmitCmdListCount = 8;
+constexpr uint32_t kMaxSubmitCmdListCount = 8;
 class ICommandQueue : public core::resource::IResource
 {
 public:
