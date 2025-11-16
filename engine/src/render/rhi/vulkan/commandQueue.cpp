@@ -1,10 +1,10 @@
-#include <array>
-#include <core/log.hpp>
 #include <render/rhi/vulkan/commandQueue.hpp>
+#include <core/log.hpp>
 #include <render/rhi/vulkan/constants.hpp>
 #include <render/rhi/vulkan/device.hpp>
+#include <array>
 
-mental::rhi::Result mental::rhi::vk::CommandQueue::init(VkQueue queue, uint32_t index)
+mental::core::Result mental::rhi::vk::CommandQueue::init(VkQueue queue, uint32_t index)
 {
   mQueue = queue;
   mIndex = index;
@@ -16,7 +16,7 @@ void mental::rhi::vk::CommandQueue::destroy()
   vkDestroyCommandPool(vk::getDevice().getVkDevice(), mCommandPool, nullptr);
 }
 
-mental::rhi::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& info)
+mental::core::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& info)
 {
   VkSubmitInfo submitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
   if (info.waitSemaphore)
@@ -48,9 +48,9 @@ mental::rhi::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& info
 
   VkResult res = vkQueueSubmit(mQueue, 1, &submitInfo, fence);
   if (res != VK_SUCCESS)
-    return rhi::Result::eQueueSubmitFailed;
+    return core::Result::eQueueSubmitFailed;
 
-  return rhi::Result::eSuccess;
+  return core::Result::eSuccess;
 }
 
 void mental::rhi::vk::CommandQueue::waitIdle()
@@ -67,7 +67,7 @@ mental::core::resource::Object mental::rhi::vk::CommandQueue::getNativeObject(co
   return mQueue;
 }
 
-mental::rhi::Result mental::rhi::vk::CommandQueue::createCommandPool(uint32_t queueFamilyIndex)
+mental::core::Result mental::rhi::vk::CommandQueue::createCommandPool(uint32_t queueFamilyIndex)
 {
   VkCommandPoolCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -77,7 +77,7 @@ mental::rhi::Result mental::rhi::vk::CommandQueue::createCommandPool(uint32_t qu
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkCreateCommandPool, error: {}", vkResultToString(res));
-    return rhi::Result::eCommandQueueInitializationFailed;
+    return core::Result::eInitializationFailed;
   }
-  return rhi::Result::eSuccess;
+  return core::Result::eSuccess;
 }

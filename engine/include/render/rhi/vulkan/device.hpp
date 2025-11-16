@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vma/vk_mem_alloc.h>
 #include <volk/volk.h>
+#include <vma/vk_mem_alloc.h>
 
 #include <render/rhi/rhi.hpp>
 #include <render/rhi/vulkan/commandQueue.hpp>
@@ -53,7 +53,7 @@ namespace mental::rhi::vk
 
     Context() = default;
 
-    rhi::Result init(
+    core::Result init(
         VkInstance instance,
         VkSurfaceKHR surface,
         VkPhysicalDevice physicalDevice,
@@ -74,29 +74,33 @@ namespace mental::rhi::vk
   {
    public:
     static Device& instance();
-    rhi::Result init(const DeviceDesc& desc);
-    ~Device();
+    core::Result init(const DeviceDesc& desc);
+    virtual void destroy() override;
 
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
 
     virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
-    virtual rhi::Result createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer) override;
+    virtual core::Result createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer) override;
     virtual ICommandQueue* getGraphicsQueue() override;
     vk::CommandQueue* getVulkanGraphicsQueue();
 
-    VkDevice getVkDevice() const
+    inline VkDevice getVkDevice() const
     {
       return mContext.mDevice;
+    }
+    inline VmaAllocator getBufferAllocator() const
+    {
+      return mContext.mAllocator;
     }
 
    private:
     Context mContext;
     CommandQueue mGraphicsQueue;
   };
+
   inline Device& getDevice()
   {
     return Device::instance();
   }
-
 }  // namespace mental::rhi::vk

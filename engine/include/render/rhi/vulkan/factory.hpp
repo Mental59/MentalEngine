@@ -113,16 +113,16 @@ namespace mental::rhi::vk
   class DeviceFactory
   {
    public:
-    rhi::Result initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const;
-    rhi::Result createInstance(InstanceInfo& info) const;
+    core::Result initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const;
+    core::Result createInstance(InstanceInfo& info) const;
 
    private:
     bool checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const;
     bool checkInstanceLayerSupport(const std::vector<const char*>& layers) const;
 
-    rhi::Result choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceInfo& physicalDeviceInfo)
+    core::Result choosePhysicalDevice(VkInstance instance, VkSurfaceKHR surface, PhysicalDeviceInfo& physicalDeviceInfo)
         const;
-    rhi::Result createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo, VkDevice& device) const;
+    core::Result createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo, VkDevice& device) const;
 
 #if defined(_DEBUG)
     DebugMessenger createDebugMessenger(VkInstance instance) const;

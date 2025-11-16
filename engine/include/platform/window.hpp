@@ -1,15 +1,13 @@
 #pragma once
-
-#include <core/memory.hpp>
-#include <render/rhi/rhi.hpp>
-
-#if defined(MENTAL_WITH_VULKAN)
-#include <volk/volk.h>
+#ifdef MENTAL_WITH_VULKAN
+#include <Volk/volk.h>
 #endif
+#include <core/memory.hpp>
+#include "core/resource.hpp"
+#include "core/types.hpp"
 
 namespace mental::platform
 {
-
   struct WindowDesc
   {
     const char* title = nullptr;
@@ -17,16 +15,16 @@ namespace mental::platform
     int height = 0;
   };
 
-  class IWindow : public core::memory::NonCopyable
+  class IWindow : public core::resource::IResource
   {
    public:
+    virtual core::Result init(const WindowDesc& desc) = 0;
     virtual void pollEvents() const = 0;
     virtual double getTime() const = 0;
     virtual bool shouldClose() const = 0;
-
-#if defined(MENTAL_WITH_VULKAN)
-    virtual rhi::Result createSurface(VkInstance instance, VkSurfaceKHR& surface) const = 0;
-#endif
   };
 
+#ifdef MENTAL_WITH_VULKAN
+  core::Result createVulkanSurface(IWindow* window, VkInstance instance, VkSurfaceKHR* surface);
+#endif
 }  // namespace mental::platform

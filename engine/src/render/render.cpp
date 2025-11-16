@@ -1,19 +1,32 @@
+#include <render/render.hpp>
 #include <core/log.hpp>
 #include <platform/window.hpp>
-#include <render/render.hpp>
 #include <render/rhi/rhi.hpp>
 
-namespace mental::render
+mental::core::Result mental::render::RenderSystem::init(const mental::render::RenderSystemConfig& conf)
 {
-  RenderSystem::RenderSystem(const mental::platform::IWindow* const window)
+  if (mIsInitialized)
   {
-    rhi::initDevice(rhi::GraphicsApi::Vulkan, window);
-    MENTAL_INFO("Render system initialized");
+    MENTAL_ERROR("Trying to initialize an already initialized RenderSystem");
+    return core::Result::eInitializationFailed;
   }
 
-    RenderSystem::~RenderSystem()
+  MENTAL_ASSERT_DEBUG(conf.window != nullptr);
+
+  rhi::initDevice(conf.graphicsApi, conf.window);
+  mIsInitialized = true;
+  MENTAL_INFO("Render system initialized");
+
+  return core::Result::eSuccess;
+}
+
+void mental::render::RenderSystem::destroy()
+{
+  if (!mIsInitialized)
   {
-    MENTAL_INFO("Render system destroyed");
+    return;
   }
 
-}  // namespace mental::render
+  rhi::destroyDevice();
+  MENTAL_INFO("Render system destroyed");
+}

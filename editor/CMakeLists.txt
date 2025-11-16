@@ -27,3 +27,4 @@ endif()
 if(ENABLE_ASSERTS)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_ASSERTS)
 endif()
+

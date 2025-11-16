@@ -1,10 +1,9 @@
+#include <render/rhi/vulkan/factory.hpp>
 #include <Volk/volk.h>
-
 #include <core/log.hpp>
 #include <render/rhi/vulkan/constants.hpp>
 #include <render/rhi/vulkan/device.hpp>
 #include <render/rhi/vulkan/extensionManager.hpp>
-#include <render/rhi/vulkan/factory.hpp>
 #include <set>
 #include <vector>
 
@@ -77,9 +76,9 @@ namespace mental::rhi::vk
   }
 #endif
 
-  rhi::Result DeviceFactory::initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const
+  core::Result DeviceFactory::initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const
   {
-    rhi::Result res;
+    core::Result res;
 
     DebugMessenger debugMessenger{};
 #if defined(_DEBUG)
@@ -88,12 +87,12 @@ namespace mental::rhi::vk
 
     PhysicalDeviceInfo physicalDeviceInfo;
     res = choosePhysicalDevice(instanceInfo.getInstance(), surface, physicalDeviceInfo);
-    if (res != rhi::Result::eSuccess)
+    if (res != core::Result::eSuccess)
       return res;
 
     VkDevice vkDevice;
     res = createLogicalDevice(physicalDeviceInfo, vkDevice);
-    if (res != rhi::Result::eSuccess)
+    if (res != core::Result::eSuccess)
       return res;
 
     VkQueue graphicsQueue;
@@ -116,13 +115,13 @@ namespace mental::rhi::vk
     return getDevice().init(desc);
   }
 
-  rhi::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
+  core::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
   {
     VkResult vkRes;
 
     vkRes = volkInitialize();
     if (vkRes != VK_SUCCESS)
-      return rhi::Result::eInstanceInitializationFailed;
+      return core::Result::eInitializationFailed;
 
     VkApplicationInfo appInfo{ VK_STRUCTURE_TYPE_APPLICATION_INFO };
     appInfo.pApplicationName = "Mental App";
@@ -132,7 +131,7 @@ namespace mental::rhi::vk
 
     vkRes = vkEnumerateInstanceVersion(&appInfo.apiVersion);
     if (vkRes != VK_SUCCESS)
-      return rhi::Result::eInstanceInitializationFailed;
+      return core::Result::eInitializationFailed;
 
     const uint32_t minimumVulkanVersion = VK_MAKE_API_VERSION(0, 1, 3, 0);
 
@@ -146,7 +145,7 @@ namespace mental::rhi::vk
           VK_API_VERSION_MAJOR(minimumVulkanVersion),
           VK_API_VERSION_MINOR(minimumVulkanVersion),
           VK_API_VERSION_PATCH(minimumVulkanVersion));
-      return rhi::Result::eInstanceInitializationFailed;
+      return core::Result::eInitializationFailed;
     }
 
     std::vector<const char*> instanceExtensions = ExtensionManager::getRequiredInstanceExtensions();
@@ -155,13 +154,13 @@ namespace mental::rhi::vk
     if (!checkInstanceExtensionSupport(instanceExtensions))
     {
       MENTAL_ERROR("Required extensions not supported");
-      return rhi::Result::eInstanceInitializationFailed;
+      return core::Result::eInitializationFailed;
     }
 
     if (!checkInstanceLayerSupport(validationLayers))
     {
       MENTAL_ERROR("Validation layers not supported");
-      return rhi::Result::eInstanceInitializationFailed;
+      return core::Result::eInitializationFailed;
     }
 
     VkInstanceCreateInfo instanceCreateInfo{ VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
@@ -179,12 +178,12 @@ namespace mental::rhi::vk
     VkInstance instance;
     vkRes = vkCreateInstance(&instanceCreateInfo, VK_NULL_HANDLE, &instance);
     if (vkRes != VK_SUCCESS)
-      return rhi::Result::eInstanceInitializationFailed;
+      return core::Result::eInitializationFailed;
 
     volkLoadInstance(instance);
 
     instanceInfo = InstanceInfo(instance, instanceExtensions);
-    return rhi::Result::eSuccess;
+    return core::Result::eSuccess;
   }
 
   bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const
@@ -233,7 +232,7 @@ namespace mental::rhi::vk
     return requiredSet.empty();
   }
 
-  rhi::Result DeviceFactory::choosePhysicalDevice(
+  core::Result DeviceFactory::choosePhysicalDevice(
       VkInstance instance,
       VkSurfaceKHR surface,
       PhysicalDeviceInfo& physicalDeviceInfo) const
@@ -245,12 +244,12 @@ namespace mental::rhi::vk
     uint32_t physicalDeviceCount = 0;
     vkRes = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
     if (!physicalDeviceCount || vkRes != VK_SUCCESS)
-      return rhi::Result::ePhysicalDeviceInitializationFailed;
+      return core::Result::eInitializationFailed;
 
     std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
     vkRes = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
     if (vkRes != VK_SUCCESS)
-      return rhi::Result::ePhysicalDeviceInitializationFailed;
+      return core::Result::eInitializationFailed;
 
     PhysicalDeviceInfo bestPhysicalDeviceInfo;
     std::vector<const char*> requiredExtensions = ExtensionManager::getRequiredDeviceExtensions();
@@ -268,13 +267,13 @@ namespace mental::rhi::vk
     }
 
     if (!bestPhysicalDeviceInfo.isSuitable())
-      return rhi::Result::ePhysicalDeviceInitializationFailed;
+      return core::Result::eInitializationFailed;
 
     physicalDeviceInfo = bestPhysicalDeviceInfo;
-    return rhi::Result::eSuccess;
+    return core::Result::eSuccess;
   }
 
-  rhi::Result DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo, VkDevice& device) const
+  core::Result DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo, VkDevice& device) const
   {
     VkResult vkRes;
 
@@ -294,11 +293,11 @@ namespace mental::rhi::vk
 
     vkRes = vkCreateDevice(physicalDeviceInfo.getPhysicalDevice(), &createInfo, VK_NULL_HANDLE, &device);
     if (vkRes != VK_SUCCESS)
-      return rhi::Result::eLogicalDeviceInitializationFailed;
+      return core::Result::eInitializationFailed;
 
     volkLoadDevice(device);
 
-    return rhi::Result::eSuccess;
+    return core::Result::eSuccess;
   }
 
   PhysicalDeviceInfo::PhysicalDeviceInfo(

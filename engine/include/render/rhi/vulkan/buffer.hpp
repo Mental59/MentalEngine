@@ -5,47 +5,31 @@
 
 #include <core/resource.hpp>
 #include <render/rhi/rhi.hpp>
+#include <core/types.hpp>
 
 namespace mental::rhi::vk
 {
   class Buffer : public IBuffer
   {
    public:
-    explicit Buffer(const BufferDesc& desc);
-    virtual ~Buffer();
+    Buffer() = default;
 
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
+    virtual core::Result init(const rhi::BufferDesc& desc) override;
+    virtual void destroy() override;
 
-    virtual const BufferDesc& getDesc() const override
+    inline virtual const BufferDesc& getDesc() const override
     {
       return mDesc;
     };
-    virtual rhi::Result map(void** mappedData) override;
-    virtual rhi::Result unmap() override;
-    virtual rhi::Result copy(void* data, uint64_t size, uint64_t offset = 0) override;
-
-    Buffer& setBuffer(VkBuffer buffer)
-    {
-      mBuffer = buffer;
-      return *this;
-    }
-    Buffer& setAllocator(VmaAllocator allocator)
-    {
-      mAllocator = allocator;
-      return *this;
-    }
-    Buffer& setAllocation(VmaAllocation allocation)
-    {
-      mAllocation = allocation;
-      return *this;
-    }
+    virtual core::Result map(void** mappedData) override;
+    virtual core::Result unmap() override;
+    virtual core::Result copy(void* data, uint64_t size, uint64_t offset = 0) override;
 
    private:
-    BufferDesc mDesc;
-    VkBuffer mBuffer;
-    VmaAllocator mAllocator;
-    VmaAllocation mAllocation;
-    bool mIsMapped;
+    BufferDesc mDesc = {};
+    VkBuffer mBuffer = VK_NULL_HANDLE;
+    VmaAllocation mAllocation = nullptr;
+    bool mIsMapped = false;
   };
-
 }  // namespace mental::rhi::vk

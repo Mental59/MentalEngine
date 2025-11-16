@@ -1,6 +1,7 @@
 #pragma once
 
 #include <render/rhi/rhi.hpp>
+#include "core/resource.hpp"
 
 namespace mental::platform
 {
@@ -9,15 +10,31 @@ namespace mental::platform
 
 namespace mental::render
 {
-  class RenderSystem
+  struct RenderSystemConfig
+  {
+    rhi::GraphicsApi graphicsApi;
+    mental::platform::IWindow* window;
+  };
+
+  class RenderSystem : public core::resource::IResource
   {
    public:
+    RenderSystem() = default;
     RenderSystem(const RenderSystem&) = delete;
     RenderSystem(const RenderSystem&&) = delete;
     RenderSystem& operator=(const RenderSystem&) = delete;
     RenderSystem& operator=(const RenderSystem&&) = delete;
 
-    RenderSystem(const mental::platform::IWindow* const window);
-    ~RenderSystem();
+    core::Result init(const RenderSystemConfig& conf);
+    virtual void destroy() override;
+
+   private:
+    bool mIsInitialized = false;
   };
+
+  inline RenderSystem& getRenderSystem()
+  {
+    static RenderSystem renderSystem;
+    return renderSystem;
+  }
 }  // namespace mental::render

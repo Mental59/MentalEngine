@@ -1,15 +1,15 @@
+#include <render/rhi/vulkan/device.hpp>
 #include <Volk/volk.h>
 #include <vma/vk_mem_alloc.h>
-
 #include <core/log.hpp>
 #include <render/rhi/vulkan/buffer.hpp>
 #include <render/rhi/vulkan/constants.hpp>
-#include <render/rhi/vulkan/device.hpp>
+#include "render/rhi/rhi.hpp"
 
 namespace mental::rhi::vk
 {
 
-  rhi::Result Context::init(
+  core::Result Context::init(
       VkInstance instance,
       VkSurfaceKHR surface,
       VkPhysicalDevice physicalDevice,
@@ -34,11 +34,11 @@ namespace mental::rhi::vk
     mDebugReportCallback = debugReportCallback;
     mDebugUtilsMessenger = debugUtilsMessenger;
 
-    MENTAL_ASSERT(instance != VK_NULL_HANDLE);
-    MENTAL_ASSERT(surface != VK_NULL_HANDLE);
-    MENTAL_ASSERT(physicalDevice != VK_NULL_HANDLE);
-    MENTAL_ASSERT(device != VK_NULL_HANDLE);
-    MENTAL_ASSERT(instance != VK_NULL_HANDLE);
+    MENTAL_ASSERT_DEBUG(instance != VK_NULL_HANDLE);
+    MENTAL_ASSERT_DEBUG(surface != VK_NULL_HANDLE);
+    MENTAL_ASSERT_DEBUG(physicalDevice != VK_NULL_HANDLE);
+    MENTAL_ASSERT_DEBUG(device != VK_NULL_HANDLE);
+    MENTAL_ASSERT_DEBUG(instance != VK_NULL_HANDLE);
 
     for (const char* extensionName : instanceExtensions)
       mInstanceExtensions.insert(extensionName);
@@ -56,7 +56,7 @@ namespace mental::rhi::vk
     if (importRes != VK_SUCCESS)
     {
       MENTAL_ERROR("Failed to import vulkan functions");
-      return rhi::Result::eDeviceInitializationFailed;
+      return core::Result::eInitializationFailed;
     }
 
     allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
@@ -65,10 +65,10 @@ namespace mental::rhi::vk
     if (createAllocatorRes != VK_SUCCESS)
     {
       MENTAL_ERROR("Failed to create vulkan allocator");
-      return rhi::Result::eDeviceInitializationFailed;
+      return core::Result::eInitializationFailed;
     }
 
-    return rhi::Result::eSuccess;
+    return core::Result::eSuccess;
   }
 
   void Context::destroy()
@@ -93,49 +93,12 @@ namespace mental::rhi::vk
     return GraphicsApi::Vulkan;
   }
 
-  rhi::Result Device::createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer)
+  core::Result Device::createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer)
   {
-    if (desc.byteSize == 0)
-      return Result::eBufferInitializationFailed;
-
-    VkBufferUsageFlags usage = 0;
-    if (desc.usage & BufferUsageFlagBits::eStorageBuffer)
-      usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-    if (desc.usage & BufferUsageFlagBits::eUniformBuffer)
-      usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-    if (desc.usage & BufferUsageFlagBits::eTransferSrc)
-      usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-    if (desc.usage & BufferUsageFlagBits::eTransferDst)
-      usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-
-    VkBufferCreateInfo bufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
-    bufferCreateInfo.size = desc.byteSize;
-    bufferCreateInfo.usage = usage;
-    bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    VmaAllocationCreateInfo allocInfo{};
-    allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
-    switch (desc.cpuAccess)
-    {
-      case BufferCpuAccess::Write: allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT; break;
-      case BufferCpuAccess::ReadWrite: allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT; break;
-    }
-
-    VkBuffer vkBuffer;
-    VmaAllocation allocation;
-    VkResult createBufferRes =
-        vmaCreateBuffer(mContext.mAllocator, &bufferCreateInfo, &allocInfo, &vkBuffer, &allocation, nullptr);
-
-    if (createBufferRes != VK_SUCCESS)
-    {
-      MENTAL_ERROR("Failed to create buffer {}", vkResultToString(createBufferRes));
-      return Result::eBufferInitializationFailed;
-    }
-
-    core::memory::SharedHandle<Buffer> buffer = core::memory::makeShared<Buffer>(desc);
-    buffer->setBuffer(vkBuffer).setAllocator(mContext.mAllocator).setAllocation(allocation);
+    core::memory::SharedHandle<Buffer> buffer = core::memory::makeShared<Buffer>();
+    buffer->init(desc);
     outBuffer = std::move(buffer);
-    return Result::eSuccess;
+    return core::Result::eSuccess;
   }
 
   ICommandQueue* Device::getGraphicsQueue()
@@ -154,9 +117,9 @@ namespace mental::rhi::vk
     return device;
   }
 
-  rhi::Result Device::init(const DeviceDesc& desc)
+  core::Result Device::init(const DeviceDesc& desc)
   {
-    rhi::Result res = mContext.init(
+    core::Result res = mContext.init(
         desc.instance,
         desc.surface,
         desc.physicalDevice,
@@ -169,23 +132,28 @@ namespace mental::rhi::vk
         desc.presentModes,
         desc.instanceExtensions,
         desc.deviceExtensions);
-    if (res != rhi::Result::eSuccess)
-      return res;
+    if (res != core::Result::eSuccess)
+    {
+      return core::Result::eInitializationFailed;
+    }
 
     if (!desc.graphicsQueue || desc.graphicsQueueIndex < 0)
     {
       MENTAL_ERROR("Vulkan graphics queue is invalid");
-      return rhi::Result::eDeviceInitializationFailed;
+      return core::Result::eInitializationFailed;
     }
     res = mGraphicsQueue.init(desc.graphicsQueue, desc.graphicsQueueIndex);
-    if (res != rhi::Result::eSuccess)
-      return res;
+    if (res != core::Result::eSuccess)
+    {
+      MENTAL_ERROR("Failed to initialize graphics queue");
+      return core::Result::eInitializationFailed;
+    }
 
     MENTAL_INFO("Vulkan device initialized");
-    return rhi::Result::eSuccess;
+    return core::Result::eSuccess;
   }
 
-  Device::~Device()
+  void Device::destroy()
   {
     mGraphicsQueue.destroy();
     mContext.destroy();

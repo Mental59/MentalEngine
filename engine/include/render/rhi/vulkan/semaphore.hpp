@@ -9,7 +9,8 @@ namespace mental::rhi::vk
   {
    public:
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
-    rhi::Result init();
+    core::Result init();
+    virtual void destroy() override;
 
    private:
     VkSemaphore mSemaphore;

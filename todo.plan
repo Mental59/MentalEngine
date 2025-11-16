@@ -1,8 +1,8 @@
 In the near future:
-1. Fix error of log macros: "call to consteval function "std::source_location::current" did not produce a valid constant expression"
-2. Implement <class CommandList : public ICommandList> (should support single time commands)
-3. Implement "copyBuffer", "begin", "end" methods for CommandList
-4. Using single time commands implement function for uploading data into device local buffer
+1. Implement <class CommandList : public ICommandList> (should support single time commands)
+2. Implement "copyBuffer", "begin", "end" methods for CommandList
+3. Using single time commands implement function for uploading data into device local buffer
+4. Implement Handle-Based System with Pre-allocated Contiguous Array for storing buffers.
 
 In the foreseeable future:
 1. Implement Swapchain class

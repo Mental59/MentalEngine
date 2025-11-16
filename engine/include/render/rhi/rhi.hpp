@@ -1,6 +1,8 @@
 #pragma once
 
 #include <core/resource.hpp>
+#include <core/types.hpp>
+#include <cstddef>
 
 namespace mental::platform
 {
@@ -9,24 +11,12 @@ namespace mental::platform
 
 namespace mental::rhi
 {
-
-  enum class Result
-  {
-    eSuccess = 0,
-    eDeviceInitializationFailed,
-    eInstanceInitializationFailed,
-    ePhysicalDeviceInitializationFailed,
-    eLogicalDeviceInitializationFailed,
-    eSurfaceInitializationFailed,
-    eBufferInitializationFailed,
-    eBufferMapFailed,
-    eBufferCopyFailed,
-    eCommandQueueInitializationFailed,
-    eQueueSubmitFailed,
-    eSemaphoreInitializationFailed
-  };
-
-  const char* resultToString(Result res);
+  class IBuffer;
+  class ISemaphore;
+  class IFence;
+  class ICommandList;
+  class ICommandQueue;
+  class IDevice;
 
   enum class GraphicsApi : uint8_t
   {
@@ -61,10 +51,11 @@ namespace mental::rhi
   class IBuffer : public core::resource::IResource
   {
    public:
+    virtual core::Result init(const BufferDesc& desc) = 0;
     virtual const BufferDesc& getDesc() const = 0;
-    virtual rhi::Result map(void** mappedData) = 0;
-    virtual rhi::Result unmap() = 0;
-    virtual rhi::Result copy(void* data, uint64_t size, uint64_t offset = 0) = 0;
+    virtual core::Result map(void** mappedData) = 0;
+    virtual core::Result unmap() = 0;
+    virtual core::Result copy(void* data, uint64_t size, uint64_t offset = 0) = 0;
   };
   using BufferHandle = core::memory::SharedHandle<IBuffer>;
 
@@ -78,14 +69,24 @@ namespace mental::rhi
     // TODO
   };
 
-  class ICommandList : public core::resource::IResource
-  {
-    // TODO
-  };
-
   enum class PipelineStage : uint8_t
   {
     eColorAttachmentOutput = 0
+  };
+
+  struct CommandListDesc
+  {
+    ICommandQueue* commandQueue;
+    bool isOneTimeSubmit;
+  };
+  class ICommandList : public core::resource::IResource
+  {
+   public:
+    virtual core::Result init(const CommandListDesc& desc) = 0;
+    virtual core::Result begin() = 0;
+    virtual core::Result end() = 0;
+    virtual core::Result
+    copyBuffer(IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size) = 0;
   };
 
   constexpr uint32_t kMaxSubmitCmdListCount = 8;
@@ -102,7 +103,7 @@ namespace mental::rhi
       IFence* const signalFence;          // Fence to signal after execution
     };
 
-    virtual rhi::Result submit(const SubmitInfo& info) = 0;
+    virtual core::Result submit(const SubmitInfo& info) = 0;
     virtual void waitIdle() = 0;
     // TODO
   };
@@ -113,14 +114,15 @@ namespace mental::rhi
     virtual void waitIdle() = 0;
     virtual GraphicsApi getGraphicsApi() = 0;
 
-    virtual rhi::Result createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer) = 0;
+    virtual core::Result createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer) = 0;
 
     virtual ICommandQueue* getGraphicsQueue() = 0;
 
     // TODO: extend interface
   };
 
-  void initDevice(GraphicsApi api, const mental::platform::IWindow* const window);
+  void initDevice(GraphicsApi api, mental::platform::IWindow* window);
   IDevice& getDevice();
+  void destroyDevice();
 
 }  // namespace mental::rhi
