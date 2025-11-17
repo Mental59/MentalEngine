@@ -8,7 +8,7 @@ A hobby game engine built with C++ and Vulkan.
 - Cross-platform support
 
 ## Requirements
-- Vulkan SDK
+- [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
 - C++20 compiler (Clang recommended)
 - CMake 3.30+
 
