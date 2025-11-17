@@ -1,6 +1,6 @@
 #include <core/log.hpp>
 #include <chrono>
-#include <ctime>
+#include <format>
 #include <iostream>
 #include <mutex>
 #if _WIN32
@@ -36,17 +36,20 @@ namespace mental::core::log
 
   void Logger::log(Level level, const std::string& message, const std::source_location& location)
   {
-    std::chrono::system_clock::time_point timestamp = std::chrono::system_clock::now();
-    time_t time = std::chrono::system_clock::to_time_t(timestamp);
-    tm* localTime = std::localtime(&time);
+    auto timestamp = std::chrono::system_clock::now();
+    auto localTime = std::chrono::zoned_time{ std::chrono::current_zone(), timestamp };
+    auto localTimePoint = localTime.get_local_time();
+
+    auto timeSinceMidnight = localTimePoint - std::chrono::floor<std::chrono::days>(localTimePoint);
+    std::chrono::hh_mm_ss hms{ timeSinceMidnight };
 
     std::lock_guard<std::mutex> guard(gLogMutex);
 
     std::string formatStr = std::format(
         "[{:02}:{:02}:{:02}] [{}] {} ({}:{})\n",
-        localTime->tm_hour,
-        localTime->tm_min,
-        localTime->tm_sec,
+        hms.hours().count(),
+        hms.minutes().count(),
+        hms.seconds().count(),
         levelToString(level),
         message,
         location.file_name(),

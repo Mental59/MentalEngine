@@ -8,7 +8,7 @@ int main()
   logger.enableOutputToDebug(true);
 
   mental::platform::PCWindow window;
-  window.init({ .title = "Test app", .width = 1280, .height = 720 });
+  window.init({ .title = "Editor", .width = 1280, .height = 720 });
   mental::core::resource::ResourceGuard<mental::platform::PCWindow> windowGuard(&window);
 
   mental::render::getRenderSystem().init({ mental::rhi::GraphicsApi::Vulkan, &window });

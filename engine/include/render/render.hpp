@@ -19,7 +19,12 @@ namespace mental::render
   class RenderSystem : public core::resource::IResource
   {
    public:
-    RenderSystem() = default;
+    static RenderSystem& instance()
+    {
+      static RenderSystem renderSystem;
+      return renderSystem;
+    }
+
     RenderSystem(const RenderSystem&) = delete;
     RenderSystem(const RenderSystem&&) = delete;
     RenderSystem& operator=(const RenderSystem&) = delete;
@@ -29,12 +34,12 @@ namespace mental::render
     virtual void destroy() override;
 
    private:
+    RenderSystem() = default;
     bool mIsInitialized = false;
   };
 
   inline RenderSystem& getRenderSystem()
   {
-    static RenderSystem renderSystem;
-    return renderSystem;
+    return RenderSystem::instance();
   }
 }  // namespace mental::render

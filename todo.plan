@@ -1,14 +1,10 @@
 In the near future:
-1. Implement <class CommandList : public ICommandList> (should support single time commands)
-2. Implement "copyBuffer", "begin", "end" methods for CommandList
-3. Using single time commands implement function for uploading data into device local buffer
-4. Implement Handle-Based System with Pre-allocated Contiguous Array for storing buffers.
+- Implement Handle-Based System with Pre-allocated Contiguous Array for storing buffers.
 
 In the foreseeable future:
-1. Implement Swapchain class
-2. Implement Framebuffer class
-3. Implement Graphics Pipeline with dynamic rendering
-4. Implement Fence class
-5. Implement Texture class
-6. Implement Descriptors (descriptor pool, set, set layout)
-7. Implement Shader modules
+- Implement Swapchain class
+- Implement Framebuffer class
+- Implement Graphics Pipeline with dynamic rendering
+- Implement Texture class
+- Implement Descriptors (descriptor pool, set, set layout)
+- Implement Shader modules

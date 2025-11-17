@@ -12,7 +12,7 @@ namespace mental::rhi::vk
     core::Result init(VkQueue queue, uint32_t index);
     virtual void destroy() override;
 
-    virtual core::Result submit(const SubmitInfo& info) override;
+    virtual core::Result submit(const SubmitInfo& submitInfo) override;
     virtual void waitIdle() override;
 
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;

@@ -17,6 +17,7 @@ namespace mental::rhi
   class ICommandList;
   class ICommandQueue;
   class IDevice;
+  class ISwapchain;
 
   enum class GraphicsApi : uint8_t
   {
@@ -61,12 +62,21 @@ namespace mental::rhi
 
   class ISemaphore : public core::resource::IResource
   {
-    // TODO
+   public:
+    virtual core::Result init() = 0;
+  };
+
+  struct FenceDesc
+  {
+    bool createSignaled;
   };
 
   class IFence : public core::resource::IResource
   {
-    // TODO
+   public:
+    virtual core::Result init(const FenceDesc& desc) = 0;
+    virtual core::Result wait(uint64_t timeout = UINT64_MAX) = 0;
+    virtual core::Result reset() = 0;
   };
 
   enum class PipelineStage : uint8_t
@@ -105,7 +115,6 @@ namespace mental::rhi
 
     virtual core::Result submit(const SubmitInfo& info) = 0;
     virtual void waitIdle() = 0;
-    // TODO
   };
 
   class IDevice : public core::resource::IResource

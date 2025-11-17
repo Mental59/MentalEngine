@@ -9,7 +9,8 @@ namespace mental::core
     eBufferMapFailed,
     eBufferCopyFailed,
     eQueueSubmitFailed,
-    eCommandListOperationFailed
+    eCommandListOperationFailed,
+    eFenceOperationFailed
   };
 
   const char* resultToString(Result res);

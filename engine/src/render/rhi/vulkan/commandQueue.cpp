@@ -16,37 +16,37 @@ void mental::rhi::vk::CommandQueue::destroy()
   vkDestroyCommandPool(vk::getDevice().getVkDevice(), mCommandPool, nullptr);
 }
 
-mental::core::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& info)
+mental::core::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& submitInfo)
 {
-  VkSubmitInfo submitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
-  if (info.waitSemaphore)
+  VkSubmitInfo vkSubmitInfo{ VK_STRUCTURE_TYPE_SUBMIT_INFO };
+  if (submitInfo.waitSemaphore)
   {
-    submitInfo.waitSemaphoreCount = 1;
-    submitInfo.pWaitSemaphores = info.waitSemaphore->getNativeObject(core::resource::ObjectType::eVkSemaphore);
+    vkSubmitInfo.waitSemaphoreCount = 1;
+    vkSubmitInfo.pWaitSemaphores = submitInfo.waitSemaphore->getNativeObject(core::resource::ObjectType::eVkSemaphore);
   }
-  if (info.signalSemaphore)
+  if (submitInfo.signalSemaphore)
   {
-    submitInfo.signalSemaphoreCount = 1;
-    submitInfo.pSignalSemaphores = info.signalSemaphore->getNativeObject(core::resource::ObjectType::eVkSemaphore);
+    vkSubmitInfo.signalSemaphoreCount = 1;
+    vkSubmitInfo.pSignalSemaphores = submitInfo.signalSemaphore->getNativeObject(core::resource::ObjectType::eVkSemaphore);
   }
 
-  MENTAL_ASSERT(info.cmdListCount <= kMaxSubmitCmdListCount);
+  MENTAL_ASSERT(submitInfo.cmdListCount <= kMaxSubmitCmdListCount);
 
   std::array<VkCommandBuffer, kMaxSubmitCmdListCount> commandBuffers{};
-  for (uint32_t i = 0; i < info.cmdListCount; i++)
+  for (uint32_t i = 0; i < submitInfo.cmdListCount; i++)
   {
-    commandBuffers[i] = info.cmdLists[i]->getNativeObject(core::resource::ObjectType::eVkCommandBuffer);
+    commandBuffers[i] = submitInfo.cmdLists[i]->getNativeObject(core::resource::ObjectType::eVkCommandBuffer);
   }
-  submitInfo.commandBufferCount = info.cmdListCount;
-  submitInfo.pCommandBuffers = commandBuffers.data();
+  vkSubmitInfo.commandBufferCount = submitInfo.cmdListCount;
+  vkSubmitInfo.pCommandBuffers = commandBuffers.data();
 
   VkFence fence = VK_NULL_HANDLE;
-  if (info.signalFence)
+  if (submitInfo.signalFence)
   {
-    fence = info.signalFence->getNativeObject(core::resource::ObjectType::eVkFence);
+    fence = submitInfo.signalFence->getNativeObject(core::resource::ObjectType::eVkFence);
   }
 
-  VkResult res = vkQueueSubmit(mQueue, 1, &submitInfo, fence);
+  VkResult res = vkQueueSubmit(mQueue, 1, &vkSubmitInfo, fence);
   if (res != VK_SUCCESS)
     return core::Result::eQueueSubmitFailed;
 

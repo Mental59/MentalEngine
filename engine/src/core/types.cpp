@@ -11,6 +11,7 @@ const char* mental::core::resultToString(mental::core::Result res)
     case mental::core::Result::eBufferCopyFailed: return "RHI_BUFFER_COPY_FAILED";
     case mental::core::Result::eQueueSubmitFailed: return "RHI_QUEUE_SUBMIT_FAILED";
     case mental::core::Result::eCommandListOperationFailed: return "RHI_COMMAND_LIST_OPERATION_FAILED";
+    case mental::core::Result::eFenceOperationFailed: return "RHI_FENCE_OPERATION_FAILED";
 
     default:
     {
