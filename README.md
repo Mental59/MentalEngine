@@ -9,8 +9,8 @@ A hobby game engine built with C++ and Vulkan.
 
 ## Requirements
 - [Vulkan SDK](https://vulkan.lunarg.com/sdk/home)
-- C++20 compiler (Clang recommended)
-- CMake 3.30+
+- C++20 compiler ([Clang 21.1.5](https://github.com/llvm/llvm-project/releases/tag/llvmorg-21.1.5) recommended)
+- [CMake 3.30+](https://cmake.org/download/)
 
 ## Cloning and Building
 ```bash
