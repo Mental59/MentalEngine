@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_set>
 #include <vector>
+#include "core/resource.hpp"
 
 namespace mental::rhi::vk
 {
@@ -81,7 +82,6 @@ namespace mental::rhi::vk
 
     virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
-    virtual core::Result createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer) override;
     virtual ICommandQueue* getGraphicsQueue() override;
     vk::CommandQueue* getVulkanGraphicsQueue();
 

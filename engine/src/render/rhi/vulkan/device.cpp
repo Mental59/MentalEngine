@@ -4,6 +4,8 @@
 #include <core/log.hpp>
 #include <render/rhi/vulkan/buffer.hpp>
 #include <render/rhi/vulkan/constants.hpp>
+#include "core/resource.hpp"
+#include "core/types.hpp"
 #include "render/rhi/rhi.hpp"
 
 namespace mental::rhi::vk
@@ -91,14 +93,6 @@ namespace mental::rhi::vk
   GraphicsApi Device::getGraphicsApi()
   {
     return GraphicsApi::Vulkan;
-  }
-
-  core::Result Device::createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer)
-  {
-    core::memory::SharedHandle<Buffer> buffer = core::memory::makeShared<Buffer>();
-    buffer->init(desc);
-    outBuffer = std::move(buffer);
-    return core::Result::eSuccess;
   }
 
   ICommandQueue* Device::getGraphicsQueue()

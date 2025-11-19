@@ -275,8 +275,6 @@ namespace mental::rhi::vk
 
   core::Result DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physicalDeviceInfo, VkDevice& device) const
   {
-    VkResult vkRes;
-
     VkDeviceQueueCreateInfo graphicsQueueCreateInfo{ VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO };
     float graphicsQueuePriority = 1.0f;
     graphicsQueueCreateInfo.queueFamilyIndex = physicalDeviceInfo.getGraphicsQueueFamily();
@@ -291,8 +289,8 @@ namespace mental::rhi::vk
     createInfo.enabledExtensionCount = static_cast<uint32_t>(physicalDeviceExtensions.size());
     createInfo.pEnabledFeatures = &physicalDeviceInfo.getRequiredFeatures();
 
-    vkRes = vkCreateDevice(physicalDeviceInfo.getPhysicalDevice(), &createInfo, VK_NULL_HANDLE, &device);
-    if (vkRes != VK_SUCCESS)
+    VkResult res = vkCreateDevice(physicalDeviceInfo.getPhysicalDevice(), &createInfo, VK_NULL_HANDLE, &device);
+    if (res != VK_SUCCESS)
       return core::Result::eInitializationFailed;
 
     volkLoadDevice(device);

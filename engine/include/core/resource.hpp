@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/memory.hpp>
+#include <cstdint>
 
 namespace mental::core::resource
 {
@@ -37,9 +37,15 @@ namespace mental::core::resource
     eGLFWwindow
   };
 
-  class IResource : public core::memory::NonCopyable
+  class IResource
   {
    public:
+    IResource() = default;
+    IResource(const IResource& other) = delete;
+    IResource& operator=(const IResource& other) = delete;
+    IResource(IResource&& other) = delete;
+    IResource& operator=(IResource&& other) = delete;
+
     virtual Object getNativeObject(ObjectType objectType)
     {
       return nullptr;
@@ -63,5 +69,16 @@ namespace mental::core::resource
 
    private:
     T* mResource;
+  };
+
+  class ResourceHandle
+  {
+   public:
+    bool isValid() const
+    {
+      return id > 0;
+    }
+
+    uint32_t id;
   };
 }  // namespace mental::core::resource

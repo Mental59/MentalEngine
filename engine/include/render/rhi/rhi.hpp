@@ -58,7 +58,6 @@ namespace mental::rhi
     virtual core::Result unmap() = 0;
     virtual core::Result copy(void* data, uint64_t size, uint64_t offset = 0) = 0;
   };
-  using BufferHandle = core::memory::SharedHandle<IBuffer>;
 
   class ISemaphore : public core::resource::IResource
   {
@@ -122,8 +121,6 @@ namespace mental::rhi
    public:
     virtual void waitIdle() = 0;
     virtual GraphicsApi getGraphicsApi() = 0;
-
-    virtual core::Result createBuffer(BufferDesc desc, core::memory::SharedHandle<IBuffer>& outBuffer) = 0;
 
     virtual ICommandQueue* getGraphicsQueue() = 0;
 

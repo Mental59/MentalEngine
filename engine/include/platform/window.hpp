@@ -2,7 +2,6 @@
 #ifdef MENTAL_WITH_VULKAN
 #include <Volk/volk.h>
 #endif
-#include <core/memory.hpp>
 #include "core/resource.hpp"
 #include "core/types.hpp"
 

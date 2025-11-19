@@ -6,6 +6,7 @@ const char* mental::core::resultToString(mental::core::Result res)
   switch (res)
   {
     case mental::core::Result::eSuccess: return "RHI_SUCCESS";
+    case mental::core::Result::eResourceCreationFailed: return "RHI_RESOURCE_CREATION_FAILED";
     case mental::core::Result::eInitializationFailed: return "RHI_INITIALIZATION_FAILED";
     case mental::core::Result::eBufferMapFailed: return "RHI_BUFFER_MAP_FAILED";
     case mental::core::Result::eBufferCopyFailed: return "RHI_BUFFER_COPY_FAILED";
