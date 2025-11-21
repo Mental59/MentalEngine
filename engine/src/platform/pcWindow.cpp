@@ -16,7 +16,7 @@ mental::core::Result mental::platform::PCWindow::init(const mental::platform::Wi
 {
   if (mIsInitialized)
   {
-    MENTAL_ERROR("Trying to initialize an already initialized Window");
+    MENTAL_WARN("Trying to initialize an already initialized PCWindow");
     return core::Result::eInitializationFailed;
   }
 
@@ -46,6 +46,7 @@ void mental::platform::PCWindow::destroy()
 {
   if (!mIsInitialized)
   {
+    MENTAL_WARN("Trying to destroy an uninitialized PCWindow");
     return;
   }
 

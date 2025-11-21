@@ -6,6 +6,12 @@
 
 mental::core::Result mental::rhi::vk::Buffer::init(const BufferDesc& desc)
 {
+  if (mIsInit)
+  {
+    MENTAL_WARN("Trying to initialize an already initialized vk::Buffer");
+    return core::Result::eInitializationFailed;
+  }
+
   if (desc.byteSize == 0)
     return core::Result::eInitializationFailed;
 
@@ -44,8 +50,11 @@ mental::core::Result mental::rhi::vk::Buffer::init(const BufferDesc& desc)
     return core::Result::eInitializationFailed;
   }
 
+  mDesc = desc;
   mBuffer = vkBuffer;
   mAllocation = allocation;
+  mIsMapped = false;
+  mIsInit = true;
 
   MENTAL_INFO("Vulkan buffer initialized");
 
@@ -54,13 +63,25 @@ mental::core::Result mental::rhi::vk::Buffer::init(const BufferDesc& desc)
 
 void mental::rhi::vk::Buffer::destroy()
 {
+  if (!mIsInit)
+  {
+    MENTAL_WARN("Trying to destroy an uninitialized vk::Buffer");
+    return;
+  }
+
   vmaDestroyBuffer(vk::getDevice().getBufferAllocator(), mBuffer, mAllocation);
   mDesc = {};
   mBuffer = VK_NULL_HANDLE;
   mAllocation = nullptr;
   mIsMapped = false;
+  mIsInit = false;
 
   MENTAL_INFO("Vulkan buffer destroyed");
+}
+
+bool mental::rhi::vk::Buffer::isValid() const
+{
+  return mIsInit;
 }
 
 mental::core::resource::Object mental::rhi::vk::Buffer::getNativeObject(core::resource::ObjectType objectType)

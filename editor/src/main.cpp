@@ -1,6 +1,7 @@
 #include <core/log.hpp>
 #include <platform/pcWindow.hpp>
 #include <render/render.hpp>
+#include "render/rhi/rhi.hpp"
 
 int main()
 {

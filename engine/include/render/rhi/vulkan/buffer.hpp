@@ -17,6 +17,7 @@ namespace mental::rhi::vk
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
     virtual core::Result init(const rhi::BufferDesc& desc) override;
     virtual void destroy() override;
+    virtual bool isValid() const override;
 
     inline virtual const BufferDesc& getDesc() const override
     {
@@ -31,5 +32,6 @@ namespace mental::rhi::vk
     VkBuffer mBuffer = VK_NULL_HANDLE;
     VmaAllocation mAllocation = nullptr;
     bool mIsMapped = false;
+    bool mIsInit = false;
   };
 }  // namespace mental::rhi::vk

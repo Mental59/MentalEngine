@@ -43,14 +43,17 @@ namespace mental::core::resource
     IResource() = default;
     IResource(const IResource& other) = delete;
     IResource& operator=(const IResource& other) = delete;
-    IResource(IResource&& other) = delete;
+    IResource(IResource&& other) = default;  // allow moving
     IResource& operator=(IResource&& other) = delete;
 
     virtual Object getNativeObject(ObjectType objectType)
     {
       return nullptr;
     }
-
+    virtual bool isValid() const
+    {
+      return true;
+    }
     virtual void destroy() = 0;
   };
 
@@ -79,6 +82,6 @@ namespace mental::core::resource
       return id > 0;
     }
 
-    uint32_t id;
+    size_t id;
   };
 }  // namespace mental::core::resource
