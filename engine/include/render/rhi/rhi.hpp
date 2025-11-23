@@ -86,13 +86,16 @@ namespace mental::rhi
   struct CommandListDesc
   {
     ICommandQueue* commandQueue;
+  };
+  struct CommandListBegindDesc
+  {
     bool isOneTimeSubmit;
   };
   class ICommandList : public core::resource::IResource
   {
    public:
     virtual core::Result init(const CommandListDesc& desc) = 0;
-    virtual core::Result begin() = 0;
+    virtual core::Result begin(const CommandListBegindDesc& desc) = 0;
     virtual core::Result end() = 0;
     virtual core::Result
     copyBuffer(IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size) = 0;
@@ -113,7 +116,20 @@ namespace mental::rhi
     };
 
     virtual core::Result submit(const SubmitInfo& info) = 0;
+
     virtual void waitIdle() = 0;
+  };
+
+  struct SwapchainDesc
+  {
+    uint32_t width;
+    uint32_t height;
+    uint32_t imageCount;
+  };
+  class ISwapchain : public core::resource::IResource
+  {
+   public:
+    virtual core::Result init(const SwapchainDesc& desc) = 0;
   };
 
   class IDevice : public core::resource::IResource
@@ -123,8 +139,7 @@ namespace mental::rhi
     virtual GraphicsApi getGraphicsApi() = 0;
 
     virtual ICommandQueue* getGraphicsQueue() = 0;
-
-    // TODO: extend interface
+    virtual ISwapchain* getSwapchain() = 0;
   };
 
   void initDevice(GraphicsApi api, mental::platform::IWindow* window);

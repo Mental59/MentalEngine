@@ -1,4 +1,3 @@
-#include <vulkan/vulkan_core.h>
 #include <render/rhi/vulkan/fence.hpp>
 #include "core/resource.hpp"
 #include "render/rhi/vulkan/constants.hpp"
@@ -23,7 +22,7 @@ mental::core::Result mental::rhi::vk::Fence::init(const mental::rhi::FenceDesc& 
     createInfo.flags |= VK_FENCE_CREATE_SIGNALED_BIT;
   }
 
-  VkResult res = vkCreateFence(vk::getDevice().getVkDevice(), &createInfo, nullptr, &mFence);
+  VkResult res = vkCreateFence(vk::getDevice().getVirtualDevice(), &createInfo, nullptr, &mFence);
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkCreateFence, error: {}", vkResultToString(res));
@@ -34,12 +33,12 @@ mental::core::Result mental::rhi::vk::Fence::init(const mental::rhi::FenceDesc& 
 }
 void mental::rhi::vk::Fence::destroy()
 {
-  vkDestroyFence(vk::getDevice().getVkDevice(), mFence, nullptr);
+  vkDestroyFence(vk::getDevice().getVirtualDevice(), mFence, nullptr);
 }
 
 mental::core::Result mental::rhi::vk::Fence::wait(uint64_t timeout)
 {
-  VkResult res = vkWaitForFences(vk::getDevice().getVkDevice(), 1, &mFence, VK_TRUE, timeout);
+  VkResult res = vkWaitForFences(vk::getDevice().getVirtualDevice(), 1, &mFence, VK_TRUE, timeout);
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkWaitForFences, error: {}", vkResultToString(res));
@@ -49,7 +48,7 @@ mental::core::Result mental::rhi::vk::Fence::wait(uint64_t timeout)
 }
 mental::core::Result mental::rhi::vk::Fence::reset()
 {
-  VkResult res = vkResetFences(vk::getDevice().getVkDevice(), 1, &mFence);
+  VkResult res = vkResetFences(vk::getDevice().getVirtualDevice(), 1, &mFence);
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkResetFences, error: {}", vkResultToString(res));

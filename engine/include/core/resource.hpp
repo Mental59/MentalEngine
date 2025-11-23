@@ -34,6 +34,9 @@ namespace mental::core::resource
     eVkBuffer,
     eVkSemaphore,
     eVkFence,
+    eVkDevice,
+    eVkPhysicalDevice,
+    eVkSurfaceKHR,
     eGLFWwindow
   };
 

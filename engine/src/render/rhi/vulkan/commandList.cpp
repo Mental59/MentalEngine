@@ -15,7 +15,7 @@ mental::core::Result mental::rhi::vk::CommandList::init(const mental::rhi::Comma
   allocInfo.commandPool = cmdPool;
   allocInfo.commandBufferCount = 1;
 
-  VkResult res = vkAllocateCommandBuffers(vk::getDevice().getVkDevice(), &allocInfo, &mCmdBuffer);
+  VkResult res = vkAllocateCommandBuffers(vk::getDevice().getVirtualDevice(), &allocInfo, &mCmdBuffer);
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkAllocateCommandBuffers, error: {}", vkResultToString(res));
@@ -23,20 +23,19 @@ mental::core::Result mental::rhi::vk::CommandList::init(const mental::rhi::Comma
   }
 
   mCmdPool = cmdPool;
-  mIsOneTimeSubmit = desc.isOneTimeSubmit;
 
   return core::Result::eSuccess;
 }
 
 void mental::rhi::vk::CommandList::destroy()
 {
-  vkFreeCommandBuffers(vk::getDevice().getVkDevice(), mCmdPool, 1, &mCmdBuffer);
+  vkFreeCommandBuffers(vk::getDevice().getVirtualDevice(), mCmdPool, 1, &mCmdBuffer);
 }
 
-mental::core::Result mental::rhi::vk::CommandList::begin()
+mental::core::Result mental::rhi::vk::CommandList::begin(const CommandListBegindDesc& desc)
 {
   VkCommandBufferBeginInfo beginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
-  if (mIsOneTimeSubmit)
+  if (desc.isOneTimeSubmit)
   {
     beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
   }

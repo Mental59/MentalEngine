@@ -13,7 +13,7 @@ mental::core::resource::Object mental::rhi::vk::Semaphore::getNativeObject(core:
 mental::core::Result mental::rhi::vk::Semaphore::init()
 {
   VkSemaphoreCreateInfo createInfo{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
-  VkResult res = vkCreateSemaphore(vk::getDevice().getVkDevice(), &createInfo, nullptr, &mSemaphore);
+  VkResult res = vkCreateSemaphore(vk::getDevice().getVirtualDevice(), &createInfo, nullptr, &mSemaphore);
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkCreateSemaphore, error: {}", vkResultToString(res));
@@ -24,5 +24,5 @@ mental::core::Result mental::rhi::vk::Semaphore::init()
 
 void mental::rhi::vk::Semaphore::destroy()
 {
-  vkDestroySemaphore(vk::getDevice().getVkDevice(), mSemaphore, nullptr);
+  vkDestroySemaphore(vk::getDevice().getVirtualDevice(), mSemaphore, nullptr);
 }

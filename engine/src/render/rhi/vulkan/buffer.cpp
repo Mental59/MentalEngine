@@ -3,6 +3,7 @@
 #include <render/rhi/vulkan/constants.hpp>
 #include <render/rhi/rhi.hpp>
 #include <render/rhi/vulkan/device.hpp>
+#include "render/rhi/vulkan/allocator.hpp"
 
 mental::core::Result mental::rhi::vk::Buffer::init(const BufferDesc& desc)
 {
@@ -42,7 +43,7 @@ mental::core::Result mental::rhi::vk::Buffer::init(const BufferDesc& desc)
   VkBuffer vkBuffer;
   VmaAllocation allocation;
   VkResult createBufferRes =
-      vmaCreateBuffer(vk::getDevice().getBufferAllocator(), &bufferCreateInfo, &allocInfo, &vkBuffer, &allocation, nullptr);
+      vmaCreateBuffer(vk::getAllocator(), &bufferCreateInfo, &allocInfo, &vkBuffer, &allocation, nullptr);
 
   if (createBufferRes != VK_SUCCESS)
   {
@@ -69,7 +70,7 @@ void mental::rhi::vk::Buffer::destroy()
     return;
   }
 
-  vmaDestroyBuffer(vk::getDevice().getBufferAllocator(), mBuffer, mAllocation);
+  vmaDestroyBuffer(vk::getAllocator(), mBuffer, mAllocation);
   mDesc = {};
   mBuffer = VK_NULL_HANDLE;
   mAllocation = nullptr;
@@ -93,7 +94,7 @@ mental::core::resource::Object mental::rhi::vk::Buffer::getNativeObject(core::re
 
 mental::core::Result mental::rhi::vk::Buffer::map(void** mappedData)
 {
-  VkResult res = vmaMapMemory(vk::getDevice().getBufferAllocator(), mAllocation, mappedData);
+  VkResult res = vmaMapMemory(vk::getAllocator(), mAllocation, mappedData);
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Vulkan buffer map failed, error: {}", vkResultToString(res));
@@ -105,7 +106,7 @@ mental::core::Result mental::rhi::vk::Buffer::map(void** mappedData)
 
 mental::core::Result mental::rhi::vk::Buffer::unmap()
 {
-  vmaUnmapMemory(vk::getDevice().getBufferAllocator(), mAllocation);
+  vmaUnmapMemory(vk::getAllocator(), mAllocation);
   mIsMapped = false;
   return core::Result::eSuccess;
 }
@@ -119,7 +120,7 @@ mental::core::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, ui
   }
 
   VmaAllocationInfo allocationInfo;
-  vmaGetAllocationInfo(vk::getDevice().getBufferAllocator(), mAllocation, &allocationInfo);
+  vmaGetAllocationInfo(vk::getAllocator(), mAllocation, &allocationInfo);
   memcpy((uint8_t*)allocationInfo.pMappedData + offset, data, size);
 
   return core::Result::eSuccess;

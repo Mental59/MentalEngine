@@ -1,22 +1,20 @@
 #include <render/rhi/vulkan/device.hpp>
 #include <Volk/volk.h>
-#include <vma/vk_mem_alloc.h>
 #include <core/log.hpp>
 #include <render/rhi/vulkan/buffer.hpp>
 #include <render/rhi/vulkan/constants.hpp>
+#include <render/rhi/vulkan/allocator.hpp>
 #include "core/resource.hpp"
 #include "core/types.hpp"
 #include "render/rhi/rhi.hpp"
 
 namespace mental::rhi::vk
 {
-
   core::Result Context::init(
       VkInstance instance,
       VkSurfaceKHR surface,
       VkPhysicalDevice physicalDevice,
       VkDevice device,
-      uint32_t apiVersion,
       VkDebugReportCallbackEXT debugReportCallback,
       VkDebugUtilsMessengerEXT debugUtilsMessenger,
       VkSurfaceCapabilitiesKHR capabilities,
@@ -47,35 +45,11 @@ namespace mental::rhi::vk
     for (const char* extensionName : deviceExtensions)
       mDeviceExtensions.insert(extensionName);
 
-    VmaAllocatorCreateInfo allocatorCreateInfo{};
-    allocatorCreateInfo.vulkanApiVersion = apiVersion;
-    allocatorCreateInfo.physicalDevice = physicalDevice;
-    allocatorCreateInfo.device = device;
-    allocatorCreateInfo.instance = instance;
-
-    VmaVulkanFunctions vulkanFunctions;
-    VkResult importRes = vmaImportVulkanFunctionsFromVolk(&allocatorCreateInfo, &vulkanFunctions);
-    if (importRes != VK_SUCCESS)
-    {
-      MENTAL_ERROR("Failed to import vulkan functions");
-      return core::Result::eInitializationFailed;
-    }
-
-    allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
-
-    VkResult createAllocatorRes = vmaCreateAllocator(&allocatorCreateInfo, &mAllocator);
-    if (createAllocatorRes != VK_SUCCESS)
-    {
-      MENTAL_ERROR("Failed to create vulkan allocator");
-      return core::Result::eInitializationFailed;
-    }
-
     return core::Result::eSuccess;
   }
 
   void Context::destroy()
   {
-    vmaDestroyAllocator(mAllocator);
     vkDestroyDevice(mDevice, VK_NULL_HANDLE);
     vkDestroySurfaceKHR(mInstance, mSurface, VK_NULL_HANDLE);
     if (mDebugUtilsMessenger)
@@ -100,9 +74,9 @@ namespace mental::rhi::vk
     return &mGraphicsQueue;
   }
 
-  vk::CommandQueue* Device::getVulkanGraphicsQueue()
+  ISwapchain* Device::getSwapchain()
   {
-    return &mGraphicsQueue;
+    return &mSwapchain;
   }
 
   Device& Device::instance()
@@ -118,7 +92,6 @@ namespace mental::rhi::vk
         desc.surface,
         desc.physicalDevice,
         desc.device,
-        desc.apiVersion,
         desc.debugReportCallback,
         desc.debugUtilsMessenger,
         desc.capabilities,
@@ -139,7 +112,19 @@ namespace mental::rhi::vk
     res = mGraphicsQueue.init(desc.graphicsQueue, desc.graphicsQueueIndex);
     if (res != core::Result::eSuccess)
     {
-      MENTAL_ERROR("Failed to initialize graphics queue");
+      MENTAL_ERROR("Failed to initialize graphics queue, error: {}", core::resultToString(res));
+      return core::Result::eInitializationFailed;
+    }
+
+    AllocatorDesc allocatorDesc{};
+    allocatorDesc.device = desc.device;
+    allocatorDesc.physicalDevice = desc.physicalDevice;
+    allocatorDesc.instance = desc.instance;
+    allocatorDesc.vulkanApiVersion = desc.apiVersion;
+    res = initAllocator(allocatorDesc);
+    if (res != core::Result::eSuccess)
+    {
+      MENTAL_ERROR("Failed to initialize allocator, error: {}", core::resultToString(res));
       return core::Result::eInitializationFailed;
     }
 
@@ -149,6 +134,8 @@ namespace mental::rhi::vk
 
   void Device::destroy()
   {
+    destroyAllocator();
+    mSwapchain.destroy();
     mGraphicsQueue.destroy();
     mContext.destroy();
     MENTAL_INFO("Vulkan device destroyed");

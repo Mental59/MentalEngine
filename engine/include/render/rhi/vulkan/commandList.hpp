@@ -11,7 +11,7 @@ namespace mental::rhi::vk
     virtual core::Result init(const CommandListDesc& desc) override;
     virtual void destroy() override;
 
-    virtual core::Result begin() override;
+    virtual core::Result begin(const CommandListBegindDesc& desc) override;
     virtual core::Result end() override;
     virtual core::Result copyBuffer(IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size)
         override;
@@ -19,6 +19,5 @@ namespace mental::rhi::vk
    private:
     VkCommandBuffer mCmdBuffer;
     VkCommandPool mCmdPool;
-    bool mIsOneTimeSubmit;
   };
 }  // namespace mental::rhi::vk

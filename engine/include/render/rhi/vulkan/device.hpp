@@ -1,10 +1,9 @@
 #pragma once
 
 #include <volk/volk.h>
-#include <vma/vk_mem_alloc.h>
-
 #include <render/rhi/rhi.hpp>
 #include <render/rhi/vulkan/commandQueue.hpp>
+#include <render/rhi/vulkan/swapchain.hpp>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -36,11 +35,27 @@ namespace mental::rhi::vk
 
   struct Context
   {
+    Context() = default;
+
+    core::Result init(
+        VkInstance instance,
+        VkSurfaceKHR surface,
+        VkPhysicalDevice physicalDevice,
+        VkDevice device,
+        VkDebugReportCallbackEXT debugReportCallback,
+        VkDebugUtilsMessengerEXT debugUtilsMessenger,
+        VkSurfaceCapabilitiesKHR capabilities,
+        const std::vector<VkSurfaceFormatKHR>& formats,
+        const std::vector<VkPresentModeKHR>& presentModes,
+        const std::vector<const char*>& instanceExtensions,
+        const std::vector<const char*>& deviceExtensions);
+
+    void destroy();
+
     VkInstance mInstance;
     VkSurfaceKHR mSurface;
     VkPhysicalDevice mPhysicalDevice;
     VkDevice mDevice;
-    VmaAllocator mAllocator;
 
     VkDebugReportCallbackEXT mDebugReportCallback;
     VkDebugUtilsMessengerEXT mDebugUtilsMessenger;
@@ -51,24 +66,6 @@ namespace mental::rhi::vk
 
     std::unordered_set<std::string> mInstanceExtensions;
     std::unordered_set<std::string> mDeviceExtensions;
-
-    Context() = default;
-
-    core::Result init(
-        VkInstance instance,
-        VkSurfaceKHR surface,
-        VkPhysicalDevice physicalDevice,
-        VkDevice device,
-        uint32_t apiVersion,
-        VkDebugReportCallbackEXT debugReportCallback,
-        VkDebugUtilsMessengerEXT debugUtilsMessenger,
-        VkSurfaceCapabilitiesKHR capabilities,
-        const std::vector<VkSurfaceFormatKHR>& formats,
-        const std::vector<VkPresentModeKHR>& presentModes,
-        const std::vector<const char*>& instanceExtensions,
-        const std::vector<const char*>& deviceExtensions);
-
-    void destroy();
   };
 
   class Device : public IDevice
@@ -83,20 +80,25 @@ namespace mental::rhi::vk
     virtual void waitIdle() override;
     virtual GraphicsApi getGraphicsApi() override;
     virtual ICommandQueue* getGraphicsQueue() override;
-    vk::CommandQueue* getVulkanGraphicsQueue();
+    virtual ISwapchain* getSwapchain() override;
 
-    inline VkDevice getVkDevice() const
+    inline VkDevice getVirtualDevice() const
     {
       return mContext.mDevice;
     }
-    inline VmaAllocator getBufferAllocator() const
+    inline VkSurfaceKHR getSurface() const
     {
-      return mContext.mAllocator;
+      return mContext.mSurface;
+    }
+    inline VkPhysicalDevice getPhysicalDevice() const
+    {
+      return mContext.mPhysicalDevice;
     }
 
    private:
     Context mContext;
     CommandQueue mGraphicsQueue;
+    Swapchain mSwapchain;
   };
 
   inline Device& getDevice()

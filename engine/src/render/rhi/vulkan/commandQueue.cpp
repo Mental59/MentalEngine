@@ -13,7 +13,7 @@ mental::core::Result mental::rhi::vk::CommandQueue::init(VkQueue queue, uint32_t
 
 void mental::rhi::vk::CommandQueue::destroy()
 {
-  vkDestroyCommandPool(vk::getDevice().getVkDevice(), mCommandPool, nullptr);
+  vkDestroyCommandPool(vk::getDevice().getVirtualDevice(), mCommandPool, nullptr);
 }
 
 mental::core::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& submitInfo)
@@ -73,7 +73,7 @@ mental::core::Result mental::rhi::vk::CommandQueue::createCommandPool(uint32_t q
   createInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   createInfo.queueFamilyIndex = queueFamilyIndex;
-  VkResult res = vkCreateCommandPool(vk::getDevice().getVkDevice(), &createInfo, nullptr, &mCommandPool);
+  VkResult res = vkCreateCommandPool(vk::getDevice().getVirtualDevice(), &createInfo, nullptr, &mCommandPool);
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkCreateCommandPool, error: {}", vkResultToString(res));
