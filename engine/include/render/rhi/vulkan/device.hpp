@@ -19,7 +19,6 @@ namespace mental::rhi::vk
     VkDevice device;
     uint32_t apiVersion;
 
-    VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 
@@ -44,7 +43,6 @@ namespace mental::rhi::vk
         VkDevice device,
         VkDebugReportCallbackEXT debugReportCallback,
         VkDebugUtilsMessengerEXT debugUtilsMessenger,
-        VkSurfaceCapabilitiesKHR capabilities,
         const std::vector<VkSurfaceFormatKHR>& formats,
         const std::vector<VkPresentModeKHR>& presentModes,
         const std::vector<const char*>& instanceExtensions,
@@ -60,7 +58,6 @@ namespace mental::rhi::vk
     VkDebugReportCallbackEXT mDebugReportCallback;
     VkDebugUtilsMessengerEXT mDebugUtilsMessenger;
 
-    VkSurfaceCapabilitiesKHR mCapabilities;
     std::vector<VkSurfaceFormatKHR> mFormats;
     std::vector<VkPresentModeKHR> mPresentModes;
 
@@ -82,6 +79,10 @@ namespace mental::rhi::vk
     virtual ICommandQueue* getGraphicsQueue() override;
     virtual ISwapchain* getSwapchain() override;
 
+    inline CommandQueue& _getGraphicsQueue()
+    {
+      return mGraphicsQueue;
+    }
     inline VkDevice getVirtualDevice() const
     {
       return mContext.mDevice;
@@ -93,6 +94,14 @@ namespace mental::rhi::vk
     inline VkPhysicalDevice getPhysicalDevice() const
     {
       return mContext.mPhysicalDevice;
+    }
+    inline const std::vector<VkSurfaceFormatKHR>& getSurfaceFormats() const
+    {
+      return mContext.mFormats;
+    }
+    inline const std::vector<VkPresentModeKHR>& getPresentModes() const
+    {
+      return mContext.mPresentModes;
     }
 
    private:

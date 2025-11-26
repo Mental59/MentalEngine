@@ -17,7 +17,6 @@ namespace mental::rhi::vk
       VkDevice device,
       VkDebugReportCallbackEXT debugReportCallback,
       VkDebugUtilsMessengerEXT debugUtilsMessenger,
-      VkSurfaceCapabilitiesKHR capabilities,
       const std::vector<VkSurfaceFormatKHR>& formats,
       const std::vector<VkPresentModeKHR>& presentModes,
       const std::vector<const char*>& instanceExtensions,
@@ -28,7 +27,6 @@ namespace mental::rhi::vk
     mSurface = surface;
     mPhysicalDevice = physicalDevice;
     mDevice = device;
-    mCapabilities = capabilities;
     mFormats = formats;
     mPresentModes = presentModes;
     mDebugReportCallback = debugReportCallback;
@@ -94,7 +92,6 @@ namespace mental::rhi::vk
         desc.device,
         desc.debugReportCallback,
         desc.debugUtilsMessenger,
-        desc.capabilities,
         desc.formats,
         desc.presentModes,
         desc.instanceExtensions,
@@ -125,6 +122,18 @@ namespace mental::rhi::vk
     if (res != core::Result::eSuccess)
     {
       MENTAL_ERROR("Failed to initialize allocator, error: {}", core::resultToString(res));
+      return core::Result::eInitializationFailed;
+    }
+
+    SwapchainDesc swapchainDesc{};
+    swapchainDesc.width = 512;
+    swapchainDesc.height = 512;
+    swapchainDesc.enableVerticalSync = true;
+    swapchainDesc.imageCount = 2;
+    res = mSwapchain.init(swapchainDesc);
+    if (res != core::Result::eSuccess)
+    {
+      MENTAL_ERROR("Failed to create swapchain, error: {}", core::resultToString(res));
       return core::Result::eInitializationFailed;
     }
 

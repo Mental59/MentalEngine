@@ -11,6 +11,9 @@ namespace mental::rhi::vk
     virtual void destroy() override;
 
    private:
+    VkSurfaceFormatKHR chooseSurfaceFormat() const;
+    VkPresentModeKHR choosePresentMode(const SwapchainDesc& desc) const;
+
     VkSwapchainKHR mSwapchain;
   };
 }  // namespace mental::rhi::vk

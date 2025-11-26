@@ -102,7 +102,6 @@ namespace mental::rhi::vk
                      .surface = surface,
                      .physicalDevice = physicalDeviceInfo.getPhysicalDevice(),
                      .device = vkDevice,
-                     .capabilities = physicalDeviceInfo.getSwapchainSupportDetails().capabilities,
                      .formats = physicalDeviceInfo.getSwapchainSupportDetails().formats,
                      .presentModes = physicalDeviceInfo.getSwapchainSupportDetails().presentModes,
                      .graphicsQueue = graphicsQueue,

@@ -17,6 +17,11 @@ namespace mental::rhi::vk
 
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
 
+    inline uint32_t getIndex() const
+    {
+      return mIndex;
+    }
+
    private:
     core::Result createCommandPool(uint32_t queueFamilyIndex);
 

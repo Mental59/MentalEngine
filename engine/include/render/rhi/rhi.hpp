@@ -125,6 +125,7 @@ namespace mental::rhi
     uint32_t width;
     uint32_t height;
     uint32_t imageCount;
+    bool enableVerticalSync;
   };
   class ISwapchain : public core::resource::IResource
   {
