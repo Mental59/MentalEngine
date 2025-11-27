@@ -126,8 +126,6 @@ namespace mental::rhi::vk
     }
 
     SwapchainDesc swapchainDesc{};
-    swapchainDesc.width = 512;
-    swapchainDesc.height = 512;
     swapchainDesc.enableVerticalSync = true;
     swapchainDesc.imageCount = 2;
     res = mSwapchain.init(swapchainDesc);

@@ -1,4 +1,3 @@
-#include <vulkan/vulkan_core.h>
 #include <cstdint>
 #include <render/rhi/vulkan/swapchain.hpp>
 #include "core/log.hpp"
@@ -54,6 +53,10 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
     MENTAL_ERROR("Failed to call vkCreateSwapchainKHR, error: {}", vkResultToString(res));
     return core::Result::eInitializationFailed;
   }
+
+  mFormat = surfaceFormat;
+  mPresentMode = presentMode;
+  mExtent = extent;
 
   return core::Result::eSuccess;
 }

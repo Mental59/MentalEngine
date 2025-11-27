@@ -122,8 +122,6 @@ namespace mental::rhi
 
   struct SwapchainDesc
   {
-    uint32_t width;
-    uint32_t height;
     uint32_t imageCount;
     bool enableVerticalSync;
   };

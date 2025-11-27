@@ -15,5 +15,8 @@ namespace mental::rhi::vk
     VkPresentModeKHR choosePresentMode(const SwapchainDesc& desc) const;
 
     VkSwapchainKHR mSwapchain;
+    VkSurfaceFormatKHR mFormat;
+    VkPresentModeKHR mPresentMode;
+    VkExtent2D mExtent;
   };
 }  // namespace mental::rhi::vk
