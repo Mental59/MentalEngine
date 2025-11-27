@@ -44,7 +44,7 @@ mental::core::Result mental::rhi::vk::CommandList::begin(const CommandListBegind
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkBeginCommandBuffer, error: {}", vkResultToString(res));
-    return core::Result::eCommandListOperationFailed;
+    return core::Result::eOperationFailed;
   }
 
   return core::Result::eSuccess;
@@ -56,7 +56,7 @@ mental::core::Result mental::rhi::vk::CommandList::end()
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkEndCommandBuffer, error: {}", vkResultToString(res));
-    return core::Result::eCommandListOperationFailed;
+    return core::Result::eOperationFailed;
   }
 
   return core::Result::eSuccess;

@@ -48,7 +48,7 @@ mental::core::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& sub
 
   VkResult res = vkQueueSubmit(mQueue, 1, &vkSubmitInfo, fence);
   if (res != VK_SUCCESS)
-    return core::Result::eQueueSubmitFailed;
+    return core::Result::eOperationFailed;
 
   return core::Result::eSuccess;
 }
@@ -64,7 +64,7 @@ mental::core::resource::Object mental::rhi::vk::CommandQueue::getNativeObject(co
     return mQueue;
   if (objectType == core::resource::ObjectType::eVkCommandPool)
     return mCommandPool;
-  return mQueue;
+  return nullptr;
 }
 
 mental::core::Result mental::rhi::vk::CommandQueue::createCommandPool(uint32_t queueFamilyIndex)

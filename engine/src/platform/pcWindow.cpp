@@ -9,7 +9,7 @@ mental::core::resource::Object mental::platform::PCWindow::getNativeObject(core:
   {
     return mWindow;
   }
-  return mWindow;
+  return nullptr;
 }
 
 mental::core::Result mental::platform::PCWindow::init(const mental::platform::WindowDesc& desc)

@@ -11,7 +11,7 @@ mental::core::resource::Object mental::rhi::vk::Fence::getNativeObject(mental::c
   {
     return mFence;
   }
-  return mFence;
+  return nullptr;
 }
 
 mental::core::Result mental::rhi::vk::Fence::init(const mental::rhi::FenceDesc& desc)
@@ -42,7 +42,7 @@ mental::core::Result mental::rhi::vk::Fence::wait(uint64_t timeout)
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkWaitForFences, error: {}", vkResultToString(res));
-    return core::Result::eFenceOperationFailed;
+    return core::Result::eOperationFailed;
   }
   return core::Result::eSuccess;
 }
@@ -52,7 +52,7 @@ mental::core::Result mental::rhi::vk::Fence::reset()
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkResetFences, error: {}", vkResultToString(res));
-    return core::Result::eFenceOperationFailed;
+    return core::Result::eOperationFailed;
   }
   return core::Result::eSuccess;
 }

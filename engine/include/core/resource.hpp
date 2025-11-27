@@ -37,6 +37,7 @@ namespace mental::core::resource
     eVkDevice,
     eVkPhysicalDevice,
     eVkSurfaceKHR,
+    eVkSwapchainKHR,
     eGLFWwindow
   };
 

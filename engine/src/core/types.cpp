@@ -6,13 +6,12 @@ const char* mental::core::resultToString(mental::core::Result res)
   switch (res)
   {
     case mental::core::Result::eSuccess: return "RHI_SUCCESS";
-    case mental::core::Result::eResourceCreationFailed: return "RHI_RESOURCE_CREATION_FAILED";
     case mental::core::Result::eInitializationFailed: return "RHI_INITIALIZATION_FAILED";
-    case mental::core::Result::eBufferMapFailed: return "RHI_BUFFER_MAP_FAILED";
-    case mental::core::Result::eBufferCopyFailed: return "RHI_BUFFER_COPY_FAILED";
-    case mental::core::Result::eQueueSubmitFailed: return "RHI_QUEUE_SUBMIT_FAILED";
-    case mental::core::Result::eCommandListOperationFailed: return "RHI_COMMAND_LIST_OPERATION_FAILED";
-    case mental::core::Result::eFenceOperationFailed: return "RHI_FENCE_OPERATION_FAILED";
+    case mental::core::Result::eOperationFailed: return "RHI_OPERATION_FAILED";
+    case mental::core::Result::eSuboptimal: return "RHI_SUBOPTIMAL";
+    case mental::core::Result::eOutOfDate: return "RHI_OUT_OF_DATE";
+    case mental::core::Result::eNotReady: return "RHI_NOT_READY";
+    case mental::core::Result::eTimeout: return "RHI_TIMEOUT";
 
     default:
     {

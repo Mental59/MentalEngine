@@ -5,13 +5,12 @@ namespace mental::core
   enum class Result
   {
     eSuccess = 0,
-    eResourceCreationFailed,
     eInitializationFailed,
-    eBufferMapFailed,
-    eBufferCopyFailed,
-    eQueueSubmitFailed,
-    eCommandListOperationFailed,
-    eFenceOperationFailed,
+    eOperationFailed,
+    eSuboptimal,
+    eOutOfDate,
+    eNotReady,
+    eTimeout,
   };
 
   const char* resultToString(Result res);

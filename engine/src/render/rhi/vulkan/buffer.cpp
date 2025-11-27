@@ -89,7 +89,7 @@ mental::core::resource::Object mental::rhi::vk::Buffer::getNativeObject(core::re
 {
   if (objectType == core::resource::ObjectType::eVkBuffer)
     return mBuffer;
-  return mBuffer;
+  return nullptr;
 }
 
 mental::core::Result mental::rhi::vk::Buffer::map(void** mappedData)
@@ -98,7 +98,7 @@ mental::core::Result mental::rhi::vk::Buffer::map(void** mappedData)
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Vulkan buffer map failed, error: {}", vkResultToString(res));
-    return core::Result::eBufferMapFailed;
+    return core::Result::eOperationFailed;
   }
   mIsMapped = true;
   return core::Result::eSuccess;
@@ -116,7 +116,7 @@ mental::core::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, ui
   if (!mIsMapped)
   {
     MENTAL_ERROR("Buffer is not mapped");
-    return core::Result::eBufferCopyFailed;
+    return core::Result::eOperationFailed;
   }
 
   VmaAllocationInfo allocationInfo;

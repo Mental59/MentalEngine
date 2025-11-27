@@ -47,7 +47,8 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
   createInfo.presentMode = presentMode;
   createInfo.clipped = VK_TRUE;
 
-  res = vkCreateSwapchainKHR(vk::getDevice().getVirtualDevice(), &createInfo, nullptr, &mSwapchain);
+  VkDevice device = vk::getDevice().getVirtualDevice();
+  res = vkCreateSwapchainKHR(device, &createInfo, nullptr, &mSwapchain);
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkCreateSwapchainKHR, error: {}", vkResultToString(res));
@@ -58,7 +59,61 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
   mPresentMode = presentMode;
   mExtent = extent;
 
+  uint32_t swapchainImageCount;
+  vkGetSwapchainImagesKHR(device, mSwapchain, &swapchainImageCount, nullptr);
+  mImages.resize(swapchainImageCount);
+  vkGetSwapchainImagesKHR(device, mSwapchain, &swapchainImageCount, mImages.data());
+
+  // TODO: initialize textures
+
   return core::Result::eSuccess;
+}
+
+mental::core::Result mental::rhi::vk::Swapchain::acquireNextImage(
+    uint64_t timeout,
+    mental::rhi::ISemaphore* signalSemaphore,
+    mental::rhi::IFence* signalFence,
+    uint32_t& imageIndex)
+{
+  VkDevice device = vk::getDevice().getVirtualDevice();
+
+  VkSemaphore semaphore = VK_NULL_HANDLE;
+  if (signalSemaphore)
+    semaphore = signalSemaphore->getNativeObject(core::resource::ObjectType::eVkSemaphore);
+
+  VkFence fence = VK_NULL_HANDLE;
+  if (signalFence)
+    fence = signalFence->getNativeObject(core::resource::ObjectType::eVkFence);
+
+  VkResult res = vkAcquireNextImageKHR(device, mSwapchain, timeout, semaphore, fence, &imageIndex);
+  switch (res)
+  {
+    case VK_SUCCESS: return core::Result::eSuccess;
+    case VK_SUBOPTIMAL_KHR: return core::Result::eSuboptimal;
+    case VK_ERROR_OUT_OF_DATE_KHR: return core::Result::eOutOfDate;
+    case VK_NOT_READY: return core::Result::eNotReady;
+    case VK_TIMEOUT: return core::Result::eTimeout;
+    default: return core::Result::eOperationFailed;
+  }
+}
+
+uint32_t mental::rhi::vk::Swapchain::getImageCount() const
+{
+  return static_cast<uint32_t>(mImages.size());
+}
+
+mental::rhi::ITexture* mental::rhi::vk::Swapchain::getImage(uint32_t index) const
+{
+  return nullptr;
+}
+
+mental::core::resource::Object mental::rhi::vk::Swapchain::getNativeObject(mental::core::resource::ObjectType objectType)
+{
+  if (objectType == core::resource::ObjectType::eVkSwapchainKHR)
+  {
+    return mSwapchain;
+  }
+  return nullptr;
 }
 
 VkSurfaceFormatKHR mental::rhi::vk::Swapchain::chooseSurfaceFormat() const

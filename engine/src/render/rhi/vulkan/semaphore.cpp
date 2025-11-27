@@ -7,7 +7,7 @@ mental::core::resource::Object mental::rhi::vk::Semaphore::getNativeObject(core:
 {
   if (objectType == core::resource::ObjectType::eVkSemaphore)
     return mSemaphore;
-  return mSemaphore;
+  return nullptr;
 }
 
 mental::core::Result mental::rhi::vk::Semaphore::init()
