@@ -5,11 +5,11 @@
 
 mental::core::resource::Object mental::platform::PCWindow::getNativeObject(core::resource::ObjectType objectType)
 {
-  if (objectType == core::resource::ObjectType::eGLFWwindow)
+  switch (objectType)
   {
-    return mWindow;
+    case core::resource::ObjectType::eGLFWwindow: return mWindow;
+    default: return nullptr;
   }
-  return nullptr;
 }
 
 mental::core::Result mental::platform::PCWindow::init(const mental::platform::WindowDesc& desc)

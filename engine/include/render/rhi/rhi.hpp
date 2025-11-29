@@ -18,7 +18,7 @@ namespace mental::rhi
   class ICommandQueue;
   class IDevice;
   class ISwapchain;
-  class ITexture;
+  class IImage;
 
   enum class GraphicsApi : uint8_t
   {
@@ -133,11 +133,25 @@ namespace mental::rhi
     virtual core::Result
     acquireNextImage(uint64_t timeout, ISemaphore* signalSemaphore, IFence* signalFence, uint32_t& imageIndex) = 0;
     virtual uint32_t getImageCount() const = 0;
-    virtual ITexture* getImage(uint32_t index) const = 0;
+    virtual IImage* getImage(uint32_t index) const = 0;
   };
 
-  class ITexture : public core::resource::IResource
+  struct ImageExtent
   {
+    uint32_t width;
+    uint32_t height;
+    uint32_t depth;
+  };
+  class IImage : public core::resource::IResource
+  {
+   public:
+    inline ImageExtent getExtent() const
+    {
+      return mExtent;
+    }
+
+   protected:
+    ImageExtent mExtent;
   };
 
   class IDevice : public core::resource::IResource

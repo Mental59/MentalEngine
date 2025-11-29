@@ -60,11 +60,12 @@ void mental::rhi::vk::CommandQueue::waitIdle()
 
 mental::core::resource::Object mental::rhi::vk::CommandQueue::getNativeObject(core::resource::ObjectType objectType)
 {
-  if (objectType == core::resource::ObjectType::eVkQueue)
-    return mQueue;
-  if (objectType == core::resource::ObjectType::eVkCommandPool)
-    return mCommandPool;
-  return nullptr;
+  switch (objectType)
+  {
+    case core::resource::ObjectType::eVkQueue: return mQueue;
+    case core::resource::ObjectType::eVkCommandPool: return mCommandPool;
+    default: return nullptr;
+  }
 }
 
 mental::core::Result mental::rhi::vk::CommandQueue::createCommandPool(uint32_t queueFamilyIndex)

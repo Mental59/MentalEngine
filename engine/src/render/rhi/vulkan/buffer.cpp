@@ -87,9 +87,11 @@ bool mental::rhi::vk::Buffer::isValid() const
 
 mental::core::resource::Object mental::rhi::vk::Buffer::getNativeObject(core::resource::ObjectType objectType)
 {
-  if (objectType == core::resource::ObjectType::eVkBuffer)
-    return mBuffer;
-  return nullptr;
+  switch (objectType)
+  {
+    case core::resource::ObjectType::eVkBuffer: return mBuffer;
+    default: return nullptr;
+  }
 }
 
 mental::core::Result mental::rhi::vk::Buffer::map(void** mappedData)

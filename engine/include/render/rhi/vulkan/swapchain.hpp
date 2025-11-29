@@ -1,6 +1,7 @@
 #pragma once
 #include <Volk/volk.h>
 #include <render/rhi/rhi.hpp>
+#include <render/rhi/vulkan/image.hpp>
 #include <vector>
 
 namespace mental::rhi::vk
@@ -14,7 +15,7 @@ namespace mental::rhi::vk
     virtual core::Result
     acquireNextImage(uint64_t timeout, ISemaphore* signalSemaphore, IFence* signalFence, uint32_t& imageIndex) override;
     virtual uint32_t getImageCount() const override;
-    virtual ITexture* getImage(uint32_t index) const override;
+    virtual IImage* getImage(uint32_t index) const override;
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
 
    private:
@@ -25,6 +26,6 @@ namespace mental::rhi::vk
     VkSurfaceFormatKHR mFormat;
     VkPresentModeKHR mPresentMode;
     VkExtent2D mExtent;
-    std::vector<VkImage> mImages;
+    std::vector<vk::Image> mImages;
   };
 }  // namespace mental::rhi::vk

@@ -61,10 +61,16 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
 
   uint32_t swapchainImageCount;
   vkGetSwapchainImagesKHR(device, mSwapchain, &swapchainImageCount, nullptr);
-  mImages.resize(swapchainImageCount);
-  vkGetSwapchainImagesKHR(device, mSwapchain, &swapchainImageCount, mImages.data());
+  std::vector<VkImage> vulkanImages(swapchainImageCount);
+  vkGetSwapchainImagesKHR(device, mSwapchain, &swapchainImageCount, vulkanImages.data());
 
-  // TODO: initialize textures
+  mImages.resize(swapchainImageCount);
+  for (uint32_t i = 0; i < swapchainImageCount; i++)
+  {
+    SwapchainImageDesc desc{ .image = vulkanImages[i] };
+    desc.extent = { .width = extent.width, .height = extent.height, .depth = 1 };
+    mImages[i].initSwapchainImage(desc);
+  }
 
   return core::Result::eSuccess;
 }
@@ -102,18 +108,18 @@ uint32_t mental::rhi::vk::Swapchain::getImageCount() const
   return static_cast<uint32_t>(mImages.size());
 }
 
-mental::rhi::ITexture* mental::rhi::vk::Swapchain::getImage(uint32_t index) const
+mental::rhi::IImage* mental::rhi::vk::Swapchain::getImage(uint32_t index) const
 {
   return nullptr;
 }
 
 mental::core::resource::Object mental::rhi::vk::Swapchain::getNativeObject(mental::core::resource::ObjectType objectType)
 {
-  if (objectType == core::resource::ObjectType::eVkSwapchainKHR)
+  switch (objectType)
   {
-    return mSwapchain;
+    case core::resource::ObjectType::eVkSwapchainKHR: return mSwapchain;
+    default: return nullptr;
   }
-  return nullptr;
 }
 
 VkSurfaceFormatKHR mental::rhi::vk::Swapchain::chooseSurfaceFormat() const

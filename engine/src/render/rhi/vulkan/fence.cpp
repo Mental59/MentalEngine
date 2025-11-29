@@ -7,11 +7,11 @@
 
 mental::core::resource::Object mental::rhi::vk::Fence::getNativeObject(mental::core::resource::ObjectType objectType)
 {
-  if (objectType == core::resource::ObjectType::eVkFence)
+  switch (objectType)
   {
-    return mFence;
+    case core::resource::ObjectType::eVkFence: return mFence;
+    default: return nullptr;
   }
-  return nullptr;
 }
 
 mental::core::Result mental::rhi::vk::Fence::init(const mental::rhi::FenceDesc& desc)
