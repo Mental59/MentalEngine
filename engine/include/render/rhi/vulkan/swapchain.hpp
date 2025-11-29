@@ -15,7 +15,7 @@ namespace mental::rhi::vk
     virtual core::Result
     acquireNextImage(uint64_t timeout, ISemaphore* signalSemaphore, IFence* signalFence, uint32_t& imageIndex) override;
     virtual uint32_t getImageCount() const override;
-    virtual IImage* getImage(uint32_t index) const override;
+    virtual IImage* getImage(uint32_t index) override;
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
 
    private:

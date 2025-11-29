@@ -133,7 +133,7 @@ namespace mental::rhi
     virtual core::Result
     acquireNextImage(uint64_t timeout, ISemaphore* signalSemaphore, IFence* signalFence, uint32_t& imageIndex) = 0;
     virtual uint32_t getImageCount() const = 0;
-    virtual IImage* getImage(uint32_t index) const = 0;
+    virtual IImage* getImage(uint32_t index) = 0;
   };
 
   struct ImageExtent

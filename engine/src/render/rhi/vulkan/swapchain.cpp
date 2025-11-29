@@ -108,9 +108,10 @@ uint32_t mental::rhi::vk::Swapchain::getImageCount() const
   return static_cast<uint32_t>(mImages.size());
 }
 
-mental::rhi::IImage* mental::rhi::vk::Swapchain::getImage(uint32_t index) const
+mental::rhi::IImage* mental::rhi::vk::Swapchain::getImage(uint32_t index)
 {
-  return nullptr;
+  MENTAL_ASSERT_DEBUG(index < mImages.size());
+  return &mImages[index];
 }
 
 mental::core::resource::Object mental::rhi::vk::Swapchain::getNativeObject(mental::core::resource::ObjectType objectType)
