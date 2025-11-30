@@ -26,8 +26,7 @@ mental::core::Result mental::rhi::vk::Image::init(const ImageDesc& desc)
 {
   MENTAL_ASSERT_DEBUG(desc.extent.width > 0 && desc.extent.height > 0 && desc.extent.depth > 0);
 
-  VkImageCreateInfo imageInfo{};
-  imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+  VkImageCreateInfo imageInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
   imageInfo.imageType = desc.extent.depth > 1 ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
   imageInfo.extent.width = desc.extent.width;
   imageInfo.extent.height = desc.extent.height;
