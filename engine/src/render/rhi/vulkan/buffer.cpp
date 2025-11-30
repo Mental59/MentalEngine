@@ -17,13 +17,13 @@ mental::core::Result mental::rhi::vk::Buffer::init(const BufferDesc& desc)
     return core::Result::eInitializationFailed;
 
   VkBufferUsageFlags usage = 0;
-  if (desc.usage & BufferUsageFlagBits::eStorageBuffer)
+  if (desc.usage & BufferUsageFlagBits::eBufferUsageStorageBit)
     usage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-  if (desc.usage & BufferUsageFlagBits::eUniformBuffer)
+  if (desc.usage & BufferUsageFlagBits::eBufferUsageUniformBit)
     usage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-  if (desc.usage & BufferUsageFlagBits::eTransferSrc)
+  if (desc.usage & BufferUsageFlagBits::eBufferUsageTransferSrcBit)
     usage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-  if (desc.usage & BufferUsageFlagBits::eTransferDst)
+  if (desc.usage & BufferUsageFlagBits::eBufferUsageTransferDstBit)
     usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
   VkBufferCreateInfo bufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };

@@ -4,6 +4,7 @@
 #include "core/types.hpp"
 #include "render/rhi/vulkan/constants.hpp"
 #include "render/rhi/vulkan/device.hpp"
+#include "render/rhi/rhi.hpp"
 
 mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::SwapchainDesc& desc)
 {
@@ -31,6 +32,8 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
   }
 
   uint32_t graphicsQueueFamilyIndex = vk::getDevice()._getGraphicsQueue().getIndex();
+  VkImageUsageFlags imageUsageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
   VkSwapchainCreateInfoKHR createInfo{ VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
   createInfo.minImageCount = minImageCount;
   createInfo.surface = vk::getDevice().getSurface();
@@ -38,7 +41,7 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
   createInfo.imageColorSpace = surfaceFormat.colorSpace;
   createInfo.imageExtent = extent;
   createInfo.imageArrayLayers = 1;
-  createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+  createInfo.imageUsage = imageUsageFlags;
   createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
   createInfo.queueFamilyIndexCount = 1;
   createInfo.pQueueFamilyIndices = &graphicsQueueFamilyIndex;
@@ -67,8 +70,12 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
   mImages.resize(swapchainImageCount);
   for (uint32_t i = 0; i < swapchainImageCount; i++)
   {
-    SwapchainImageDesc desc{ .image = vulkanImages[i] };
+    SwapchainImageDesc desc{};
+    desc.image = vulkanImages[i];
     desc.extent = { .width = extent.width, .height = extent.height, .depth = 1 };
+    desc.format = surfaceFormatToImageFormat(surfaceFormat);
+    desc.usage = rhi::ImageUsageFlagBits::eImageUsageColorAttachmentBit;
+
     mImages[i].initSwapchainImage(desc);
   }
 
@@ -154,6 +161,23 @@ VkSurfaceFormatKHR mental::rhi::vk::Swapchain::chooseSurfaceFormat() const
       static_cast<uint32_t>(availableFormats[0].format),
       static_cast<uint32_t>(availableFormats[0].colorSpace));
   return availableFormats[0];
+}
+
+mental::rhi::ImageFormat mental::rhi::vk::Swapchain::surfaceFormatToImageFormat(VkSurfaceFormatKHR surfaceFormat) const
+{
+  switch (surfaceFormat.format)
+  {
+    case VK_FORMAT_R8G8B8A8_SRGB: return mental::rhi::ImageFormat::eRGBA32_SRGB;
+    case VK_FORMAT_B8G8R8A8_SRGB: return mental::rhi::ImageFormat::eBGRA32_SRGB;
+    case VK_FORMAT_R8G8B8A8_UNORM: return mental::rhi::ImageFormat::eRGBA32_UNORM;
+    case VK_FORMAT_B8G8R8A8_UNORM: return mental::rhi::ImageFormat::eBGRA32_UNORM;
+
+    default:
+    {
+      MENTAL_ASSERT_MESSAGE(false, "Failed to convert surface format");
+      return mental::rhi::ImageFormat::eRGBA32_SRGB;
+    }
+  }
 }
 
 VkPresentModeKHR mental::rhi::vk::Swapchain::choosePresentMode(const SwapchainDesc& desc) const

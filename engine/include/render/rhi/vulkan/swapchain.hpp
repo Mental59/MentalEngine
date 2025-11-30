@@ -21,6 +21,7 @@ namespace mental::rhi::vk
    private:
     VkSurfaceFormatKHR chooseSurfaceFormat() const;
     VkPresentModeKHR choosePresentMode(const SwapchainDesc& desc) const;
+    mental::rhi::ImageFormat surfaceFormatToImageFormat(VkSurfaceFormatKHR surfaceFormat) const;
 
     VkSwapchainKHR mSwapchain;
     VkSurfaceFormatKHR mFormat;

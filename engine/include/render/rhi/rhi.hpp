@@ -19,6 +19,7 @@ namespace mental::rhi
   class IDevice;
   class ISwapchain;
   class IImage;
+  class IImageView;
 
   enum class GraphicsApi : uint8_t
   {
@@ -29,10 +30,10 @@ namespace mental::rhi
 
   enum BufferUsageFlagBits : uint32_t
   {
-    eStorageBuffer = 1,
-    eUniformBuffer = 2,
-    eTransferSrc = 4,
-    eTransferDst = 8
+    eBufferUsageStorageBit = 1,
+    eBufferUsageUniformBit = 2,
+    eBufferUsageTransferSrcBit = 4,
+    eBufferUsageTransferDstBit = 8
   };
   using BufferUsageFlags = uint32_t;
 
@@ -136,22 +137,66 @@ namespace mental::rhi
     virtual IImage* getImage(uint32_t index) = 0;
   };
 
+  enum class ImageFormat : uint8_t
+  {
+    eRGBA32_SRGB = 0,
+    eBGRA32_SRGB,
+    eRGBA32_UNORM,
+    eBGRA32_UNORM,
+    eD32_SFLOAT,
+    eD32_SFLOAT_S8_UINT,
+    eD24_UNORM_S8_UINT
+  };
+  enum class ImageLayout : uint8_t
+  {
+    eUndefined = 0,
+    ePresent,
+    eColorAttachment,
+    eDepthStencilAttachment,
+    eTransferSrc,
+    eTransferDst,
+    eShaderReadOnly
+  };
+  enum class ImageTiling : uint8_t
+  {
+    eOptimal = 0,
+    eLinear
+  };
+  enum ImageUsageFlagBits : uint32_t
+  {
+    eImageUsageTransferSrcBit = 1,
+    eImageUsageTransferDstBit = 2,
+    eImageUsageSampledBit = 4,
+    eImageUsageStorageBit = 8,
+    eImageUsageColorAttachmentBit = 16,
+    eImageUsageDepthStencilAttachmentBit = 32
+  };
+  using ImageUsageFlags = uint32_t;
+
   struct ImageExtent
   {
     uint32_t width;
     uint32_t height;
     uint32_t depth;
   };
+  struct ImageDesc
+  {
+    ImageFormat format;
+    ImageLayout layout;
+    ImageTiling tiling;
+    ImageUsageFlags usage;
+    ImageExtent extent;
+    uint32_t mipLevels;
+  };
   class IImage : public core::resource::IResource
   {
    public:
-    inline ImageExtent getExtent() const
-    {
-      return mExtent;
-    }
+    virtual core::Result init(const ImageDesc& desc) = 0;
+    virtual const ImageDesc& getDesc() const = 0;
+  };
 
-   protected:
-    ImageExtent mExtent;
+  class IImageView : public core::resource::IResource
+  {
   };
 
   class IDevice : public core::resource::IResource

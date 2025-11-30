@@ -7,7 +7,9 @@ namespace mental::rhi::vk
   struct SwapchainImageDesc
   {
     VkImage image;
+    rhi::ImageFormat format;
     rhi::ImageExtent extent;
+    rhi::ImageUsageFlags usage;
   };
 
   class Image : public IImage
@@ -16,10 +18,30 @@ namespace mental::rhi::vk
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
     virtual void destroy() override;
 
+    virtual core::Result init(const ImageDesc& desc) override;
+    inline virtual const ImageDesc& getDesc() const override
+    {
+      return mDesc;
+    }
     void initSwapchainImage(const SwapchainImageDesc& desc);
 
    private:
+    VkFormat convertFormat(ImageFormat format);
+    VkImageLayout convertLayout(ImageLayout layout);
+    VkImageTiling convertTiling(ImageTiling tiling);
+    VkImageUsageFlags convertUsageFlags(ImageUsageFlags usage);
+
     bool mShouldDestroyImage;
     VkImage mImage;
+    ImageDesc mDesc;
+  };
+
+  class ImageView : public IImageView
+  {
+   public:
+    virtual void destroy() override;
+
+   private:
+    VkImageView mImageView;
   };
 }  // namespace mental::rhi::vk

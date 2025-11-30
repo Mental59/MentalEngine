@@ -1,5 +1,6 @@
 #pragma once
 #include <volk/volk.h>
+#include <render/rhi/rhi.hpp>
 
 namespace mental::rhi::vk
 {
