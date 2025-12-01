@@ -49,6 +49,8 @@ mental::core::Result mental::rhi::vk::Image::init(const ImageDesc& desc)
   }
 
   mDesc = desc;
+  mShouldDestroyImage = true;
+
   return core::Result::eSuccess;
 }
 
