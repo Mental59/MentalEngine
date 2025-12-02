@@ -1,4 +1,5 @@
 #pragma once
+#include <vma/vk_mem_alloc.h>
 #include <Volk/volk.h>
 #include <render/rhi/rhi.hpp>
 
@@ -33,6 +34,7 @@ namespace mental::rhi::vk
 
     bool mShouldDestroyImage;
     VkImage mImage;
+    VmaAllocation mAllocation;
     ImageDesc mDesc;
   };
 

@@ -1,6 +1,7 @@
 #include <render/rhi/vulkan/image.hpp>
 #include <render/rhi/vulkan/device.hpp>
 #include <render/rhi/vulkan/constants.hpp>
+#include <render/rhi/vulkan/allocator.hpp>
 #include <core/log.hpp>
 
 mental::core::resource::Object mental::rhi::vk::Image::getNativeObject(core::resource::ObjectType objectType)
@@ -18,7 +19,7 @@ void mental::rhi::vk::Image::destroy()
 
   if (mShouldDestroyImage)
   {
-    vkDestroyImage(device, mImage, nullptr);
+    vmaDestroyImage(vk::getAllocator(), mImage, mAllocation);
   }
 }
 
@@ -40,15 +41,19 @@ mental::core::Result mental::rhi::vk::Image::init(const ImageDesc& desc)
   imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
   imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  VkDevice device = vk::getDevice().getVirtualDevice();
-  VkResult res = vkCreateImage(device, &imageInfo, nullptr, &mImage);
+  VmaAllocationCreateInfo allocationCreateInfo{};
+  allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+  VkResult res = vmaCreateImage(vk::getAllocator(), &imageInfo, &allocationCreateInfo, &mImage, &mAllocation, nullptr);
   if (res != VK_SUCCESS)
   {
-    MENTAL_ERROR("Failed to call vkCreateImage, error: {}", vkResultToString(res));
+    MENTAL_ERROR("Failed to call vmaCreateImage, error: {}", vkResultToString(res));
     return core::Result::eInitializationFailed;
   }
 
   mDesc = desc;
+  mShouldDestroyImage = true;
+
   return core::Result::eSuccess;
 }
 
