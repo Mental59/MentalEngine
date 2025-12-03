@@ -79,6 +79,8 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
     mImages[i].initSwapchainImage(desc);
   }
 
+  // TODO: create image views
+
   return core::Result::eSuccess;
 }
 
