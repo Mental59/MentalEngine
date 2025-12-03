@@ -27,11 +27,6 @@ namespace mental::rhi::vk
     void initSwapchainImage(const SwapchainImageDesc& desc);
 
    private:
-    VkFormat convertFormat(ImageFormat format);
-    VkImageLayout convertLayout(ImageLayout layout);
-    VkImageTiling convertTiling(ImageTiling tiling);
-    VkImageUsageFlags convertUsageFlags(ImageUsageFlags usage);
-
     bool mShouldDestroyImage;
     VkImage mImage;
     VmaAllocation mAllocation;
@@ -41,9 +36,12 @@ namespace mental::rhi::vk
   class ImageView : public IImageView
   {
    public:
+    virtual core::Result init(const ImageViewDesc& desc) override;
+    virtual const ImageViewDesc& getDesc() const override;
     virtual void destroy() override;
 
    private:
+    ImageViewDesc mDesc;
     VkImageView mImageView;
   };
 }  // namespace mental::rhi::vk

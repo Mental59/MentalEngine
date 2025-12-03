@@ -3,6 +3,7 @@
 #include <core/resource.hpp>
 #include <core/types.hpp>
 #include <cstddef>
+#include <optional>
 
 namespace mental::platform
 {
@@ -187,6 +188,8 @@ namespace mental::rhi
     ImageUsageFlags usage;
     ImageExtent extent;
     uint32_t mipLevels;
+    uint32_t arrayLayers;
+    bool cubeCompatible;
   };
   class IImage : public core::resource::IResource
   {
@@ -195,8 +198,33 @@ namespace mental::rhi
     virtual const ImageDesc& getDesc() const = 0;
   };
 
+  enum class ImageViewType : uint8_t
+  {
+    eTexture = 0,
+    eDepthMap,
+    eDepthStencilMap,
+    eCubeMap
+  };
+
+  enum ImageViewAspectFlagBits : uint8_t
+  {
+    eImageViewColorAspectBit = 1,
+    eImageViewDepthAspectBit = 2,
+    eImageViewStencilAspectBit = 4
+  };
+  using ImageViewAspectFlags = uint8_t;
+
+  struct ImageViewDesc
+  {
+    IImage* image;
+    std::optional<ImageFormat> format;
+    ImageViewType type;
+  };
   class IImageView : public core::resource::IResource
   {
+   public:
+    virtual core::Result init(const ImageViewDesc& desc) = 0;
+    virtual const ImageViewDesc& getDesc() const = 0;
   };
 
   class IDevice : public core::resource::IResource

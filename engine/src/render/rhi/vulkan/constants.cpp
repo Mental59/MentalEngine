@@ -53,3 +53,77 @@ const char* mental::rhi::vk::vkResultToString(VkResult result)
     }
   }
 }
+
+VkFormat mental::rhi::vk::convertImageFormat(mental::rhi::ImageFormat format)
+{
+  switch (format)
+  {
+    case ImageFormat::eRGBA32_SRGB: return VK_FORMAT_R8G8B8A8_SRGB;
+    case ImageFormat::eBGRA32_SRGB: return VK_FORMAT_B8G8R8A8_SRGB;
+    case ImageFormat::eRGBA32_UNORM: return VK_FORMAT_R8G8B8A8_UNORM;
+    case ImageFormat::eBGRA32_UNORM: return VK_FORMAT_B8G8R8A8_UNORM;
+    case ImageFormat::eD32_SFLOAT: return VK_FORMAT_D32_SFLOAT;
+    case ImageFormat::eD32_SFLOAT_S8_UINT: return VK_FORMAT_D32_SFLOAT_S8_UINT;
+    case ImageFormat::eD24_UNORM_S8_UINT: return VK_FORMAT_D24_UNORM_S8_UINT;
+  }
+}
+
+VkImageLayout mental::rhi::vk::convertImageLayout(mental::rhi::ImageLayout layout)
+{
+  switch (layout)
+  {
+    case ImageLayout::eUndefined: return VK_IMAGE_LAYOUT_UNDEFINED;
+    case ImageLayout::ePresent: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    case ImageLayout::eColorAttachment: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    case ImageLayout::eDepthStencilAttachment: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    case ImageLayout::eTransferSrc: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    case ImageLayout::eTransferDst: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    case ImageLayout::eShaderReadOnly: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  }
+}
+
+VkImageTiling mental::rhi::vk::convertImageTiling(mental::rhi::ImageTiling tiling)
+{
+  switch (tiling)
+  {
+    case ImageTiling::eLinear: return VK_IMAGE_TILING_LINEAR;
+    case ImageTiling::eOptimal: return VK_IMAGE_TILING_OPTIMAL;
+  }
+}
+
+VkImageUsageFlags mental::rhi::vk::convertImageUsageFlags(mental::rhi::ImageUsageFlags usage)
+{
+  VkImageUsageFlags flags = 0;
+
+  if (usage & ImageUsageFlagBits::eImageUsageTransferSrcBit)
+  {
+    flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+  }
+
+  if (usage & ImageUsageFlagBits::eImageUsageTransferDstBit)
+  {
+    flags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+  }
+
+  if (usage & ImageUsageFlagBits::eImageUsageSampledBit)
+  {
+    flags |= VK_IMAGE_USAGE_SAMPLED_BIT;
+  }
+
+  if (usage & ImageUsageFlagBits::eImageUsageStorageBit)
+  {
+    flags |= VK_IMAGE_USAGE_STORAGE_BIT;
+  }
+
+  if (usage & ImageUsageFlagBits::eImageUsageColorAttachmentBit)
+  {
+    flags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+  }
+
+  if (usage & ImageUsageFlagBits::eImageUsageDepthStencilAttachmentBit)
+  {
+    flags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+  }
+
+  return flags;
+}

@@ -33,13 +33,15 @@ mental::core::Result mental::rhi::vk::Image::init(const ImageDesc& desc)
   imageInfo.extent.height = desc.extent.height;
   imageInfo.extent.depth = desc.extent.depth;
   imageInfo.mipLevels = desc.mipLevels;
-  imageInfo.arrayLayers = 1;
-  imageInfo.format = convertFormat(desc.format);
-  imageInfo.tiling = convertTiling(desc.tiling);
-  imageInfo.initialLayout = convertLayout(desc.layout);
-  imageInfo.usage = convertUsageFlags(desc.usage);
+  imageInfo.arrayLayers = desc.arrayLayers;
+  imageInfo.format = convertImageFormat(desc.format);
+  imageInfo.tiling = convertImageTiling(desc.tiling);
+  imageInfo.initialLayout = convertImageLayout(desc.layout);
+  imageInfo.usage = convertImageUsageFlags(desc.usage);
   imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
   imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+  if (desc.cubeCompatible)
+    imageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 
   VmaAllocationCreateInfo allocationCreateInfo{};
   allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
@@ -69,78 +71,54 @@ void mental::rhi::vk::Image::initSwapchainImage(const SwapchainImageDesc& desc)
   mDesc.usage = desc.usage;
 }
 
-VkFormat mental::rhi::vk::Image::convertFormat(ImageFormat format)
+mental::core::Result mental::rhi::vk::ImageView::init(const mental::rhi::ImageViewDesc& desc)
 {
-  switch (format)
+  MENTAL_ASSERT_DEBUG(desc.image != nullptr);
+
+  VkImageViewCreateInfo imageViewInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+  imageViewInfo.image = desc.image->getNativeObject(core::resource::ObjectType::eVkImage);
+  imageViewInfo.viewType = desc.type == ImageViewType::eCubeMap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+  imageViewInfo.format = convertImageFormat(desc.format.has_value() ? desc.format.value() : desc.image->getDesc().format);
+  imageViewInfo.subresourceRange.baseMipLevel = 0;
+  imageViewInfo.subresourceRange.baseArrayLayer = 0;
+  imageViewInfo.subresourceRange.levelCount = desc.image->getDesc().mipLevels;
+  imageViewInfo.subresourceRange.layerCount = desc.image->getDesc().arrayLayers;
+  switch (desc.type)
   {
-    case ImageFormat::eRGBA32_SRGB: return VK_FORMAT_R8G8B8A8_SRGB;
-    case ImageFormat::eBGRA32_SRGB: return VK_FORMAT_B8G8R8A8_SRGB;
-    case ImageFormat::eRGBA32_UNORM: return VK_FORMAT_R8G8B8A8_UNORM;
-    case ImageFormat::eBGRA32_UNORM: return VK_FORMAT_B8G8R8A8_UNORM;
-    case ImageFormat::eD32_SFLOAT: return VK_FORMAT_D32_SFLOAT;
-    case ImageFormat::eD32_SFLOAT_S8_UINT: return VK_FORMAT_D32_SFLOAT_S8_UINT;
-    case ImageFormat::eD24_UNORM_S8_UINT: return VK_FORMAT_D24_UNORM_S8_UINT;
+    case ImageViewType::eTexture:
+    case ImageViewType::eCubeMap:
+    {
+      imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+      break;
+    }
+    case ImageViewType::eDepthMap:
+    {
+      imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+      break;
+    }
+    case ImageViewType::eDepthStencilMap:
+    {
+      imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+      break;
+    }
   }
+  MENTAL_ASSERT_DEBUG(imageViewInfo.image != VK_NULL_HANDLE);
+
+  VkDevice device = vk::getDevice().getVirtualDevice();
+  VkResult res = vkCreateImageView(device, &imageViewInfo, nullptr, &mImageView);
+  if (res != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkCreateImageView, error: {}", vkResultToString(res));
+    return core::Result::eInitializationFailed;
+  }
+
+  mDesc = desc;
+  return core::Result::eSuccess;
 }
 
-VkImageLayout mental::rhi::vk::Image::convertLayout(ImageLayout layout)
+const mental::rhi::ImageViewDesc& mental::rhi::vk::ImageView::getDesc() const
 {
-  switch (layout)
-  {
-    case ImageLayout::eUndefined: return VK_IMAGE_LAYOUT_UNDEFINED;
-    case ImageLayout::ePresent: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    case ImageLayout::eColorAttachment: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    case ImageLayout::eDepthStencilAttachment: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    case ImageLayout::eTransferSrc: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    case ImageLayout::eTransferDst: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    case ImageLayout::eShaderReadOnly: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-  }
-}
-
-VkImageTiling mental::rhi::vk::Image::convertTiling(ImageTiling tiling)
-{
-  switch (tiling)
-  {
-    case ImageTiling::eLinear: return VK_IMAGE_TILING_LINEAR;
-    case ImageTiling::eOptimal: return VK_IMAGE_TILING_OPTIMAL;
-  }
-}
-
-VkImageUsageFlags mental::rhi::vk::Image::convertUsageFlags(ImageUsageFlags usage)
-{
-  VkImageUsageFlags flags = 0;
-
-  if (usage & ImageUsageFlagBits::eImageUsageTransferSrcBit)
-  {
-    flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-  }
-
-  if (usage & ImageUsageFlagBits::eImageUsageTransferDstBit)
-  {
-    flags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-  }
-
-  if (usage & ImageUsageFlagBits::eImageUsageSampledBit)
-  {
-    flags |= VK_IMAGE_USAGE_SAMPLED_BIT;
-  }
-
-  if (usage & ImageUsageFlagBits::eImageUsageStorageBit)
-  {
-    flags |= VK_IMAGE_USAGE_STORAGE_BIT;
-  }
-
-  if (usage & ImageUsageFlagBits::eImageUsageColorAttachmentBit)
-  {
-    flags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-  }
-
-  if (usage & ImageUsageFlagBits::eImageUsageDepthStencilAttachmentBit)
-  {
-    flags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-  }
-
-  return flags;
+  return mDesc;
 }
 
 void mental::rhi::vk::ImageView::destroy()
