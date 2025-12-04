@@ -1,10 +1,10 @@
-#include <render/rhi/vulkan/image.hpp>
+#include <render/rhi/vulkan/texture.hpp>
 #include <render/rhi/vulkan/device.hpp>
 #include <render/rhi/vulkan/constants.hpp>
 #include <render/rhi/vulkan/allocator.hpp>
 #include <core/log.hpp>
 
-mental::core::resource::Object mental::rhi::vk::Image::getNativeObject(core::resource::ObjectType objectType)
+mental::core::resource::Object mental::rhi::vk::Texture::getNativeObject(core::resource::ObjectType objectType)
 {
   switch (objectType)
   {
@@ -13,7 +13,7 @@ mental::core::resource::Object mental::rhi::vk::Image::getNativeObject(core::res
   }
 }
 
-void mental::rhi::vk::Image::destroy()
+void mental::rhi::vk::Texture::destroy()
 {
   VkDevice device = vk::getDevice().getVirtualDevice();
 
@@ -23,7 +23,7 @@ void mental::rhi::vk::Image::destroy()
   }
 }
 
-mental::core::Result mental::rhi::vk::Image::init(const ImageDesc& desc)
+mental::core::Result mental::rhi::vk::Texture::init(const TextureDesc& desc)
 {
   MENTAL_ASSERT_DEBUG(desc.extent.width > 0 && desc.extent.height > 0 && desc.extent.depth > 0);
 
@@ -34,10 +34,10 @@ mental::core::Result mental::rhi::vk::Image::init(const ImageDesc& desc)
   imageInfo.extent.depth = desc.extent.depth;
   imageInfo.mipLevels = desc.mipLevels;
   imageInfo.arrayLayers = desc.arrayLayers;
-  imageInfo.format = convertImageFormat(desc.format);
-  imageInfo.tiling = convertImageTiling(desc.tiling);
-  imageInfo.initialLayout = convertImageLayout(desc.layout);
-  imageInfo.usage = convertImageUsageFlags(desc.usage);
+  imageInfo.format = convertTextureFormat(desc.format);
+  imageInfo.tiling = convertTextureTiling(desc.tiling);
+  imageInfo.initialLayout = convertTextureLayout(desc.layout);
+  imageInfo.usage = convertTextureUsageFlags(desc.usage);
   imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
   imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
   if (desc.cubeCompatible)
@@ -59,44 +59,47 @@ mental::core::Result mental::rhi::vk::Image::init(const ImageDesc& desc)
   return core::Result::eSuccess;
 }
 
-void mental::rhi::vk::Image::initSwapchainImage(const SwapchainImageDesc& desc)
+void mental::rhi::vk::Texture::initSwapchainTexture(const SwapchainTextureDesc& desc)
 {
   mShouldDestroyImage = false;
   mImage = desc.image;
   mDesc.extent = desc.extent;
   mDesc.format = desc.format;
-  mDesc.layout = ImageLayout::eUndefined;
+  mDesc.layout = TextureLayout::eUndefined;
   mDesc.mipLevels = 1;
-  mDesc.tiling = ImageTiling::eOptimal;
+  mDesc.tiling = TextureTiling::eOptimal;
   mDesc.usage = desc.usage;
+  mDesc.arrayLayers = 1;
+  mDesc.cubeCompatible = false;
 }
 
-mental::core::Result mental::rhi::vk::ImageView::init(const mental::rhi::ImageViewDesc& desc)
+mental::core::Result mental::rhi::vk::TextureView::init(const mental::rhi::TextureViewDesc& desc)
 {
-  MENTAL_ASSERT_DEBUG(desc.image != nullptr);
+  MENTAL_ASSERT_DEBUG(desc.texture != nullptr);
 
   VkImageViewCreateInfo imageViewInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-  imageViewInfo.image = desc.image->getNativeObject(core::resource::ObjectType::eVkImage);
-  imageViewInfo.viewType = desc.type == ImageViewType::eCubeMap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
-  imageViewInfo.format = convertImageFormat(desc.format.has_value() ? desc.format.value() : desc.image->getDesc().format);
+  imageViewInfo.image = desc.texture->getNativeObject(core::resource::ObjectType::eVkImage);
+  imageViewInfo.viewType = desc.type == TextureViewType::eCubeMap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+  imageViewInfo.format =
+      convertTextureFormat(desc.format.has_value() ? desc.format.value() : desc.texture->getDesc().format);
   imageViewInfo.subresourceRange.baseMipLevel = 0;
   imageViewInfo.subresourceRange.baseArrayLayer = 0;
-  imageViewInfo.subresourceRange.levelCount = desc.image->getDesc().mipLevels;
-  imageViewInfo.subresourceRange.layerCount = desc.image->getDesc().arrayLayers;
+  imageViewInfo.subresourceRange.levelCount = desc.texture->getDesc().mipLevels;
+  imageViewInfo.subresourceRange.layerCount = desc.texture->getDesc().arrayLayers;
   switch (desc.type)
   {
-    case ImageViewType::eTexture:
-    case ImageViewType::eCubeMap:
+    case TextureViewType::eTexture2D:
+    case TextureViewType::eCubeMap:
     {
       imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
       break;
     }
-    case ImageViewType::eDepthMap:
+    case TextureViewType::eDepthMap:
     {
       imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
       break;
     }
-    case ImageViewType::eDepthStencilMap:
+    case TextureViewType::eDepthStencilMap:
     {
       imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
       break;
@@ -116,12 +119,12 @@ mental::core::Result mental::rhi::vk::ImageView::init(const mental::rhi::ImageVi
   return core::Result::eSuccess;
 }
 
-const mental::rhi::ImageViewDesc& mental::rhi::vk::ImageView::getDesc() const
+const mental::rhi::TextureViewDesc& mental::rhi::vk::TextureView::getDesc() const
 {
   return mDesc;
 }
 
-void mental::rhi::vk::ImageView::destroy()
+void mental::rhi::vk::TextureView::destroy()
 {
   VkDevice device = vk::getDevice().getVirtualDevice();
   vkDestroyImageView(device, mImageView, nullptr);

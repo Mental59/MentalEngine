@@ -126,7 +126,7 @@ namespace mental::rhi::vk
 
     SwapchainDesc swapchainDesc{};
     swapchainDesc.enableVerticalSync = true;
-    swapchainDesc.imageCount = 2;
+    swapchainDesc.textureCount = 2;
     res = mSwapchain.init(swapchainDesc);
     if (res != core::Result::eSuccess)
     {

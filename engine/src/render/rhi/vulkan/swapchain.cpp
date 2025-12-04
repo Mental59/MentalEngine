@@ -20,13 +20,13 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
   VkSurfaceFormatKHR surfaceFormat = chooseSurfaceFormat();
   VkPresentModeKHR presentMode = choosePresentMode(desc);
   VkExtent2D extent = surfaceCapabilities.currentExtent;
-  uint32_t minImageCount = desc.imageCount;
+  uint32_t minImageCount = desc.textureCount;
   if (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount)
   {
     MENTAL_WARN(
         "Surface max image count is {}, but got {}, minImageCount is set to {}",
         surfaceCapabilities.maxImageCount,
-        desc.imageCount,
+        desc.textureCount,
         surfaceCapabilities.maxImageCount);
     minImageCount = surfaceCapabilities.maxImageCount;
   }
@@ -67,28 +67,31 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
   std::vector<VkImage> vulkanImages(swapchainImageCount);
   vkGetSwapchainImagesKHR(device, mSwapchain, &swapchainImageCount, vulkanImages.data());
 
-  mImages.resize(swapchainImageCount);
+  mTextures.resize(swapchainImageCount);
+  mTextureViews.resize(swapchainImageCount);
   for (uint32_t i = 0; i < swapchainImageCount; i++)
   {
-    SwapchainImageDesc desc{};
+    SwapchainTextureDesc desc{};
     desc.image = vulkanImages[i];
     desc.extent = { .width = extent.width, .height = extent.height, .depth = 1 };
-    desc.format = surfaceFormatToImageFormat(surfaceFormat);
-    desc.usage = rhi::ImageUsageFlagBits::eImageUsageColorAttachmentBit;
+    desc.format = surfaceFormatToTextureFormat(surfaceFormat);
+    desc.usage = rhi::TextureUsageFlagBits::eTextureUsageColorAttachmentBit;
+    mTextures[i].initSwapchainTexture(desc);
 
-    mImages[i].initSwapchainImage(desc);
+    TextureViewDesc viewDesc{};
+    viewDesc.texture = &mTextures[i];
+    viewDesc.type = TextureViewType::eTexture2D;
+    mTextureViews[i].init(viewDesc);
   }
-
-  // TODO: create image views
 
   return core::Result::eSuccess;
 }
 
-mental::core::Result mental::rhi::vk::Swapchain::acquireNextImage(
+mental::core::Result mental::rhi::vk::Swapchain::acquireNextTexture(
     uint64_t timeout,
     mental::rhi::ISemaphore* signalSemaphore,
     mental::rhi::IFence* signalFence,
-    uint32_t& imageIndex)
+    uint32_t& textureIndex)
 {
   VkDevice device = vk::getDevice().getVirtualDevice();
 
@@ -100,7 +103,7 @@ mental::core::Result mental::rhi::vk::Swapchain::acquireNextImage(
   if (signalFence)
     fence = signalFence->getNativeObject(core::resource::ObjectType::eVkFence);
 
-  VkResult res = vkAcquireNextImageKHR(device, mSwapchain, timeout, semaphore, fence, &imageIndex);
+  VkResult res = vkAcquireNextImageKHR(device, mSwapchain, timeout, semaphore, fence, &textureIndex);
   switch (res)
   {
     case VK_SUCCESS: return core::Result::eSuccess;
@@ -112,15 +115,21 @@ mental::core::Result mental::rhi::vk::Swapchain::acquireNextImage(
   }
 }
 
-uint32_t mental::rhi::vk::Swapchain::getImageCount() const
+uint32_t mental::rhi::vk::Swapchain::getTextureCount() const
 {
-  return static_cast<uint32_t>(mImages.size());
+  return static_cast<uint32_t>(mTextures.size());
 }
 
-mental::rhi::IImage* mental::rhi::vk::Swapchain::getImage(uint32_t index)
+mental::rhi::ITexture* mental::rhi::vk::Swapchain::getTexture(uint32_t index)
 {
-  MENTAL_ASSERT_DEBUG(index < mImages.size());
-  return &mImages[index];
+  MENTAL_ASSERT_DEBUG(index < mTextures.size());
+  return &mTextures[index];
+}
+
+mental::rhi::ITextureView* mental::rhi::vk::Swapchain::getTextureView(uint32_t index)
+{
+  MENTAL_ASSERT_DEBUG(index < mTextureViews.size());
+  return &mTextureViews[index];
 }
 
 mental::core::resource::Object mental::rhi::vk::Swapchain::getNativeObject(mental::core::resource::ObjectType objectType)
@@ -165,19 +174,19 @@ VkSurfaceFormatKHR mental::rhi::vk::Swapchain::chooseSurfaceFormat() const
   return availableFormats[0];
 }
 
-mental::rhi::ImageFormat mental::rhi::vk::Swapchain::surfaceFormatToImageFormat(VkSurfaceFormatKHR surfaceFormat) const
+mental::rhi::TextureFormat mental::rhi::vk::Swapchain::surfaceFormatToTextureFormat(VkSurfaceFormatKHR surfaceFormat) const
 {
   switch (surfaceFormat.format)
   {
-    case VK_FORMAT_R8G8B8A8_SRGB: return mental::rhi::ImageFormat::eRGBA32_SRGB;
-    case VK_FORMAT_B8G8R8A8_SRGB: return mental::rhi::ImageFormat::eBGRA32_SRGB;
-    case VK_FORMAT_R8G8B8A8_UNORM: return mental::rhi::ImageFormat::eRGBA32_UNORM;
-    case VK_FORMAT_B8G8R8A8_UNORM: return mental::rhi::ImageFormat::eBGRA32_UNORM;
+    case VK_FORMAT_R8G8B8A8_SRGB: return mental::rhi::TextureFormat::eRGBA32_SRGB;
+    case VK_FORMAT_B8G8R8A8_SRGB: return mental::rhi::TextureFormat::eBGRA32_SRGB;
+    case VK_FORMAT_R8G8B8A8_UNORM: return mental::rhi::TextureFormat::eRGBA32_UNORM;
+    case VK_FORMAT_B8G8R8A8_UNORM: return mental::rhi::TextureFormat::eBGRA32_UNORM;
 
     default:
     {
       MENTAL_ASSERT_MESSAGE(false, "Failed to convert surface format");
-      return mental::rhi::ImageFormat::eRGBA32_SRGB;
+      return mental::rhi::TextureFormat::eRGBA32_SRGB;
     }
   }
 }
@@ -203,4 +212,12 @@ VkPresentModeKHR mental::rhi::vk::Swapchain::choosePresentMode(const SwapchainDe
 void mental::rhi::vk::Swapchain::destroy()
 {
   vkDestroySwapchainKHR(vk::getDevice().getVirtualDevice(), mSwapchain, nullptr);
+  for (TextureView& view : mTextureViews)
+  {
+    view.destroy();
+  }
+  for (Texture& texture : mTextures)
+  {
+    texture.destroy();
+  }
 }

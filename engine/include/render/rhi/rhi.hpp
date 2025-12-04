@@ -19,8 +19,8 @@ namespace mental::rhi
   class ICommandQueue;
   class IDevice;
   class ISwapchain;
-  class IImage;
-  class IImageView;
+  class ITexture;
+  class ITextureView;
 
   enum class GraphicsApi : uint8_t
   {
@@ -125,7 +125,7 @@ namespace mental::rhi
 
   struct SwapchainDesc
   {
-    uint32_t imageCount;
+    uint32_t textureCount;
     bool enableVerticalSync;
   };
   class ISwapchain : public core::resource::IResource
@@ -133,12 +133,13 @@ namespace mental::rhi
    public:
     virtual core::Result init(const SwapchainDesc& desc) = 0;
     virtual core::Result
-    acquireNextImage(uint64_t timeout, ISemaphore* signalSemaphore, IFence* signalFence, uint32_t& imageIndex) = 0;
-    virtual uint32_t getImageCount() const = 0;
-    virtual IImage* getImage(uint32_t index) = 0;
+    acquireNextTexture(uint64_t timeout, ISemaphore* signalSemaphore, IFence* signalFence, uint32_t& textureIndex) = 0;
+    virtual uint32_t getTextureCount() const = 0;
+    virtual ITexture* getTexture(uint32_t index) = 0;
+    virtual ITextureView* getTextureView(uint32_t index) = 0;
   };
 
-  enum class ImageFormat : uint8_t
+  enum class TextureFormat : uint8_t
   {
     eRGBA32_SRGB = 0,
     eBGRA32_SRGB,
@@ -148,7 +149,7 @@ namespace mental::rhi
     eD32_SFLOAT_S8_UINT,
     eD24_UNORM_S8_UINT
   };
-  enum class ImageLayout : uint8_t
+  enum class TextureLayout : uint8_t
   {
     eUndefined = 0,
     ePresent,
@@ -158,73 +159,65 @@ namespace mental::rhi
     eTransferDst,
     eShaderReadOnly
   };
-  enum class ImageTiling : uint8_t
+  enum class TextureTiling : uint8_t
   {
     eOptimal = 0,
     eLinear
   };
-  enum ImageUsageFlagBits : uint32_t
+  enum TextureUsageFlagBits : uint32_t
   {
-    eImageUsageTransferSrcBit = 1,
-    eImageUsageTransferDstBit = 2,
-    eImageUsageSampledBit = 4,
-    eImageUsageStorageBit = 8,
-    eImageUsageColorAttachmentBit = 16,
-    eImageUsageDepthStencilAttachmentBit = 32
+    eTextureUsageTransferSrcBit = 1,
+    eTextureUsageTransferDstBit = 2,
+    eTextureUsageSampledBit = 4,
+    eTextureUsageStorageBit = 8,
+    eTextureUsageColorAttachmentBit = 16,
+    eTextureUsageDepthStencilAttachmentBit = 32
   };
-  using ImageUsageFlags = uint32_t;
+  using TextureUsageFlags = uint32_t;
 
-  struct ImageExtent
+  struct TextureExtent
   {
     uint32_t width;
     uint32_t height;
     uint32_t depth;
   };
-  struct ImageDesc
+  struct TextureDesc
   {
-    ImageFormat format;
-    ImageLayout layout;
-    ImageTiling tiling;
-    ImageUsageFlags usage;
-    ImageExtent extent;
+    TextureFormat format;
+    TextureLayout layout;
+    TextureTiling tiling;
+    TextureUsageFlags usage;
+    TextureExtent extent;
     uint32_t mipLevels;
     uint32_t arrayLayers;
     bool cubeCompatible;
   };
-  class IImage : public core::resource::IResource
+  class ITexture : public core::resource::IResource
   {
    public:
-    virtual core::Result init(const ImageDesc& desc) = 0;
-    virtual const ImageDesc& getDesc() const = 0;
+    virtual core::Result init(const TextureDesc& desc) = 0;
+    virtual const TextureDesc& getDesc() const = 0;
   };
 
-  enum class ImageViewType : uint8_t
+  enum class TextureViewType : uint8_t
   {
-    eTexture = 0,
+    eTexture2D = 0,
     eDepthMap,
     eDepthStencilMap,
     eCubeMap
   };
 
-  enum ImageViewAspectFlagBits : uint8_t
+  struct TextureViewDesc
   {
-    eImageViewColorAspectBit = 1,
-    eImageViewDepthAspectBit = 2,
-    eImageViewStencilAspectBit = 4
+    ITexture* texture;
+    std::optional<TextureFormat> format;
+    TextureViewType type;
   };
-  using ImageViewAspectFlags = uint8_t;
-
-  struct ImageViewDesc
-  {
-    IImage* image;
-    std::optional<ImageFormat> format;
-    ImageViewType type;
-  };
-  class IImageView : public core::resource::IResource
+  class ITextureView : public core::resource::IResource
   {
    public:
-    virtual core::Result init(const ImageViewDesc& desc) = 0;
-    virtual const ImageViewDesc& getDesc() const = 0;
+    virtual core::Result init(const TextureViewDesc& desc) = 0;
+    virtual const TextureViewDesc& getDesc() const = 0;
   };
 
   class IDevice : public core::resource::IResource

@@ -5,8 +5,8 @@
 namespace mental::rhi::vk
 {
   const char* vkResultToString(VkResult result);
-  VkFormat convertImageFormat(ImageFormat format);
-  VkImageLayout convertImageLayout(ImageLayout layout);
-  VkImageTiling convertImageTiling(ImageTiling tiling);
-  VkImageUsageFlags convertImageUsageFlags(ImageUsageFlags usage);
+  VkFormat convertTextureFormat(TextureFormat format);
+  VkImageLayout convertTextureLayout(TextureLayout layout);
+  VkImageTiling convertTextureTiling(TextureTiling tiling);
+  VkImageUsageFlags convertTextureUsageFlags(TextureUsageFlags usage);
 }  // namespace mental::rhi::vk
