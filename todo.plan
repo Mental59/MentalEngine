@@ -1,4 +1,3 @@
-- Implement Image, ImageView class
 - Implement Framebuffer class
 - Implement Graphics Pipeline with dynamic rendering
 - Implement Descriptors (descriptor pool, set, set layout)

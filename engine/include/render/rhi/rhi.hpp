@@ -94,6 +94,12 @@ namespace mental::rhi
   {
     bool isOneTimeSubmit;
   };
+  struct TextureOffset3D
+  {
+    int32_t x;
+    int32_t y;
+    int32_t z;
+  };
   class ICommandList : public core::resource::IResource
   {
    public:
@@ -102,6 +108,12 @@ namespace mental::rhi
     virtual core::Result end() = 0;
     virtual core::Result
     copyBuffer(IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size) = 0;
+    virtual core::Result copyBufferToImage(
+        IBuffer* buffer,
+        size_t bufferOffset,
+        ITexture* texture,
+        uint32_t mipLevel,
+        const TextureOffset3D& textureOffset) = 0;
   };
 
   constexpr uint32_t kMaxSubmitCmdListCount = 8;
@@ -199,7 +211,7 @@ namespace mental::rhi
     virtual const TextureDesc& getDesc() const = 0;
   };
 
-  enum class TextureViewType : uint8_t
+  enum class TextureType : uint8_t
   {
     eTexture2D = 0,
     eDepthMap,
@@ -211,7 +223,7 @@ namespace mental::rhi
   {
     ITexture* texture;
     std::optional<TextureFormat> format;
-    TextureViewType type;
+    TextureType type;
   };
   class ITextureView : public core::resource::IResource
   {

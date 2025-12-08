@@ -79,32 +79,14 @@ mental::core::Result mental::rhi::vk::TextureView::init(const mental::rhi::Textu
 
   VkImageViewCreateInfo imageViewInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
   imageViewInfo.image = desc.texture->getNativeObject(core::resource::ObjectType::eVkImage);
-  imageViewInfo.viewType = desc.type == TextureViewType::eCubeMap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
+  imageViewInfo.viewType = desc.type == TextureType::eCubeMap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
   imageViewInfo.format =
       convertTextureFormat(desc.format.has_value() ? desc.format.value() : desc.texture->getDesc().format);
   imageViewInfo.subresourceRange.baseMipLevel = 0;
   imageViewInfo.subresourceRange.baseArrayLayer = 0;
   imageViewInfo.subresourceRange.levelCount = desc.texture->getDesc().mipLevels;
   imageViewInfo.subresourceRange.layerCount = desc.texture->getDesc().arrayLayers;
-  switch (desc.type)
-  {
-    case TextureViewType::eTexture2D:
-    case TextureViewType::eCubeMap:
-    {
-      imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-      break;
-    }
-    case TextureViewType::eDepthMap:
-    {
-      imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-      break;
-    }
-    case TextureViewType::eDepthStencilMap:
-    {
-      imageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
-      break;
-    }
-  }
+  imageViewInfo.subresourceRange.aspectMask = getTextureAspectFlags(desc.type);
   MENTAL_ASSERT_DEBUG(imageViewInfo.image != VK_NULL_HANDLE);
 
   VkDevice device = vk::getDevice().getVirtualDevice();

@@ -127,3 +127,14 @@ VkImageUsageFlags mental::rhi::vk::convertTextureUsageFlags(mental::rhi::Texture
 
   return flags;
 }
+
+VkImageAspectFlags mental::rhi::vk::getTextureAspectFlags(TextureType type)
+{
+  switch (type)
+  {
+    case TextureType::eTexture2D:
+    case TextureType::eCubeMap: return VK_IMAGE_ASPECT_COLOR_BIT;
+    case TextureType::eDepthMap: return VK_IMAGE_ASPECT_DEPTH_BIT;
+    case TextureType::eDepthStencilMap: return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+  }
+}

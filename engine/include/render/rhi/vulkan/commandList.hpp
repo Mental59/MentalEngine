@@ -15,6 +15,12 @@ namespace mental::rhi::vk
     virtual core::Result end() override;
     virtual core::Result copyBuffer(IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size)
         override;
+    virtual core::Result copyBufferToImage(
+        IBuffer* buffer,
+        size_t bufferOffset,
+        ITexture* texture,
+        uint32_t mipLevel,
+        const TextureOffset3D& textureOffset) override;
 
    private:
     VkCommandBuffer mCmdBuffer;

@@ -83,3 +83,40 @@ mental::core::Result mental::rhi::vk::CommandList::copyBuffer(
 
   return core::Result::eSuccess;
 }
+
+mental::core::Result mental::rhi::vk::CommandList::copyBufferToImage(
+    IBuffer* buffer,
+    size_t bufferOffset,
+    ITexture* texture,
+    uint32_t mipLevel,
+    const TextureOffset3D& textureOffset)
+{
+  MENTAL_ASSERT_DEBUG(buffer != nullptr);
+  MENTAL_ASSERT_DEBUG(texture != nullptr);
+
+  VkBuffer vkBuffer = buffer->getNativeObject(core::resource::ObjectType::eVkBuffer);
+  MENTAL_ASSERT_DEBUG(vkBuffer != VK_NULL_HANDLE);
+
+  VkImage vkImage = texture->getNativeObject(core::resource::ObjectType::eVkImage);
+  MENTAL_ASSERT_DEBUG(vkImage != VK_NULL_HANDLE);
+  MENTAL_ASSERT_DEBUG(texture->getDesc().layout == rhi::TextureLayout::eTransferDst);
+
+  VkBufferImageCopy region{};
+  region.bufferOffset = bufferOffset;
+  region.bufferRowLength = 0;
+  region.bufferImageHeight = 0;
+
+  region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  region.imageSubresource.mipLevel = mipLevel;
+  region.imageSubresource.baseArrayLayer = 0;
+  region.imageSubresource.layerCount = texture->getDesc().arrayLayers;
+
+  region.imageOffset = { textureOffset.x, textureOffset.y, textureOffset.z };
+  region.imageExtent = { texture->getDesc().extent.width,
+                         texture->getDesc().extent.height,
+                         texture->getDesc().extent.depth };
+
+  vkCmdCopyBufferToImage(mCmdBuffer, vkBuffer, vkImage, convertTextureLayout(texture->getDesc().layout), 1, &region);
+
+  return core::Result::eSuccess;
+}

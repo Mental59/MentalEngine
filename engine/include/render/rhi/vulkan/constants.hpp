@@ -9,4 +9,5 @@ namespace mental::rhi::vk
   VkImageLayout convertTextureLayout(TextureLayout layout);
   VkImageTiling convertTextureTiling(TextureTiling tiling);
   VkImageUsageFlags convertTextureUsageFlags(TextureUsageFlags usage);
+  VkImageAspectFlags getTextureAspectFlags(TextureType type);
 }  // namespace mental::rhi::vk
