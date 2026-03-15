@@ -12,8 +12,9 @@ int main()
   window.init({ .title = "Editor", .width = 1280, .height = 720 });
   mental::core::resource::ResourceGuard<mental::platform::PCWindow> windowGuard(&window);
 
-  mental::render::getRenderSystem().init({ mental::rhi::GraphicsApi::Vulkan, &window });
-  mental::core::resource::ResourceGuard<mental::render::RenderSystem> renderSystemGuard(&mental::render::getRenderSystem());
+  mental::render::RenderSystem* renderSystem = &mental::render::getRenderSystem();
+  renderSystem->init({ mental::rhi::GraphicsApi::Vulkan, &window });
+  mental::core::resource::ResourceGuard<mental::render::RenderSystem> renderSystemGuard(renderSystem);
 
   while (!window.shouldClose())
   {

@@ -280,6 +280,11 @@ namespace mental::rhi::vk
     graphicsQueueCreateInfo.queueCount = 1;
     graphicsQueueCreateInfo.pQueuePriorities = &graphicsQueuePriority;
 
+    VkPhysicalDeviceDynamicRenderingFeaturesKHR dynamicRenderingFeature{
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
+    };
+    dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+
     std::vector<const char*> physicalDeviceExtensions = physicalDeviceInfo.getRequiredExtensions();
     VkDeviceCreateInfo createInfo{ VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
     createInfo.queueCreateInfoCount = 1;
@@ -287,6 +292,7 @@ namespace mental::rhi::vk
     createInfo.ppEnabledExtensionNames = physicalDeviceExtensions.data();
     createInfo.enabledExtensionCount = static_cast<uint32_t>(physicalDeviceExtensions.size());
     createInfo.pEnabledFeatures = &physicalDeviceInfo.getRequiredFeatures();
+    createInfo.pNext = &dynamicRenderingFeature;
 
     VkResult res = vkCreateDevice(physicalDeviceInfo.getPhysicalDevice(), &createInfo, VK_NULL_HANDLE, &device);
     if (res != VK_SUCCESS)

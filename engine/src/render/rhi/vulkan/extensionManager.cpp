@@ -14,13 +14,13 @@ std::vector<const char*> mental::rhi::vk::ExtensionManager::getRequiredInstanceE
   MENTAL_ASSERT_MESSAGE(false, "Unsupported platform");
 #endif
 
-  extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-  extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-
 #if defined(_DEBUG)
   extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
   extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif
+
+  extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+  extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
   return extensions;
 }
@@ -38,5 +38,5 @@ std::vector<const char*> mental::rhi::vk::ExtensionManager::getValidationLayers(
 
 std::vector<const char*> mental::rhi::vk::ExtensionManager::getRequiredDeviceExtensions()
 {
-  return { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+  return { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
 }
