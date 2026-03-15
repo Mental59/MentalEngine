@@ -49,12 +49,8 @@ namespace mental::resource
         resizeBuffersArray();
       }
 
-      size_t freeIndex = mFreeBuffersIndices.front();
-
-      BufferHandle handle{ freeIndex + 1 };
-      rhi::vk::Buffer* buf = getBufferByHandle(handle);
-
-      core::Result res = buf->init(desc);
+      size_t bufferIndex = mFreeBuffersIndices.front();
+      core::Result res = mBuffers[bufferIndex].init(desc);
       if (res != core::Result::eSuccess)
       {
         MENTAL_ERROR("Failed to create buffer, error: {}", core::resultToString(res));
@@ -63,30 +59,29 @@ namespace mental::resource
 
       mFreeBuffersIndices.pop();
 
+      BufferHandle handle{ bufferIndex + 1 };
       return handle;
     }
 
     virtual rhi::IBuffer* getBuffer(BufferHandle handle) override
     {
-      rhi::vk::Buffer* buf = getBufferByHandle(handle);
-      return buf->isValid() ? buf : nullptr;
+      size_t index = handle.id - 1;
+      return mBuffers[index].isValid() ? &mBuffers[index] : nullptr;
     }
 
     virtual void destroyBuffer(BufferHandle handle) override
     {
-      rhi::vk::Buffer* buf = getBufferByHandle(handle);
-      if (buf->isValid())
+      size_t index = handle.id - 1;
+      if (mBuffers[index].isValid())
       {
-        buf->destroy();
-        mFreeBuffersIndices.push(handle.id - 1);
+        mBuffers[index].destroy();
+        mFreeBuffersIndices.push(index);
       }
     }
 
     virtual CommandListHandle createCommandList(const rhi::CommandListDesc& desc) override
     {
       size_t cmdListIndex = mFreeCmdListsIndices.front();
-
-      CommandListHandle handle{ cmdListIndex + 1 };
       core::Result res = mCmdLists[cmdListIndex].init(desc);
       if (res != core::Result::eSuccess)
       {
@@ -96,6 +91,7 @@ namespace mental::resource
 
       mFreeCmdListsIndices.pop();
 
+      CommandListHandle handle{ cmdListIndex + 1 };
       return handle;
     };
 
@@ -116,13 +112,6 @@ namespace mental::resource
     };
 
    private:
-    rhi::vk::Buffer* getBufferByHandle(BufferHandle handle)
-    {
-      size_t index = handle.id - 1;
-      rhi::vk::Buffer* buf = &mBuffers[index];
-      return buf;
-    }
-
     void resizeBuffersArray()
     {
       size_t curSize = mBuffers.size();
