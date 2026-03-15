@@ -100,20 +100,44 @@ namespace mental::rhi
     int32_t y;
     int32_t z;
   };
+  struct ClearBufferValue
+  {
+    float color[4];
+    float depth;
+    uint32_t stencil;
+  };
+  struct RenderArea
+  {
+    uint32_t width;
+    uint32_t height;
+  };
+  struct CommandListBeginRenderingInfo
+  {
+    ITextureView* swapchainImageView;
+    ClearBufferValue clearValue;
+    RenderArea renderArea;
+  };
+
   class ICommandList : public core::resource::IResource
   {
    public:
     virtual core::Result init(const CommandListDesc& desc) = 0;
+
     virtual core::Result begin(const CommandListBegindDesc& desc) = 0;
     virtual core::Result end() = 0;
+
     virtual core::Result
     copyBuffer(IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size) = 0;
+
     virtual core::Result copyBufferToImage(
         IBuffer* buffer,
         size_t bufferOffset,
         ITexture* texture,
         uint32_t mipLevel,
         const TextureOffset3D& textureOffset) = 0;
+
+    virtual core::Result beginRendering(CommandListBeginRenderingInfo& info) = 0;
+    virtual core::Result endRendering() = 0;
   };
 
   constexpr uint32_t kMaxSubmitCmdListCount = 8;

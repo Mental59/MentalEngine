@@ -1,7 +1,7 @@
 #pragma once
 
 #include <render/rhi/rhi.hpp>
-#include "core/resource.hpp"
+#include <resource/resourceManager.hpp>
 
 namespace mental::platform
 {
@@ -10,8 +10,6 @@ namespace mental::platform
 
 namespace mental::render
 {
-  class BufferHandle;
-
   struct RenderSystemConfig
   {
     rhi::GraphicsApi graphicsApi;
@@ -35,8 +33,12 @@ namespace mental::render
     core::Result init(const RenderSystemConfig& conf);
     virtual void destroy() override;
 
+    core::Result render();
+
    private:
     RenderSystem() = default;
+
+    resource::CommandListHandle mCmdListHandle;
     bool mIsInitialized = false;
   };
 
@@ -44,41 +46,4 @@ namespace mental::render
   {
     return RenderSystem::instance();
   }
-
-  class IResourceManager
-  {
-   public:
-    IResourceManager() = default;
-    IResourceManager(const IResourceManager& other) = delete;
-    IResourceManager& operator=(const IResourceManager& other) = delete;
-    IResourceManager(IResourceManager&& other) = delete;
-    IResourceManager& operator=(IResourceManager&& other) = delete;
-
-    virtual BufferHandle createBuffer(const rhi::BufferDesc& desc) = 0;
-    virtual rhi::IBuffer* getBuffer(BufferHandle handle) = 0;
-    virtual void destroyBuffer(BufferHandle handle) = 0;
-  };
-
-  void initResourceManager();
-  void destroyResourceManager();
-  IResourceManager& getResourceManager();
-
-  class BufferHandle : public core::resource::ResourceHandle
-  {
-   public:
-    static BufferHandle invalid()
-    {
-      return { 0 };
-    }
-
-    inline void destroy() const
-    {
-      getResourceManager().destroyBuffer(*this);
-    }
-
-    inline rhi::IBuffer* get() const
-    {
-      return getResourceManager().getBuffer(*this);
-    }
-  };
 }  // namespace mental::render

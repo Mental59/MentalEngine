@@ -18,6 +18,7 @@ int main()
 
   while (!window.shouldClose())
   {
+    renderSystem->render();
     window.pollEvents();
   }
 

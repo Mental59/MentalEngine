@@ -39,6 +39,7 @@ namespace mental::core::resource
     eVkSurfaceKHR,
     eVkSwapchainKHR,
     eVkImage,
+    eVkImageView,
     eGLFWwindow
   };
 

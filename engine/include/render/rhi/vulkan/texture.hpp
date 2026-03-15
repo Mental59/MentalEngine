@@ -36,6 +36,7 @@ namespace mental::rhi::vk
   class TextureView : public ITextureView
   {
    public:
+    virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
     virtual core::Result init(const TextureViewDesc& desc) override;
     virtual const TextureViewDesc& getDesc() const override;
     virtual void destroy() override;

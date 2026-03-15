@@ -73,6 +73,15 @@ void mental::rhi::vk::Texture::initSwapchainTexture(const SwapchainTextureDesc& 
   mDesc.cubeCompatible = false;
 }
 
+mental::core::resource::Object mental::rhi::vk::TextureView::getNativeObject(mental::core::resource::ObjectType objectType)
+{
+  if (objectType == core::resource::ObjectType::eVkImageView)
+  {
+    return mImageView;
+  }
+  return nullptr;
+}
+
 mental::core::Result mental::rhi::vk::TextureView::init(const mental::rhi::TextureViewDesc& desc)
 {
   MENTAL_ASSERT_DEBUG(desc.texture != nullptr);

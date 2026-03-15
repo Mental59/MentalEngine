@@ -1,16 +1,19 @@
 #include <queue>
 #include <vector>
-#include <render/render.hpp>
+#include <array>
 #include <render/rhi/rhi.hpp>
+#include <resource/resourceManager.hpp>
 #include "core/log.hpp"
 #include "core/types.hpp"
 
 #ifdef MENTAL_WITH_VULKAN
 #include <render/rhi/vulkan/buffer.hpp>
+#include <render/rhi/vulkan/commandList.hpp>
 
-namespace mental::render
+namespace mental::resource
 {
   constexpr size_t kInitialBuffersVectorSize = 16384;
+  constexpr size_t kMaxCommandLists = 16;
 
   class ResourceManagerImpl : public IResourceManager
   {
@@ -22,6 +25,12 @@ namespace mental::render
       {
         mFreeBuffersIndices.push(i);
       }
+
+      for (size_t i = 0; i < kMaxCommandLists; i++)
+      {
+        mFreeCmdListsIndices.push(i);
+      }
+
       mIsInit = true;
     }
 
@@ -37,7 +46,7 @@ namespace mental::render
     {
       if (mFreeBuffersIndices.empty())
       {
-        resize();
+        resizeBuffersArray();
       }
 
       size_t freeIndex = mFreeBuffersIndices.front();
@@ -69,18 +78,52 @@ namespace mental::render
       if (buf->isValid())
       {
         buf->destroy();
+        mFreeBuffersIndices.push(handle.id - 1);
       }
     }
+
+    virtual CommandListHandle createCommandList(const rhi::CommandListDesc& desc) override
+    {
+      size_t cmdListIndex = mFreeCmdListsIndices.front();
+
+      CommandListHandle handle{ cmdListIndex + 1 };
+      core::Result res = mCmdLists[cmdListIndex].init(desc);
+      if (res != core::Result::eSuccess)
+      {
+        MENTAL_ERROR("Failed to create command list, error: {}", core::resultToString(res));
+        return CommandListHandle::invalid();
+      }
+
+      mFreeCmdListsIndices.pop();
+
+      return handle;
+    };
+
+    virtual rhi::ICommandList* getCommandList(CommandListHandle handle) override
+    {
+      size_t index = handle.id - 1;
+      return mCmdLists[index].isValid() ? &mCmdLists[index] : nullptr;
+    };
+
+    virtual void destroyCommandList(CommandListHandle handle) override
+    {
+      size_t index = handle.id - 1;
+      if (mCmdLists[index].isValid())
+      {
+        mCmdLists[index].destroy();
+        mFreeCmdListsIndices.push(index);
+      }
+    };
 
    private:
     rhi::vk::Buffer* getBufferByHandle(BufferHandle handle)
     {
       size_t index = handle.id - 1;
-      rhi::vk::Buffer* buf = &mBuffers[handle.id - 1];
+      rhi::vk::Buffer* buf = &mBuffers[index];
       return buf;
     }
 
-    void resize()
+    void resizeBuffersArray()
     {
       size_t curSize = mBuffers.size();
       mBuffers.resize(curSize * 2);
@@ -92,6 +135,10 @@ namespace mental::render
 
     std::vector<rhi::vk::Buffer> mBuffers;
     std::queue<size_t> mFreeBuffersIndices;
+
+    std::array<rhi::vk::CommandList, kMaxCommandLists> mCmdLists;
+    std::queue<size_t> mFreeCmdListsIndices;
+
     bool mIsInit = false;
   };
 
@@ -118,6 +165,6 @@ namespace mental::render
 
     gResourceManager.destroy();
   }
-}  // namespace mental::render
+}  // namespace mental::resource
 
 #endif
