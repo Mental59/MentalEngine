@@ -124,10 +124,9 @@ namespace mental::rhi::vk
       return core::Result::eInitializationFailed;
     }
 
-    // TODO: pass params for swapchain, do not use hard coded constants
     SwapchainDesc swapchainDesc{};
-    swapchainDesc.enableVerticalSync = true;
-    swapchainDesc.textureCount = 2;
+    swapchainDesc.enableVerticalSync = desc.enableTripleBuffering;
+    swapchainDesc.textureCount = desc.enableTripleBuffering ? 3 : 2;
     res = mSwapchain.init(swapchainDesc);
     if (res != core::Result::eSuccess)
     {

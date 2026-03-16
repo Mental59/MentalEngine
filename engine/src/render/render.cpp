@@ -26,6 +26,10 @@ mental::core::Result mental::render::RenderSystem::init(const mental::render::Re
     return core::Result::eInitializationFailed;
   }
 
+  uint32_t swapchainTextureCount = rhi::getDevice().getSwapchain()->getTextureCount();
+  mMaxFramesInFlight = swapchainTextureCount;
+  MENTAL_INFO("swapchainTextureCount={}, maxFramesInFlight={}", swapchainTextureCount, mMaxFramesInFlight);
+
   mIsInitialized = true;
   MENTAL_INFO("Render system initialized");
 
@@ -46,6 +50,30 @@ void mental::render::RenderSystem::destroy()
 
 mental::core::Result mental::render::RenderSystem::render()
 {
-  // TODO: clear screen color
+  rhi::ICommandList* cmdList = mCmdListHandle.get();
+  if (!cmdList || !cmdList->isValid())
+  {
+    return core::Result::eOperationFailed;
+  }
+
+  core::Result res = cmdList->begin({ .isOneTimeSubmit = false });
+  if (res != core::Result::eSuccess)
+  {
+    MENTAL_ERROR("Failed to begin command list");
+    return core::Result::eOperationFailed;
+  }
+
+  rhi::CommandListBeginRenderingInfo renderingInfo{};  // TODO: fill rendering info
+  cmdList->beginRendering(renderingInfo);
+
+  cmdList->endRendering();
+
+  res = cmdList->end();
+  if (res != core::Result::eSuccess)
+  {
+    MENTAL_ERROR("Failed to end command list");
+    return core::Result::eOperationFailed;
+  }
+
   return core::Result::eSuccess;
 }

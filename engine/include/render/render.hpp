@@ -39,6 +39,10 @@ namespace mental::render
     RenderSystem() = default;
 
     resource::CommandListHandle mCmdListHandle;
+
+    uint32_t mCurrentFrame = 0;
+    uint32_t mMaxFramesInFlight = 0;
+
     bool mIsInitialized = false;
   };
 

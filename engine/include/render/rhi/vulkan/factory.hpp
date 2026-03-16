@@ -113,7 +113,14 @@ namespace mental::rhi::vk
   class DeviceFactory
   {
    public:
-    core::Result initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const;
+    struct SwapchainSettings
+    {
+      bool enableVerticalSync;
+      bool enableTripleBuffering;
+    };
+
+    core::Result initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface, SwapchainSettings swapchainSettings)
+        const;
     core::Result createInstance(InstanceInfo& info) const;
 
    private:

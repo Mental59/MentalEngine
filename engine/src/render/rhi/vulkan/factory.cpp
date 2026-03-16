@@ -76,7 +76,10 @@ namespace mental::rhi::vk
   }
 #endif
 
-  core::Result DeviceFactory::initDevice(const InstanceInfo& instanceInfo, VkSurfaceKHR surface) const
+  core::Result DeviceFactory::initDevice(
+      const InstanceInfo& instanceInfo,
+      VkSurfaceKHR surface,
+      SwapchainSettings swapchainSettings) const
   {
     core::Result res;
 
@@ -98,18 +101,22 @@ namespace mental::rhi::vk
     VkQueue graphicsQueue;
     vkGetDeviceQueue(vkDevice, physicalDeviceInfo.getGraphicsQueueFamily(), 0, &graphicsQueue);
 
-    DeviceDesc desc{ .instance = instanceInfo.getInstance(),
-                     .surface = surface,
-                     .physicalDevice = physicalDeviceInfo.getPhysicalDevice(),
-                     .device = vkDevice,
-                     .formats = physicalDeviceInfo.getSwapchainSupportDetails().formats,
-                     .presentModes = physicalDeviceInfo.getSwapchainSupportDetails().presentModes,
-                     .graphicsQueue = graphicsQueue,
-                     .graphicsQueueIndex = physicalDeviceInfo.getGraphicsQueueFamily(),
-                     .debugUtilsMessenger = debugMessenger.utilsMessenger,
-                     .debugReportCallback = debugMessenger.reportCallback,
-                     .instanceExtensions = instanceInfo.getExtensions(),
-                     .deviceExtensions = physicalDeviceInfo.getRequiredExtensions() };
+    DeviceDesc desc{
+      .instance = instanceInfo.getInstance(),
+      .surface = surface,
+      .physicalDevice = physicalDeviceInfo.getPhysicalDevice(),
+      .device = vkDevice,
+      .enableVerticalSync = swapchainSettings.enableVerticalSync,
+      .enableTripleBuffering = swapchainSettings.enableTripleBuffering,
+      .formats = physicalDeviceInfo.getSwapchainSupportDetails().formats,
+      .presentModes = physicalDeviceInfo.getSwapchainSupportDetails().presentModes,
+      .graphicsQueue = graphicsQueue,
+      .graphicsQueueIndex = physicalDeviceInfo.getGraphicsQueueFamily(),
+      .debugUtilsMessenger = debugMessenger.utilsMessenger,
+      .debugReportCallback = debugMessenger.reportCallback,
+      .instanceExtensions = instanceInfo.getExtensions(),
+      .deviceExtensions = physicalDeviceInfo.getRequiredExtensions(),
+    };
 
     return getDevice().init(desc);
   }

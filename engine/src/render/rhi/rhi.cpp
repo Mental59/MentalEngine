@@ -50,7 +50,11 @@ namespace mental::rhi
             res == core::Result::eSuccess,
             std::format("Failed to create vulkan surface. Error: {}", core::resultToString(res)));
 
-        res = factory.initDevice(instanceInfo, surface);
+        rhi::vk::DeviceFactory::SwapchainSettings swapchainSettings{};
+        swapchainSettings.enableTripleBuffering = false;
+        swapchainSettings.enableVerticalSync = true;
+
+        res = factory.initDevice(instanceInfo, surface, swapchainSettings);
         MENTAL_ASSERT_MESSAGE(
             res == core::Result::eSuccess,
             std::format("Failed to create vulkan device. Error: {}", core::resultToString(res)));

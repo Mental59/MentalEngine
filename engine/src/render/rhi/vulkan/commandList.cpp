@@ -131,7 +131,7 @@ mental::core::Result mental::rhi::vk::CommandList::copyBufferToImage(
   return core::Result::eSuccess;
 }
 
-mental::core::Result mental::rhi::vk::CommandList::beginRendering(CommandListBeginRenderingInfo& info)
+void mental::rhi::vk::CommandList::beginRendering(CommandListBeginRenderingInfo& info)
 {
   MENTAL_ASSERT_DEBUG(info.swapchainImageView != nullptr);
 
@@ -165,12 +165,9 @@ mental::core::Result mental::rhi::vk::CommandList::beginRendering(CommandListBeg
   renderInfo.pColorAttachments = &colorAttachmentInfo;
 
   vkCmdBeginRenderingKHR(mCmdBuffer, &renderInfo);
-
-  return core::Result::eSuccess;
 }
 
-mental::core::Result mental::rhi::vk::CommandList::endRendering()
+void mental::rhi::vk::CommandList::endRendering()
 {
   vkCmdEndRenderingKHR(mCmdBuffer);
-  return core::Result::eSuccess;
 }

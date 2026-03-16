@@ -136,8 +136,8 @@ namespace mental::rhi
         uint32_t mipLevel,
         const TextureOffset3D& textureOffset) = 0;
 
-    virtual core::Result beginRendering(CommandListBeginRenderingInfo& info) = 0;
-    virtual core::Result endRendering() = 0;
+    virtual void beginRendering(CommandListBeginRenderingInfo& info) = 0;
+    virtual void endRendering() = 0;
   };
 
   constexpr uint32_t kMaxSubmitCmdListCount = 8;

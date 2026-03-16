@@ -18,6 +18,8 @@ namespace mental::rhi::vk
     VkPhysicalDevice physicalDevice;
     VkDevice device;
     uint32_t apiVersion;
+    bool enableVerticalSync;
+    bool enableTripleBuffering;
 
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;

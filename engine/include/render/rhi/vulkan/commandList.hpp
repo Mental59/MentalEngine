@@ -24,8 +24,8 @@ namespace mental::rhi::vk
         uint32_t mipLevel,
         const TextureOffset3D& textureOffset) override;
 
-    virtual core::Result beginRendering(CommandListBeginRenderingInfo& info) override;
-    virtual core::Result endRendering() override;
+    virtual void beginRendering(CommandListBeginRenderingInfo& info) override;
+    virtual void endRendering() override;
 
    private:
     VkCommandBuffer mCmdBuffer;

@@ -5,6 +5,8 @@ namespace mental::resource
   class BufferHandle;
   class CommandListHandle;
 
+  // TODO: add frame data struct
+
   class IResourceManager
   {
    public:
