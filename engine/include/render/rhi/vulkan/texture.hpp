@@ -17,9 +17,12 @@ namespace mental::rhi::vk
   {
    public:
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
-    virtual void destroy() override;
 
     virtual core::Result init(const TextureDesc& desc) override;
+    virtual void destroy() override;
+
+    virtual bool isValid() const override;
+
     inline virtual const TextureDesc& getDesc() const override
     {
       return mDesc;
@@ -27,6 +30,7 @@ namespace mental::rhi::vk
     void initSwapchainTexture(const SwapchainTextureDesc& desc);
 
    private:
+    bool mIsInit = false;
     bool mShouldDestroyImage;
     VkImage mImage;
     VmaAllocation mAllocation;
@@ -38,10 +42,14 @@ namespace mental::rhi::vk
    public:
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
     virtual core::Result init(const TextureViewDesc& desc) override;
-    virtual const TextureViewDesc& getDesc() const override;
     virtual void destroy() override;
 
+    virtual bool isValid() const override;
+
+    virtual const TextureViewDesc& getDesc() const override;
+
    private:
+    bool mIsInit = false;
     TextureViewDesc mDesc;
     VkImageView mImageView;
   };

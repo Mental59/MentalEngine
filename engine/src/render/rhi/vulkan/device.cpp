@@ -84,6 +84,12 @@ namespace mental::rhi::vk
 
   core::Result Device::init(const DeviceDesc& desc)
   {
+    if (mIsInit)
+    {
+      MENTAL_INFO("Trying to initialize an already initialized vk::Device");
+      return core::Result::eInitializationFailed;
+    }
+
     core::Result res = mContext.init(
         desc.instance,
         desc.surface,
@@ -135,16 +141,31 @@ namespace mental::rhi::vk
     }
 
     MENTAL_INFO("Vulkan device initialized");
+
+    mIsInit = true;
     return core::Result::eSuccess;
   }
 
   void Device::destroy()
   {
+    if (!mIsInit)
+    {
+      MENTAL_INFO("Trying to destroy uninitialized vk::Device");
+      return;
+    }
+
     destroyAllocator();
     mSwapchain.destroy();
     mGraphicsQueue.destroy();
     mContext.destroy();
+    mIsInit = false;
+
     MENTAL_INFO("Vulkan device destroyed");
+  }
+
+  bool Device::isValid() const
+  {
+    return mIsInit;
   }
 
   core::resource::Object Device::getNativeObject(core::resource::ObjectType objectType)

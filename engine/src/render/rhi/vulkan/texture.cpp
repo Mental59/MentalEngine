@@ -13,18 +13,14 @@ mental::core::resource::Object mental::rhi::vk::Texture::getNativeObject(core::r
   }
 }
 
-void mental::rhi::vk::Texture::destroy()
-{
-  VkDevice device = vk::getDevice().getVirtualDevice();
-
-  if (mShouldDestroyImage)
-  {
-    vmaDestroyImage(vk::getAllocator(), mImage, mAllocation);
-  }
-}
-
 mental::core::Result mental::rhi::vk::Texture::init(const TextureDesc& desc)
 {
+  if (mIsInit)
+  {
+    MENTAL_INFO("Trying to initialize an already initialized vk::Texture");
+    return core::Result::eInitializationFailed;
+  }
+
   MENTAL_ASSERT_DEBUG(desc.extent.width > 0 && desc.extent.height > 0 && desc.extent.depth > 0);
 
   VkImageCreateInfo imageInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
@@ -55,12 +51,46 @@ mental::core::Result mental::rhi::vk::Texture::init(const TextureDesc& desc)
 
   mDesc = desc;
   mShouldDestroyImage = true;
+  mIsInit = true;
 
   return core::Result::eSuccess;
 }
 
+void mental::rhi::vk::Texture::destroy()
+{
+  if (!mIsInit)
+  {
+    MENTAL_INFO("Trying to destroy unitialized vk::Texture");
+    return;
+  }
+
+  VkDevice device = vk::getDevice().getVirtualDevice();
+
+  if (mShouldDestroyImage)
+  {
+    vmaDestroyImage(vk::getAllocator(), mImage, mAllocation);
+  }
+
+  mShouldDestroyImage = false;
+  mImage = VK_NULL_HANDLE;
+  mAllocation = VK_NULL_HANDLE;
+  mDesc = {};
+  mIsInit = false;
+}
+
+bool mental::rhi::vk::Texture::isValid() const
+{
+  return mIsInit;
+}
+
 void mental::rhi::vk::Texture::initSwapchainTexture(const SwapchainTextureDesc& desc)
 {
+  if (mIsInit)
+  {
+    MENTAL_INFO("Trying to initialize an already initialized vk::Texture for swapchain");
+    return;
+  }
+
   mShouldDestroyImage = false;
   mImage = desc.image;
   mDesc.extent = desc.extent;
@@ -71,6 +101,7 @@ void mental::rhi::vk::Texture::initSwapchainTexture(const SwapchainTextureDesc& 
   mDesc.usage = desc.usage;
   mDesc.arrayLayers = 1;
   mDesc.cubeCompatible = false;
+  mIsInit = true;
 }
 
 mental::core::resource::Object mental::rhi::vk::TextureView::getNativeObject(mental::core::resource::ObjectType objectType)
@@ -84,6 +115,12 @@ mental::core::resource::Object mental::rhi::vk::TextureView::getNativeObject(men
 
 mental::core::Result mental::rhi::vk::TextureView::init(const mental::rhi::TextureViewDesc& desc)
 {
+  if (mIsInit)
+  {
+    MENTAL_INFO("Trying to initialize an already initialized vk::TextureView");
+    return core::Result::eInitializationFailed;
+  }
+
   MENTAL_ASSERT_DEBUG(desc.texture != nullptr);
 
   VkImageViewCreateInfo imageViewInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
@@ -107,7 +144,25 @@ mental::core::Result mental::rhi::vk::TextureView::init(const mental::rhi::Textu
   }
 
   mDesc = desc;
+  mIsInit = true;
+
   return core::Result::eSuccess;
+}
+
+void mental::rhi::vk::TextureView::destroy()
+{
+  if (!mIsInit)
+  {
+    MENTAL_INFO("Trying to destroy uninitialized vk::TextureView");
+    return;
+  }
+
+  VkDevice device = vk::getDevice().getVirtualDevice();
+  vkDestroyImageView(device, mImageView, nullptr);
+
+  mImageView = VK_NULL_HANDLE;
+  mDesc = {};
+  mIsInit = false;
 }
 
 const mental::rhi::TextureViewDesc& mental::rhi::vk::TextureView::getDesc() const
@@ -115,8 +170,7 @@ const mental::rhi::TextureViewDesc& mental::rhi::vk::TextureView::getDesc() cons
   return mDesc;
 }
 
-void mental::rhi::vk::TextureView::destroy()
+bool mental::rhi::vk::TextureView::isValid() const
 {
-  VkDevice device = vk::getDevice().getVirtualDevice();
-  vkDestroyImageView(device, mImageView, nullptr);
+  return mIsInit;
 }

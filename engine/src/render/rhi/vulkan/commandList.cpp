@@ -7,6 +7,12 @@
 
 mental::core::Result mental::rhi::vk::CommandList::init(const mental::rhi::CommandListDesc& desc)
 {
+  if (mIsInit)
+  {
+    MENTAL_INFO("Trying to initialize an already initialized vk::CommandList");
+    return core::Result::eInitializationFailed;
+  }
+
   MENTAL_ASSERT_DEBUG(desc.commandQueue != nullptr);
 
   VkCommandPool cmdPool = desc.commandQueue->getNativeObject(core::resource::ObjectType::eVkCommandPool);
@@ -30,6 +36,12 @@ mental::core::Result mental::rhi::vk::CommandList::init(const mental::rhi::Comma
 
 void mental::rhi::vk::CommandList::destroy()
 {
+  if (!mIsInit)
+  {
+    MENTAL_INFO("Trying to destroy uninitialized vk::CommandList");
+    return;
+  }
+
   vkFreeCommandBuffers(vk::getDevice().getVirtualDevice(), mCmdPool, 1, &mCmdBuffer);
 
   mCmdBuffer = VK_NULL_HANDLE;

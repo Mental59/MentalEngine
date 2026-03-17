@@ -6,14 +6,40 @@
 
 mental::core::Result mental::rhi::vk::CommandQueue::init(VkQueue queue, uint32_t index)
 {
+  if (mIsInit)
+  {
+    MENTAL_INFO("Trying to initialize an already initialized vk::CommandQueue");
+    return core::Result::eInitializationFailed;
+  }
+
   mQueue = queue;
   mIndex = index;
-  return createCommandPool(index);
+
+  core::Result res = createCommandPool(index);
+
+  mIsInit = res == core::Result::eSuccess;
+
+  return res;
 }
 
 void mental::rhi::vk::CommandQueue::destroy()
 {
+  if (!mIsInit)
+  {
+    MENTAL_INFO("Trying to destroy uninitialized vk::CommandQueue");
+    return;
+  }
+
   vkDestroyCommandPool(vk::getDevice().getVirtualDevice(), mCommandPool, nullptr);
+
+  mIsInit = false;
+  mQueue = VK_NULL_HANDLE;
+  mIndex = 0;
+}
+
+bool mental::rhi::vk::CommandQueue::isValid() const
+{
+  return mIsInit;
 }
 
 mental::core::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& submitInfo)

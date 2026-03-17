@@ -12,6 +12,8 @@ namespace mental::rhi::vk
     core::Result init(VkQueue queue, uint32_t index);
     virtual void destroy() override;
 
+    virtual bool isValid() const override;
+
     virtual core::Result submit(const SubmitInfo& submitInfo) override;
     virtual void waitIdle() override;
 
@@ -25,6 +27,7 @@ namespace mental::rhi::vk
    private:
     core::Result createCommandPool(uint32_t queueFamilyIndex);
 
+    bool mIsInit = false;
     VkQueue mQueue;
     VkCommandPool mCommandPool;
     uint32_t mIndex;

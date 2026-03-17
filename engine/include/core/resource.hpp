@@ -56,10 +56,7 @@ namespace mental::core::resource
     {
       return nullptr;
     }
-    virtual bool isValid() const
-    {
-      return true;
-    }
+    virtual bool isValid() const = 0;
     virtual void destroy() = 0;
   };
 

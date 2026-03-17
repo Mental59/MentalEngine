@@ -8,6 +8,12 @@
 
 mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::SwapchainDesc& desc)
 {
+  if (mIsInit)
+  {
+    MENTAL_INFO("Trying to initialize an already initialized vk::Swapchain");
+    return core::Result::eInitializationFailed;
+  }
+
   VkSurfaceCapabilitiesKHR surfaceCapabilities{};
   VkResult res = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(
       vk::getDevice().getPhysicalDevice(), vk::getDevice().getSurface(), &surfaceCapabilities);
@@ -84,7 +90,33 @@ mental::core::Result mental::rhi::vk::Swapchain::init(const mental::rhi::Swapcha
     mTextureViews[i].init(viewDesc);
   }
 
+  mIsInit = true;
   return core::Result::eSuccess;
+}
+
+void mental::rhi::vk::Swapchain::destroy()
+{
+  if (!mIsInit)
+  {
+    MENTAL_INFO("Trying to destroy uninitialized vk::Swapchain");
+    return;
+  }
+
+  vkDestroySwapchainKHR(vk::getDevice().getVirtualDevice(), mSwapchain, nullptr);
+  for (TextureView& view : mTextureViews)
+  {
+    view.destroy();
+  }
+  for (Texture& texture : mTextures)
+  {
+    texture.destroy();
+  }
+  mIsInit = false;
+}
+
+bool mental::rhi::vk::Swapchain::isValid() const
+{
+  return false;
 }
 
 mental::core::Result mental::rhi::vk::Swapchain::acquireNextTexture(
@@ -207,17 +239,4 @@ VkPresentModeKHR mental::rhi::vk::Swapchain::choosePresentMode(const SwapchainDe
 
   MENTAL_WARN("Desired present mode not found, falling back to VK_PRESENT_MODE_FIFO_KHR");
   return VK_PRESENT_MODE_FIFO_KHR;
-}
-
-void mental::rhi::vk::Swapchain::destroy()
-{
-  vkDestroySwapchainKHR(vk::getDevice().getVirtualDevice(), mSwapchain, nullptr);
-  for (TextureView& view : mTextureViews)
-  {
-    view.destroy();
-  }
-  for (Texture& texture : mTextures)
-  {
-    texture.destroy();
-  }
 }

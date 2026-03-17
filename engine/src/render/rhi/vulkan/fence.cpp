@@ -16,6 +16,12 @@ mental::core::resource::Object mental::rhi::vk::Fence::getNativeObject(mental::c
 
 mental::core::Result mental::rhi::vk::Fence::init(const mental::rhi::FenceDesc& desc)
 {
+  if (mIsInit)
+  {
+    MENTAL_INFO("Trying to initialize an already initialized vk::Fence");
+    return core::Result::eInitializationFailed;
+  }
+
   VkFenceCreateInfo createInfo{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
   if (desc.createSignaled)
   {
@@ -29,11 +35,27 @@ mental::core::Result mental::rhi::vk::Fence::init(const mental::rhi::FenceDesc& 
     return core::Result::eInitializationFailed;
   }
 
+  mIsInit = true;
   return core::Result::eSuccess;
 }
+
 void mental::rhi::vk::Fence::destroy()
 {
+  if (!mIsInit)
+  {
+    MENTAL_INFO("Trying to destroy uninitialized vk::Fence");
+    return;
+  }
+
   vkDestroyFence(vk::getDevice().getVirtualDevice(), mFence, nullptr);
+
+  mIsInit = false;
+  mFence = VK_NULL_HANDLE;
+}
+
+bool mental::rhi::vk::Fence::isValid() const
+{
+  return mIsInit;
 }
 
 mental::core::Result mental::rhi::vk::Fence::wait(uint64_t timeout)
@@ -46,6 +68,7 @@ mental::core::Result mental::rhi::vk::Fence::wait(uint64_t timeout)
   }
   return core::Result::eSuccess;
 }
+
 mental::core::Result mental::rhi::vk::Fence::reset()
 {
   VkResult res = vkResetFences(vk::getDevice().getVirtualDevice(), 1, &mFence);

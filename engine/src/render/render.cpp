@@ -15,7 +15,14 @@ mental::core::Result mental::render::RenderSystem::init(const mental::render::Re
   MENTAL_ASSERT_DEBUG(conf.window != nullptr);
 
   rhi::initDevice(conf.graphicsApi, conf.window);
-  resource::initResourceManager();
+
+  uint32_t swapchainTextureCount = rhi::getDevice().getSwapchain()->getTextureCount();
+  mMaxFramesInFlight = swapchainTextureCount;
+  MENTAL_INFO("swapchainTextureCount={}, maxFramesInFlight={}", swapchainTextureCount, mMaxFramesInFlight);
+
+  resource::initResourceManager(mMaxFramesInFlight);
+
+  // TODO: init frame data
 
   rhi::CommandListDesc cmdListDesc{};
   cmdListDesc.commandQueue = rhi::getDevice().getGraphicsQueue();
@@ -25,10 +32,6 @@ mental::core::Result mental::render::RenderSystem::init(const mental::render::Re
     MENTAL_ERROR("Failed to create a command list");
     return core::Result::eInitializationFailed;
   }
-
-  uint32_t swapchainTextureCount = rhi::getDevice().getSwapchain()->getTextureCount();
-  mMaxFramesInFlight = swapchainTextureCount;
-  MENTAL_INFO("swapchainTextureCount={}, maxFramesInFlight={}", swapchainTextureCount, mMaxFramesInFlight);
 
   mIsInitialized = true;
   MENTAL_INFO("Render system initialized");
@@ -45,7 +48,14 @@ void mental::render::RenderSystem::destroy()
   }
 
   rhi::destroyDevice();
+  mIsInitialized = false;
+
   MENTAL_INFO("Render system destroyed");
+}
+
+bool mental::render::RenderSystem::isValid() const
+{
+  return mIsInitialized;
 }
 
 mental::core::Result mental::render::RenderSystem::render()

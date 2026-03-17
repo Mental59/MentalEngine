@@ -33,6 +33,8 @@ namespace mental::render
     core::Result init(const RenderSystemConfig& conf);
     virtual void destroy() override;
 
+    virtual bool isValid() const override;
+
     core::Result render();
 
    private:

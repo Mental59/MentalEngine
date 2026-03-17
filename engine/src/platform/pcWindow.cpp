@@ -53,7 +53,14 @@ void mental::platform::PCWindow::destroy()
   glfwDestroyWindow(mWindow);
   glfwTerminate();
 
+  mIsInitialized = false;
+
   MENTAL_INFO("GLFW window destroyed");
+}
+
+bool mental::platform::PCWindow::isValid() const
+{
+  return mIsInitialized;
 }
 
 void mental::platform::PCWindow::pollEvents() const

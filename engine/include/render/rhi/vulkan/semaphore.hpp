@@ -9,10 +9,14 @@ namespace mental::rhi::vk
   {
    public:
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
+
     virtual core::Result init() override;
     virtual void destroy() override;
 
+    virtual bool isValid() const override;
+
    private:
+    bool mIsInit = false;
     VkSemaphore mSemaphore;
   };
 }  // namespace mental::rhi::vk

@@ -14,6 +14,8 @@ namespace mental::platform
     virtual core::Result init(const WindowDesc& desc) override;
     virtual void destroy() override;
 
+    virtual bool isValid() const override;
+
     virtual void pollEvents() const override;
     virtual double getTime() const override;
     virtual bool shouldClose() const override;

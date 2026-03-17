@@ -74,6 +74,8 @@ namespace mental::rhi::vk
     core::Result init(const DeviceDesc& desc);
     virtual void destroy() override;
 
+    virtual bool isValid() const override;
+
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
 
     virtual void waitIdle() override;
@@ -107,6 +109,7 @@ namespace mental::rhi::vk
     }
 
    private:
+    bool mIsInit = false;
     Context mContext;
     CommandQueue mGraphicsQueue;
     Swapchain mSwapchain;

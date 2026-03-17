@@ -10,13 +10,17 @@ namespace mental::rhi::vk
   {
    public:
     virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
+
     virtual core::Result init(const FenceDesc& desc) override;
     virtual void destroy() override;
+
+    virtual bool isValid() const override;
 
     virtual core::Result wait(uint64_t timeout = UINT64_MAX) override;
     virtual core::Result reset() override;
 
    private:
+    bool mIsInit;
     VkFence mFence;
   };
 }  // namespace mental::rhi::vk
