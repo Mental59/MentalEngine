@@ -7,8 +7,10 @@ mental::core::resource::Object mental::rhi::vk::Semaphore::getNativeObject(core:
 {
   switch (objectType)
   {
-    case core::resource::ObjectType::eVkSemaphore: return mSemaphore;
-    default: return nullptr;
+    case core::resource::ObjectType::eVkSemaphore:
+      return mSemaphore;
+    default:
+      return nullptr;
   }
 }
 
@@ -20,7 +22,7 @@ mental::core::Result mental::rhi::vk::Semaphore::init()
     return core::Result::eInitializationFailed;
   }
 
-  VkSemaphoreCreateInfo createInfo{ VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+  VkSemaphoreCreateInfo createInfo {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
 
   VkResult res = vkCreateSemaphore(vk::getDevice().getVirtualDevice(), &createInfo, nullptr, &mSemaphore);
   if (res != VK_SUCCESS)

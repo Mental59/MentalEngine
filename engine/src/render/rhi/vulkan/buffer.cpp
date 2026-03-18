@@ -26,24 +26,29 @@ mental::core::Result mental::rhi::vk::Buffer::init(const BufferDesc& desc)
   if (desc.usage & BufferUsageFlagBits::eBufferUsageTransferDstBit)
     usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
-  VkBufferCreateInfo bufferCreateInfo{ VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+  VkBufferCreateInfo bufferCreateInfo {VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO};
   bufferCreateInfo.size = desc.byteSize;
   bufferCreateInfo.usage = usage;
   bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  VmaAllocationCreateInfo allocInfo{};
+  VmaAllocationCreateInfo allocInfo {};
   allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
   switch (desc.cpuAccess)
   {
-    case BufferCpuAccess::Write: allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT; break;
-    case BufferCpuAccess::ReadWrite: allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT; break;
-    case BufferCpuAccess::None: break;
+    case BufferCpuAccess::Write:
+      allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+      break;
+    case BufferCpuAccess::ReadWrite:
+      allocInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT;
+      break;
+    case BufferCpuAccess::None:
+      break;
   }
 
   VkBuffer vkBuffer;
   VmaAllocation allocation;
   VkResult createBufferRes =
-      vmaCreateBuffer(vk::getAllocator(), &bufferCreateInfo, &allocInfo, &vkBuffer, &allocation, nullptr);
+    vmaCreateBuffer(vk::getAllocator(), &bufferCreateInfo, &allocInfo, &vkBuffer, &allocation, nullptr);
 
   if (createBufferRes != VK_SUCCESS)
   {
@@ -89,8 +94,10 @@ mental::core::resource::Object mental::rhi::vk::Buffer::getNativeObject(core::re
 {
   switch (objectType)
   {
-    case core::resource::ObjectType::eVkBuffer: return mBuffer;
-    default: return nullptr;
+    case core::resource::ObjectType::eVkBuffer:
+      return mBuffer;
+    default:
+      return nullptr;
   }
 }
 

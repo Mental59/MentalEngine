@@ -8,8 +8,10 @@ mental::core::resource::Object mental::rhi::vk::Texture::getNativeObject(core::r
 {
   switch (objectType)
   {
-    case core::resource::ObjectType::eVkImage: return mImage;
-    default: return nullptr;
+    case core::resource::ObjectType::eVkImage:
+      return mImage;
+    default:
+      return nullptr;
   }
 }
 
@@ -23,7 +25,7 @@ mental::core::Result mental::rhi::vk::Texture::init(const TextureDesc& desc)
 
   MENTAL_ASSERT_DEBUG(desc.extent.width > 0 && desc.extent.height > 0 && desc.extent.depth > 0);
 
-  VkImageCreateInfo imageInfo{ VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+  VkImageCreateInfo imageInfo {VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO};
   imageInfo.imageType = desc.extent.depth > 1 ? VK_IMAGE_TYPE_3D : VK_IMAGE_TYPE_2D;
   imageInfo.extent.width = desc.extent.width;
   imageInfo.extent.height = desc.extent.height;
@@ -39,7 +41,7 @@ mental::core::Result mental::rhi::vk::Texture::init(const TextureDesc& desc)
   if (desc.cubeCompatible)
     imageInfo.flags |= VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
 
-  VmaAllocationCreateInfo allocationCreateInfo{};
+  VmaAllocationCreateInfo allocationCreateInfo {};
   allocationCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
 
   VkResult res = vmaCreateImage(vk::getAllocator(), &imageInfo, &allocationCreateInfo, &mImage, &mAllocation, nullptr);
@@ -83,6 +85,11 @@ bool mental::rhi::vk::Texture::isValid() const
   return mIsInit;
 }
 
+void mental::rhi::vk::Texture::setLayout(TextureLayout layout)
+{
+  mDesc.layout = layout;
+}
+
 void mental::rhi::vk::Texture::initSwapchainTexture(const SwapchainTextureDesc& desc)
 {
   if (mIsInit)
@@ -104,7 +111,8 @@ void mental::rhi::vk::Texture::initSwapchainTexture(const SwapchainTextureDesc& 
   mIsInit = true;
 }
 
-mental::core::resource::Object mental::rhi::vk::TextureView::getNativeObject(mental::core::resource::ObjectType objectType)
+mental::core::resource::Object mental::rhi::vk::TextureView::getNativeObject(
+  mental::core::resource::ObjectType objectType)
 {
   if (objectType == core::resource::ObjectType::eVkImageView)
   {
@@ -123,11 +131,11 @@ mental::core::Result mental::rhi::vk::TextureView::init(const mental::rhi::Textu
 
   MENTAL_ASSERT_DEBUG(desc.texture != nullptr);
 
-  VkImageViewCreateInfo imageViewInfo{ VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+  VkImageViewCreateInfo imageViewInfo {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
   imageViewInfo.image = desc.texture->getNativeObject(core::resource::ObjectType::eVkImage);
   imageViewInfo.viewType = desc.type == TextureType::eCubeMap ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
   imageViewInfo.format =
-      convertTextureFormat(desc.format.has_value() ? desc.format.value() : desc.texture->getDesc().format);
+    convertTextureFormat(desc.format.has_value() ? desc.format.value() : desc.texture->getDesc().format);
   imageViewInfo.subresourceRange.baseMipLevel = 0;
   imageViewInfo.subresourceRange.baseArrayLayer = 0;
   imageViewInfo.subresourceRange.levelCount = desc.texture->getDesc().mipLevels;

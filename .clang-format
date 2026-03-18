@@ -1,23 +1,79 @@
-BasedOnStyle: Google
-AlignAfterOpenBracket: 'AlwaysBreak'
-AllowAllConstructorInitializersOnNextLine: 'false'
-AllowAllParametersOfDeclarationOnNextLine: 'false'
-AlignConsecutiveMacros: 'true'
-AllowShortCaseLabelsOnASingleLine: 'true'
-AllowShortFunctionsOnASingleLine: 'None'
-AllowShortIfStatementsOnASingleLine: 'Never'
-AllowShortLoopsOnASingleLine: 'false'
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+IndentWidth: 2
+ContinuationIndentWidth: 2
+TabWidth: 2
+UseTab: Never
+
+ColumnLimit: 120
+PointerAlignment: Left
+ReferenceAlignment: Left
+
 BreakBeforeBraces: Allman
-BinPackArguments: 'false'
-BinPackParameters: 'false'
-Cpp11BracedListStyle: 'false'
-ColumnLimit: 125 
-NamespaceIndentation: All
-SpaceAfterTemplateKeyword: 'false'
-SpaceBeforeCtorInitializerColon: 'true'
-SpaceBeforeInheritanceColon: 'true'
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+AccessModifierOffset: -1
+IndentAccessModifiers: false
+NamespaceIndentation: None
+
+AlignAfterOpenBracket: DontAlign
+AlignArrayOfStructures: Left
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignOperands: Align
+AlignTrailingComments: true
+
+BinPackArguments: false
+BinPackParameters: false
+PackConstructorInitializers: Never
+ConstructorInitializerIndentWidth: 2
+
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+BreakAfterReturnType: None
+BreakStringLiterals: false
+
+Cpp11BracedListStyle: true
+SpaceBeforeCpp11BracedList: true
 SpaceBeforeParens: ControlStatements
-SpaceBeforeRangeBasedForLoopColon: 'true'
-SpaceInEmptyBlock: true
-Standard: 'Latest'
-SortIncludes: false
+SpaceBeforeAssignmentOperators: true
+SpaceInEmptyParentheses: false
+SpacesInAngles: Never
+SpacesInContainerLiterals: true
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+IndentCaseLabels: true
+IndentCaseBlocks: false
+
+SortIncludes: Never
+IncludeBlocks: Preserve
+
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 1
+ReflowComments: false
+PenaltyReturnTypeOnItsOwnLine: 1000
+
+Standard: Latest

@@ -6,23 +6,23 @@ class GLFWwindow;
 
 namespace mental::platform
 {
-  class PCWindow : public IWindow
-  {
-   public:
-    PCWindow() = default;
-    virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
-    virtual core::Result init(const WindowDesc& desc) override;
-    virtual void destroy() override;
+class PCWindow : public IWindow
+{
+ public:
+  PCWindow() = default;
+  virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
+  virtual core::Result init(const WindowDesc& desc) override;
+  virtual void destroy() override;
 
-    virtual bool isValid() const override;
+  virtual bool isValid() const override;
 
-    virtual void pollEvents() const override;
-    virtual double getTime() const override;
-    virtual bool shouldClose() const override;
+  virtual void pollEvents() const override;
+  virtual double getTime() const override;
+  virtual bool shouldClose() const override;
 
-   private:
-    GLFWwindow* mWindow;
-    bool mIsInitialized = false;
-  };
+ private:
+  GLFWwindow* mWindow;
+  bool mIsInitialized = false;
+};
 
-}  // namespace mental::platform
+} // namespace mental::platform

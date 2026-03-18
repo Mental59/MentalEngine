@@ -5,45 +5,82 @@ const char* mental::rhi::vk::vkResultToString(VkResult result)
 {
   switch (result)
   {
-    case VK_SUCCESS: return "VK_SUCCESS";
-    case VK_NOT_READY: return "VK_NOT_READY";
-    case VK_TIMEOUT: return "VK_TIMEOUT";
-    case VK_EVENT_SET: return "VK_EVENT_SET";
-    case VK_EVENT_RESET: return "VK_EVENT_RESET";
-    case VK_INCOMPLETE: return "VK_INCOMPLETE";
-    case VK_ERROR_OUT_OF_HOST_MEMORY: return "VK_ERROR_OUT_OF_HOST_MEMORY";
-    case VK_ERROR_OUT_OF_DEVICE_MEMORY: return "VK_ERROR_OUT_OF_DEVICE_MEMORY";
-    case VK_ERROR_INITIALIZATION_FAILED: return "VK_ERROR_INITIALIZATION_FAILED";
-    case VK_ERROR_DEVICE_LOST: return "VK_ERROR_DEVICE_LOST";
-    case VK_ERROR_MEMORY_MAP_FAILED: return "VK_ERROR_MEMORY_MAP_FAILED";
-    case VK_ERROR_LAYER_NOT_PRESENT: return "VK_ERROR_LAYER_NOT_PRESENT";
-    case VK_ERROR_EXTENSION_NOT_PRESENT: return "VK_ERROR_EXTENSION_NOT_PRESENT";
-    case VK_ERROR_FEATURE_NOT_PRESENT: return "VK_ERROR_FEATURE_NOT_PRESENT";
-    case VK_ERROR_INCOMPATIBLE_DRIVER: return "VK_ERROR_INCOMPATIBLE_DRIVER";
-    case VK_ERROR_TOO_MANY_OBJECTS: return "VK_ERROR_TOO_MANY_OBJECTS";
-    case VK_ERROR_FORMAT_NOT_SUPPORTED: return "VK_ERROR_FORMAT_NOT_SUPPORTED";
-    case VK_ERROR_FRAGMENTED_POOL: return "VK_ERROR_FRAGMENTED_POOL";
-    case VK_ERROR_UNKNOWN: return "VK_ERROR_UNKNOWN";
-    case VK_ERROR_OUT_OF_POOL_MEMORY: return "VK_ERROR_OUT_OF_POOL_MEMORY";
-    case VK_ERROR_INVALID_EXTERNAL_HANDLE: return "VK_ERROR_INVALID_EXTERNAL_HANDLE";
-    case VK_ERROR_FRAGMENTATION: return "VK_ERROR_FRAGMENTATION";
-    case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS: return "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS";
-    case VK_ERROR_SURFACE_LOST_KHR: return "VK_ERROR_SURFACE_LOST_KHR";
-    case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR: return "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR";
-    case VK_SUBOPTIMAL_KHR: return "VK_SUBOPTIMAL_KHR";
-    case VK_ERROR_OUT_OF_DATE_KHR: return "VK_ERROR_OUT_OF_DATE_KHR";
-    case VK_ERROR_INCOMPATIBLE_DISPLAY_KHR: return "VK_ERROR_INCOMPATIBLE_DISPLAY_KHR";
-    case VK_ERROR_VALIDATION_FAILED_EXT: return "VK_ERROR_VALIDATION_FAILED_EXT";
-    case VK_ERROR_INVALID_SHADER_NV: return "VK_ERROR_INVALID_SHADER_NV";
+    case VK_SUCCESS:
+      return "VK_SUCCESS";
+    case VK_NOT_READY:
+      return "VK_NOT_READY";
+    case VK_TIMEOUT:
+      return "VK_TIMEOUT";
+    case VK_EVENT_SET:
+      return "VK_EVENT_SET";
+    case VK_EVENT_RESET:
+      return "VK_EVENT_RESET";
+    case VK_INCOMPLETE:
+      return "VK_INCOMPLETE";
+    case VK_ERROR_OUT_OF_HOST_MEMORY:
+      return "VK_ERROR_OUT_OF_HOST_MEMORY";
+    case VK_ERROR_OUT_OF_DEVICE_MEMORY:
+      return "VK_ERROR_OUT_OF_DEVICE_MEMORY";
+    case VK_ERROR_INITIALIZATION_FAILED:
+      return "VK_ERROR_INITIALIZATION_FAILED";
+    case VK_ERROR_DEVICE_LOST:
+      return "VK_ERROR_DEVICE_LOST";
+    case VK_ERROR_MEMORY_MAP_FAILED:
+      return "VK_ERROR_MEMORY_MAP_FAILED";
+    case VK_ERROR_LAYER_NOT_PRESENT:
+      return "VK_ERROR_LAYER_NOT_PRESENT";
+    case VK_ERROR_EXTENSION_NOT_PRESENT:
+      return "VK_ERROR_EXTENSION_NOT_PRESENT";
+    case VK_ERROR_FEATURE_NOT_PRESENT:
+      return "VK_ERROR_FEATURE_NOT_PRESENT";
+    case VK_ERROR_INCOMPATIBLE_DRIVER:
+      return "VK_ERROR_INCOMPATIBLE_DRIVER";
+    case VK_ERROR_TOO_MANY_OBJECTS:
+      return "VK_ERROR_TOO_MANY_OBJECTS";
+    case VK_ERROR_FORMAT_NOT_SUPPORTED:
+      return "VK_ERROR_FORMAT_NOT_SUPPORTED";
+    case VK_ERROR_FRAGMENTED_POOL:
+      return "VK_ERROR_FRAGMENTED_POOL";
+    case VK_ERROR_UNKNOWN:
+      return "VK_ERROR_UNKNOWN";
+    case VK_ERROR_OUT_OF_POOL_MEMORY:
+      return "VK_ERROR_OUT_OF_POOL_MEMORY";
+    case VK_ERROR_INVALID_EXTERNAL_HANDLE:
+      return "VK_ERROR_INVALID_EXTERNAL_HANDLE";
+    case VK_ERROR_FRAGMENTATION:
+      return "VK_ERROR_FRAGMENTATION";
+    case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
+      return "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS";
+    case VK_ERROR_SURFACE_LOST_KHR:
+      return "VK_ERROR_SURFACE_LOST_KHR";
+    case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
+      return "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR";
+    case VK_SUBOPTIMAL_KHR:
+      return "VK_SUBOPTIMAL_KHR";
+    case VK_ERROR_OUT_OF_DATE_KHR:
+      return "VK_ERROR_OUT_OF_DATE_KHR";
+    case VK_ERROR_INCOMPATIBLE_DISPLAY_KHR:
+      return "VK_ERROR_INCOMPATIBLE_DISPLAY_KHR";
+    case VK_ERROR_VALIDATION_FAILED_EXT:
+      return "VK_ERROR_VALIDATION_FAILED_EXT";
+    case VK_ERROR_INVALID_SHADER_NV:
+      return "VK_ERROR_INVALID_SHADER_NV";
     case VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT:
       return "VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT";
-    case VK_ERROR_NOT_PERMITTED_EXT: return "VK_ERROR_NOT_PERMITTED_EXT";
-    case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT: return "VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT";
-    case VK_THREAD_IDLE_KHR: return "VK_THREAD_IDLE_KHR";
-    case VK_THREAD_DONE_KHR: return "VK_THREAD_DONE_KHR";
-    case VK_OPERATION_DEFERRED_KHR: return "VK_OPERATION_DEFERRED_KHR";
-    case VK_OPERATION_NOT_DEFERRED_KHR: return "VK_OPERATION_NOT_DEFERRED_KHR";
-    case VK_PIPELINE_COMPILE_REQUIRED_EXT: return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
+    case VK_ERROR_NOT_PERMITTED_EXT:
+      return "VK_ERROR_NOT_PERMITTED_EXT";
+    case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT:
+      return "VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT";
+    case VK_THREAD_IDLE_KHR:
+      return "VK_THREAD_IDLE_KHR";
+    case VK_THREAD_DONE_KHR:
+      return "VK_THREAD_DONE_KHR";
+    case VK_OPERATION_DEFERRED_KHR:
+      return "VK_OPERATION_DEFERRED_KHR";
+    case VK_OPERATION_NOT_DEFERRED_KHR:
+      return "VK_OPERATION_NOT_DEFERRED_KHR";
+    case VK_PIPELINE_COMPILE_REQUIRED_EXT:
+      return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
 
     default:
     {
@@ -58,13 +95,20 @@ VkFormat mental::rhi::vk::convertTextureFormat(mental::rhi::TextureFormat format
 {
   switch (format)
   {
-    case TextureFormat::eRGBA32_SRGB: return VK_FORMAT_R8G8B8A8_SRGB;
-    case TextureFormat::eBGRA32_SRGB: return VK_FORMAT_B8G8R8A8_SRGB;
-    case TextureFormat::eRGBA32_UNORM: return VK_FORMAT_R8G8B8A8_UNORM;
-    case TextureFormat::eBGRA32_UNORM: return VK_FORMAT_B8G8R8A8_UNORM;
-    case TextureFormat::eD32_SFLOAT: return VK_FORMAT_D32_SFLOAT;
-    case TextureFormat::eD32_SFLOAT_S8_UINT: return VK_FORMAT_D32_SFLOAT_S8_UINT;
-    case TextureFormat::eD24_UNORM_S8_UINT: return VK_FORMAT_D24_UNORM_S8_UINT;
+    case TextureFormat::eRGBA32_SRGB:
+      return VK_FORMAT_R8G8B8A8_SRGB;
+    case TextureFormat::eBGRA32_SRGB:
+      return VK_FORMAT_B8G8R8A8_SRGB;
+    case TextureFormat::eRGBA32_UNORM:
+      return VK_FORMAT_R8G8B8A8_UNORM;
+    case TextureFormat::eBGRA32_UNORM:
+      return VK_FORMAT_B8G8R8A8_UNORM;
+    case TextureFormat::eD32_SFLOAT:
+      return VK_FORMAT_D32_SFLOAT;
+    case TextureFormat::eD32_SFLOAT_S8_UINT:
+      return VK_FORMAT_D32_SFLOAT_S8_UINT;
+    case TextureFormat::eD24_UNORM_S8_UINT:
+      return VK_FORMAT_D24_UNORM_S8_UINT;
   }
 }
 
@@ -72,13 +116,46 @@ VkImageLayout mental::rhi::vk::convertTextureLayout(mental::rhi::TextureLayout l
 {
   switch (layout)
   {
-    case TextureLayout::eUndefined: return VK_IMAGE_LAYOUT_UNDEFINED;
-    case TextureLayout::ePresent: return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-    case TextureLayout::eColorAttachment: return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-    case TextureLayout::eDepthStencilAttachment: return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-    case TextureLayout::eTransferSrc: return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
-    case TextureLayout::eTransferDst: return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-    case TextureLayout::eShaderReadOnly: return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    case TextureLayout::eUndefined:
+      return VK_IMAGE_LAYOUT_UNDEFINED;
+    case TextureLayout::ePresent:
+      return VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+    case TextureLayout::eColorAttachment:
+      return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    case TextureLayout::eDepthStencilAttachment:
+      return VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    case TextureLayout::eTransferSrc:
+      return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    case TextureLayout::eTransferDst:
+      return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    case TextureLayout::eShaderReadOnly:
+      return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  }
+}
+
+VkPipelineStageFlags mental::rhi::vk::convertPipelineStage(mental::rhi::PipelineStage stage)
+{
+  switch (stage)
+  {
+    case PipelineStage::eColorAttachmentOutput:
+      return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  }
+}
+
+VkImageAspectFlags mental::rhi::vk::getTextureAspectFlags(mental::rhi::TextureFormat format)
+{
+  switch (format)
+  {
+    case TextureFormat::eD32_SFLOAT:
+      return VK_IMAGE_ASPECT_DEPTH_BIT;
+    case TextureFormat::eD32_SFLOAT_S8_UINT:
+    case TextureFormat::eD24_UNORM_S8_UINT:
+      return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+    case TextureFormat::eRGBA32_SRGB:
+    case TextureFormat::eBGRA32_SRGB:
+    case TextureFormat::eRGBA32_UNORM:
+    case TextureFormat::eBGRA32_UNORM:
+      return VK_IMAGE_ASPECT_COLOR_BIT;
   }
 }
 
@@ -86,8 +163,10 @@ VkImageTiling mental::rhi::vk::convertTextureTiling(mental::rhi::TextureTiling t
 {
   switch (tiling)
   {
-    case TextureTiling::eLinear: return VK_IMAGE_TILING_LINEAR;
-    case TextureTiling::eOptimal: return VK_IMAGE_TILING_OPTIMAL;
+    case TextureTiling::eLinear:
+      return VK_IMAGE_TILING_LINEAR;
+    case TextureTiling::eOptimal:
+      return VK_IMAGE_TILING_OPTIMAL;
   }
 }
 
@@ -133,8 +212,11 @@ VkImageAspectFlags mental::rhi::vk::getTextureAspectFlags(TextureType type)
   switch (type)
   {
     case TextureType::eTexture2D:
-    case TextureType::eCubeMap: return VK_IMAGE_ASPECT_COLOR_BIT;
-    case TextureType::eDepthMap: return VK_IMAGE_ASPECT_DEPTH_BIT;
-    case TextureType::eDepthStencilMap: return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+    case TextureType::eCubeMap:
+      return VK_IMAGE_ASPECT_COLOR_BIT;
+    case TextureType::eDepthMap:
+      return VK_IMAGE_ASPECT_DEPTH_BIT;
+    case TextureType::eDepthStencilMap:
+      return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
   }
 }

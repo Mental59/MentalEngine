@@ -9,8 +9,10 @@ mental::core::resource::Object mental::rhi::vk::Fence::getNativeObject(mental::c
 {
   switch (objectType)
   {
-    case core::resource::ObjectType::eVkFence: return mFence;
-    default: return nullptr;
+    case core::resource::ObjectType::eVkFence:
+      return mFence;
+    default:
+      return nullptr;
   }
 }
 
@@ -22,7 +24,7 @@ mental::core::Result mental::rhi::vk::Fence::init(const mental::rhi::FenceDesc& 
     return core::Result::eInitializationFailed;
   }
 
-  VkFenceCreateInfo createInfo{ VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+  VkFenceCreateInfo createInfo {VK_STRUCTURE_TYPE_FENCE_CREATE_INFO};
   if (desc.createSignaled)
   {
     createInfo.flags |= VK_FENCE_CREATE_SIGNALED_BIT;

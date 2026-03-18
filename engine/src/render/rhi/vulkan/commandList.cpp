@@ -16,7 +16,7 @@ mental::core::Result mental::rhi::vk::CommandList::init(const mental::rhi::Comma
   MENTAL_ASSERT_DEBUG(desc.commandQueue != nullptr);
 
   VkCommandPool cmdPool = desc.commandQueue->getNativeObject(core::resource::ObjectType::eVkCommandPool);
-  VkCommandBufferAllocateInfo allocInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+  VkCommandBufferAllocateInfo allocInfo {VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO};
   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   allocInfo.commandPool = cmdPool;
   allocInfo.commandBufferCount = 1;
@@ -49,6 +49,19 @@ void mental::rhi::vk::CommandList::destroy()
   mIsInit = false;
 }
 
+mental::core::resource::Object mental::rhi::vk::CommandList::getNativeObject(core::resource::ObjectType objectType)
+{
+  switch (objectType)
+  {
+    case core::resource::ObjectType::eVkCommandBuffer:
+      return mCmdBuffer;
+    case core::resource::ObjectType::eVkCommandPool:
+      return mCmdPool;
+    default:
+      return nullptr;
+  }
+}
+
 bool mental::rhi::vk::CommandList::isValid() const
 {
   return mIsInit;
@@ -56,13 +69,20 @@ bool mental::rhi::vk::CommandList::isValid() const
 
 mental::core::Result mental::rhi::vk::CommandList::begin(const CommandListBegindDesc& desc)
 {
-  VkCommandBufferBeginInfo beginInfo{ VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+  VkResult res = vkResetCommandBuffer(mCmdBuffer, 0);
+  if (res != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkResetCommandBuffer, error: {}", vkResultToString(res));
+    return core::Result::eOperationFailed;
+  }
+
+  VkCommandBufferBeginInfo beginInfo {VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO};
   if (desc.isOneTimeSubmit)
   {
     beginInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
   }
 
-  VkResult res = vkBeginCommandBuffer(mCmdBuffer, &beginInfo);
+  res = vkBeginCommandBuffer(mCmdBuffer, &beginInfo);
   if (res != VK_SUCCESS)
   {
     MENTAL_ERROR("Failed to call vkBeginCommandBuffer, error: {}", vkResultToString(res));
@@ -85,11 +105,7 @@ mental::core::Result mental::rhi::vk::CommandList::end()
 }
 
 mental::core::Result mental::rhi::vk::CommandList::copyBuffer(
-    IBuffer* srcBuffer,
-    size_t srcOffset,
-    IBuffer* dstBuffer,
-    size_t dstOffset,
-    size_t size)
+  IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size)
 {
   MENTAL_ASSERT_DEBUG(srcBuffer != nullptr);
   MENTAL_ASSERT_DEBUG(dstBuffer != nullptr);
@@ -100,18 +116,14 @@ mental::core::Result mental::rhi::vk::CommandList::copyBuffer(
   MENTAL_ASSERT_DEBUG(vkSrcBuffer != VK_NULL_HANDLE);
   MENTAL_ASSERT_DEBUG(vkDstBuffer != VK_NULL_HANDLE);
 
-  VkBufferCopy copyRegion = { .srcOffset = srcOffset, .dstOffset = dstOffset, .size = size };
+  VkBufferCopy copyRegion = {.srcOffset = srcOffset, .dstOffset = dstOffset, .size = size};
   vkCmdCopyBuffer(mCmdBuffer, vkSrcBuffer, vkDstBuffer, 1, &copyRegion);
 
   return core::Result::eSuccess;
 }
 
 mental::core::Result mental::rhi::vk::CommandList::copyBufferToImage(
-    IBuffer* buffer,
-    size_t bufferOffset,
-    ITexture* texture,
-    uint32_t mipLevel,
-    const TextureOffset3D& textureOffset)
+  IBuffer* buffer, size_t bufferOffset, ITexture* texture, uint32_t mipLevel, const TextureOffset3D& textureOffset)
 {
   MENTAL_ASSERT_DEBUG(buffer != nullptr);
   MENTAL_ASSERT_DEBUG(texture != nullptr);
@@ -123,7 +135,7 @@ mental::core::Result mental::rhi::vk::CommandList::copyBufferToImage(
   MENTAL_ASSERT_DEBUG(vkImage != VK_NULL_HANDLE);
   MENTAL_ASSERT_DEBUG(texture->getDesc().layout == rhi::TextureLayout::eTransferDst);
 
-  VkBufferImageCopy region{};
+  VkBufferImageCopy region {};
   region.bufferOffset = bufferOffset;
   region.bufferRowLength = 0;
   region.bufferImageHeight = 0;
@@ -133,13 +145,104 @@ mental::core::Result mental::rhi::vk::CommandList::copyBufferToImage(
   region.imageSubresource.baseArrayLayer = 0;
   region.imageSubresource.layerCount = texture->getDesc().arrayLayers;
 
-  region.imageOffset = { textureOffset.x, textureOffset.y, textureOffset.z };
-  region.imageExtent = { texture->getDesc().extent.width,
-                         texture->getDesc().extent.height,
-                         texture->getDesc().extent.depth };
+  region.imageOffset = {textureOffset.x, textureOffset.y, textureOffset.z};
+  region.imageExtent = {
+    texture->getDesc().extent.width, texture->getDesc().extent.height, texture->getDesc().extent.depth};
 
   vkCmdCopyBufferToImage(mCmdBuffer, vkBuffer, vkImage, convertTextureLayout(texture->getDesc().layout), 1, &region);
 
+  return core::Result::eSuccess;
+}
+
+mental::core::Result mental::rhi::vk::CommandList::transitionTexture(const TextureTransitionInfo& info)
+{
+  MENTAL_ASSERT_DEBUG(info.texture != nullptr);
+
+  VkImage vkImage = info.texture->getNativeObject(core::resource::ObjectType::eVkImage);
+  MENTAL_ASSERT_DEBUG(vkImage != VK_NULL_HANDLE);
+
+  VkImageMemoryBarrier imageBarrier {VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER};
+  imageBarrier.oldLayout = convertTextureLayout(info.oldLayout);
+  imageBarrier.newLayout = convertTextureLayout(info.newLayout);
+  imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+  imageBarrier.image = vkImage;
+  imageBarrier.subresourceRange.aspectMask = getTextureAspectFlags(info.texture->getDesc().format);
+  imageBarrier.subresourceRange.baseMipLevel = 0;
+  imageBarrier.subresourceRange.levelCount = info.texture->getDesc().mipLevels;
+  imageBarrier.subresourceRange.baseArrayLayer = 0;
+  imageBarrier.subresourceRange.layerCount = info.texture->getDesc().arrayLayers;
+
+  VkPipelineStageFlags srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+  VkPipelineStageFlags dstStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+  switch (info.oldLayout)
+  {
+    case TextureLayout::eUndefined:
+      imageBarrier.srcAccessMask = 0;
+      srcStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      break;
+    case TextureLayout::ePresent:
+      imageBarrier.srcAccessMask = 0;
+      srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      break;
+    case TextureLayout::eColorAttachment:
+      imageBarrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      break;
+    case TextureLayout::eTransferDst:
+      imageBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+      break;
+    case TextureLayout::eTransferSrc:
+      imageBarrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+      break;
+    case TextureLayout::eShaderReadOnly:
+      imageBarrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+      break;
+    case TextureLayout::eDepthStencilAttachment:
+      imageBarrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      break;
+  }
+
+  switch (info.newLayout)
+  {
+    case TextureLayout::eColorAttachment:
+      imageBarrier.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+      dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+      break;
+    case TextureLayout::ePresent:
+      imageBarrier.dstAccessMask = 0;
+      dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+      break;
+    case TextureLayout::eTransferDst:
+      imageBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+      dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+      break;
+    case TextureLayout::eTransferSrc:
+      imageBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+      dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT;
+      break;
+    case TextureLayout::eShaderReadOnly:
+      imageBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+      dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+      break;
+    case TextureLayout::eDepthStencilAttachment:
+      imageBarrier.dstAccessMask =
+        VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+      dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+      break;
+    case TextureLayout::eUndefined:
+      imageBarrier.dstAccessMask = 0;
+      dstStageMask = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+      break;
+  }
+
+  vkCmdPipelineBarrier(mCmdBuffer, srcStageMask, dstStageMask, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
+
+  info.texture->setLayout(info.newLayout);
   return core::Result::eSuccess;
 }
 
@@ -150,27 +253,25 @@ void mental::rhi::vk::CommandList::beginRendering(CommandListBeginRenderingInfo&
   VkImageView swapchainImageView = info.swapchainImageView->getNativeObject(core::resource::ObjectType::eVkImageView);
   MENTAL_ASSERT_DEBUG(swapchainImageView != VK_NULL_HANDLE);
 
-  VkClearValue clearValue{};
-  clearValue.color.float32[0] = info.clearValue.color[0];
-  clearValue.color.float32[1] = info.clearValue.color[1];
-  clearValue.color.float32[2] = info.clearValue.color[2];
-  clearValue.color.float32[3] = info.clearValue.color[3];
-  clearValue.depthStencil.depth = info.clearValue.depth;
-  clearValue.depthStencil.stencil = info.clearValue.stencil;
+  VkClearValue clearColorValue {};
+  clearColorValue.color.float32[0] = info.clearValue.color[0];
+  clearColorValue.color.float32[1] = info.clearValue.color[1];
+  clearColorValue.color.float32[2] = info.clearValue.color[2];
+  clearColorValue.color.float32[3] = info.clearValue.color[3];
 
-  VkRenderingAttachmentInfoKHR colorAttachmentInfo{ VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR };
+  VkRenderingAttachmentInfoKHR colorAttachmentInfo {VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR};
   colorAttachmentInfo.imageView = swapchainImageView;
   colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
   colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-  colorAttachmentInfo.clearValue = clearValue;
+  colorAttachmentInfo.clearValue = clearColorValue;
 
-  VkRect2D renderArea{};
+  VkRect2D renderArea {};
   renderArea.offset.x = renderArea.offset.y = 0;
   renderArea.extent.width = info.renderArea.width;
   renderArea.extent.height = info.renderArea.height;
 
-  VkRenderingInfoKHR renderInfo{ VK_STRUCTURE_TYPE_RENDERING_INFO_KHR };
+  VkRenderingInfoKHR renderInfo {VK_STRUCTURE_TYPE_RENDERING_INFO_KHR};
   renderInfo.renderArea = renderArea;
   renderInfo.layerCount = 1;
   renderInfo.colorAttachmentCount = 1;

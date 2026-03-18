@@ -5,16 +5,16 @@
 
 namespace mental::rhi::vk
 {
-  struct AllocatorDesc
-  {
-    uint32_t vulkanApiVersion;
-    VkPhysicalDevice physicalDevice;
-    VkDevice device;
-    VkInstance instance;
-  };
+struct AllocatorDesc
+{
+  uint32_t vulkanApiVersion;
+  VkPhysicalDevice physicalDevice;
+  VkDevice device;
+  VkInstance instance;
+};
 
-  core::Result initAllocator(const AllocatorDesc& desc);
-  void destroyAllocator();
+core::Result initAllocator(const AllocatorDesc& desc);
+void destroyAllocator();
 
-  VmaAllocator getAllocator();
-}  // namespace mental::rhi::vk
+VmaAllocator getAllocator();
+} // namespace mental::rhi::vk

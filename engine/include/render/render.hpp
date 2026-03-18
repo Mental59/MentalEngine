@@ -2,54 +2,55 @@
 
 #include <render/rhi/rhi.hpp>
 #include <resource/resourceManager.hpp>
+#include <vector>
 
 namespace mental::platform
 {
-  class IWindow;
+class IWindow;
 }
 
 namespace mental::render
 {
-  struct RenderSystemConfig
+struct RenderSystemConfig
+{
+  rhi::GraphicsApi graphicsApi;
+  mental::platform::IWindow* window;
+};
+
+class RenderSystem : public core::resource::IResource
+{
+ public:
+  static RenderSystem& instance()
   {
-    rhi::GraphicsApi graphicsApi;
-    mental::platform::IWindow* window;
-  };
-
-  class RenderSystem : public core::resource::IResource
-  {
-   public:
-    static RenderSystem& instance()
-    {
-      static RenderSystem renderSystem;
-      return renderSystem;
-    }
-
-    RenderSystem(const RenderSystem&) = delete;
-    RenderSystem(const RenderSystem&&) = delete;
-    RenderSystem& operator=(const RenderSystem&) = delete;
-    RenderSystem& operator=(const RenderSystem&&) = delete;
-
-    core::Result init(const RenderSystemConfig& conf);
-    virtual void destroy() override;
-
-    virtual bool isValid() const override;
-
-    core::Result render();
-
-   private:
-    RenderSystem() = default;
-
-    resource::CommandListHandle mCmdListHandle;
-
-    uint32_t mCurrentFrame = 0;
-    uint32_t mMaxFramesInFlight = 0;
-
-    bool mIsInitialized = false;
-  };
-
-  inline RenderSystem& getRenderSystem()
-  {
-    return RenderSystem::instance();
+    static RenderSystem renderSystem;
+    return renderSystem;
   }
-}  // namespace mental::render
+
+  RenderSystem(const RenderSystem&) = delete;
+  RenderSystem(const RenderSystem&&) = delete;
+  RenderSystem& operator=(const RenderSystem&) = delete;
+  RenderSystem& operator=(const RenderSystem&&) = delete;
+
+  core::Result init(const RenderSystemConfig& conf);
+  virtual void destroy() override;
+
+  virtual bool isValid() const override;
+
+  core::Result render();
+
+ private:
+  RenderSystem() = default;
+
+  std::vector<resource::FrameDataHandle> mFrameDataHandles;
+
+  uint32_t mCurrentFrame = 0;
+  uint32_t mMaxFramesInFlight = 0;
+
+  bool mIsInitialized = false;
+};
+
+inline RenderSystem& getRenderSystem()
+{
+  return RenderSystem::instance();
+}
+} // namespace mental::render

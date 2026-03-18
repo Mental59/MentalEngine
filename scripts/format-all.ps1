@@ -1,0 +1,1 @@
+Get-ChildItem engine/src,engine/include,editor -Recurse -Include *.cpp,*.hpp,*.h,*.c,*.cc,*.hh | ForEach-Object { clang-format -i $_.FullName }

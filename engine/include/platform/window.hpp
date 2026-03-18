@@ -7,23 +7,23 @@
 
 namespace mental::platform
 {
-  struct WindowDesc
-  {
-    const char* title = nullptr;
-    int width = 0;
-    int height = 0;
-  };
+struct WindowDesc
+{
+  const char* title = nullptr;
+  int width = 0;
+  int height = 0;
+};
 
-  class IWindow : public core::resource::IResource
-  {
-   public:
-    virtual core::Result init(const WindowDesc& desc) = 0;
-    virtual void pollEvents() const = 0;
-    virtual double getTime() const = 0;
-    virtual bool shouldClose() const = 0;
-  };
+class IWindow : public core::resource::IResource
+{
+ public:
+  virtual core::Result init(const WindowDesc& desc) = 0;
+  virtual void pollEvents() const = 0;
+  virtual double getTime() const = 0;
+  virtual bool shouldClose() const = 0;
+};
 
 #ifdef MENTAL_WITH_VULKAN
-  core::Result createVulkanSurface(IWindow* window, VkInstance instance, VkSurfaceKHR* surface);
+core::Result createVulkanSurface(IWindow* window, VkInstance instance, VkSurfaceKHR* surface);
 #endif
-}  // namespace mental::platform
+} // namespace mental::platform

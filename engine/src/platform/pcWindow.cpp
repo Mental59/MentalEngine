@@ -7,8 +7,10 @@ mental::core::resource::Object mental::platform::PCWindow::getNativeObject(core:
 {
   switch (objectType)
   {
-    case core::resource::ObjectType::eGLFWwindow: return mWindow;
-    default: return nullptr;
+    case core::resource::ObjectType::eGLFWwindow:
+      return mWindow;
+    default:
+      return nullptr;
   }
 }
 
@@ -28,13 +30,12 @@ mental::core::Result mental::platform::PCWindow::init(const mental::platform::Wi
   mWindow = glfwCreateWindow(desc.width, desc.height, desc.title, nullptr, nullptr);
   MENTAL_ASSERT_MESSAGE(mWindow != nullptr, "Failed to create GLFW window");
 
-  glfwSetKeyCallback(
-      mWindow,
-      [](::GLFWwindow* window, int key, int scancode, int action, int mods)
-      {
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-          glfwSetWindowShouldClose(window, GLFW_TRUE);
-      });
+  glfwSetKeyCallback(mWindow,
+    [](::GLFWwindow* window, int key, int scancode, int action, int mods)
+    {
+      if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    });
 
   MENTAL_INFO("GLFW window initialized");
   mIsInitialized = true;
@@ -81,8 +82,8 @@ bool mental::platform::PCWindow::shouldClose() const
 #ifdef MENTAL_WITH_VULKAN
 #include <render/rhi/vulkan/constants.hpp>
 
-mental::core::Result
-mental::platform::createVulkanSurface(mental::platform::IWindow* window, VkInstance instance, VkSurfaceKHR* surface)
+mental::core::Result mental::platform::createVulkanSurface(
+  mental::platform::IWindow* window, VkInstance instance, VkSurfaceKHR* surface)
 {
   GLFWwindow* glfwWindow = window->getNativeObject(core::resource::ObjectType::eGLFWwindow);
   VkResult res = glfwCreateWindowSurface(instance, glfwWindow, VK_NULL_HANDLE, surface);

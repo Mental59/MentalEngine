@@ -9,7 +9,7 @@ static VmaAllocator gAllocator;
 
 mental::core::Result mental::rhi::vk::initAllocator(const mental::rhi::vk::AllocatorDesc& desc)
 {
-  VmaAllocatorCreateInfo allocatorCreateInfo{};
+  VmaAllocatorCreateInfo allocatorCreateInfo {};
   allocatorCreateInfo.vulkanApiVersion = desc.vulkanApiVersion;
   allocatorCreateInfo.physicalDevice = desc.physicalDevice;
   allocatorCreateInfo.device = desc.device;

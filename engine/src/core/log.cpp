@@ -9,68 +9,73 @@
 
 namespace mental::core::log
 {
-  static std::mutex gLogMutex;
+static std::mutex gLogMutex;
 
-  constexpr const char* levelToString(Level level)
+constexpr const char* levelToString(Level level)
+{
+  switch (level)
   {
-    switch (level)
-    {
-      case Level::eFatal: return "FATAL";
-      case Level::eError: return "ERROR";
-      case Level::eWarn: return "WARN";
-      case Level::eInfo: return "INFO";
-      case Level::eDebug: return "DEBUG";
-      case Level::eTrace: return "TRACE";
-    }
+    case Level::eFatal:
+      return "FATAL";
+    case Level::eError:
+      return "ERROR";
+    case Level::eWarn:
+      return "WARN";
+    case Level::eInfo:
+      return "INFO";
+    case Level::eDebug:
+      return "DEBUG";
+    case Level::eTrace:
+      return "TRACE";
   }
-  Logger& Logger::getInstance()
-  {
-    static Logger logger;
-    return logger;
-  }
+}
+Logger& Logger::getInstance()
+{
+  static Logger logger;
+  return logger;
+}
 
-  Logger::~Logger()
-  {
-    flush();
-  }
+Logger::~Logger()
+{
+  flush();
+}
 
-  void Logger::log(Level level, const std::string& message, const std::source_location& location)
-  {
-    auto timestamp = std::chrono::system_clock::now();
-    auto localTime = std::chrono::zoned_time{ std::chrono::current_zone(), timestamp };
-    auto localTimePoint = localTime.get_local_time();
+void Logger::log(Level level, const std::string& message, const std::source_location& location)
+{
+  auto timestamp = std::chrono::system_clock::now();
+  auto localTime = std::chrono::zoned_time {std::chrono::current_zone(), timestamp};
+  auto localTimePoint = localTime.get_local_time();
 
-    auto timeSinceMidnight = localTimePoint - std::chrono::floor<std::chrono::days>(localTimePoint);
-    std::chrono::hh_mm_ss hms{ timeSinceMidnight };
+  auto timeSinceMidnight = localTimePoint - std::chrono::floor<std::chrono::days>(localTimePoint);
+  std::chrono::hh_mm_ss hms {timeSinceMidnight};
 
-    std::lock_guard<std::mutex> guard(gLogMutex);
+  std::lock_guard<std::mutex> guard(gLogMutex);
 
-    std::string formatStr = std::format(
-        "[{:02}:{:02}:{:02}] [{}] {} ({}:{})\n",
-        hms.hours().count(),
-        hms.minutes().count(),
-        hms.seconds().count(),
-        levelToString(level),
-        message,
-        location.file_name(),
-        location.line());
-    std::cout << formatStr;
+  std::string formatStr = std::format("[{:02}:{:02}:{:02}] [{}] {} ({}:{})\n",
+    hms.hours().count(),
+    hms.minutes().count(),
+    hms.seconds().count(),
+    levelToString(level),
+    message,
+    location.file_name(),
+    location.line());
+  std::cout << formatStr;
 
 #if _WIN32
-    if (mOutputToDebug)
-    {
-      OutputDebugStringA(formatStr.c_str());
-    }
+  if (mOutputToDebug)
+  {
+    OutputDebugStringA(formatStr.c_str());
+  }
 #endif
-  }
+}
 
-  void Logger::enableOutputToDebug(bool enable)
-  {
-    mOutputToDebug = enable;
-  }
+void Logger::enableOutputToDebug(bool enable)
+{
+  mOutputToDebug = enable;
+}
 
-  void Logger::flush()
-  {
-    std::cout.flush();
-  }
-}  // namespace mental::core::log
+void Logger::flush()
+{
+  std::cout.flush();
+}
+} // namespace mental::core::log

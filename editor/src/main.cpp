@@ -9,16 +9,21 @@ int main()
   logger.enableOutputToDebug(true);
 
   mental::platform::PCWindow window;
-  window.init({ .title = "Editor", .width = 1280, .height = 720 });
+  window.init({.title = "Editor", .width = 1280, .height = 720});
   mental::core::resource::ResourceGuard<mental::platform::PCWindow> windowGuard(&window);
 
   mental::render::RenderSystem* renderSystem = &mental::render::getRenderSystem();
-  renderSystem->init({ mental::rhi::GraphicsApi::Vulkan, &window });
+  renderSystem->init({mental::rhi::GraphicsApi::Vulkan, &window});
   mental::core::resource::ResourceGuard<mental::render::RenderSystem> renderSystemGuard(renderSystem);
 
   while (!window.shouldClose())
   {
-    renderSystem->render();
+    mental::core::Result res = renderSystem->render();
+    if (res != mental::core::Result::eSuccess)
+    {
+      break;
+    }
+
     window.pollEvents();
   }
 

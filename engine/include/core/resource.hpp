@@ -4,87 +4,88 @@
 
 namespace mental::core::resource
 {
-  struct Object
+struct Object
+{
+  union
   {
-    union
-    {
-      uint64_t integer;
-      void* pointer;
-    };
-
-    Object(uint64_t i) : integer(i)
-    {
-    }
-    Object(void* p) : pointer(p)
-    {
-    }
-
-    template<typename T>
-    operator T*() const
-    {
-      return static_cast<T*>(pointer);
-    }
+    uint64_t integer;
+    void* pointer;
   };
 
-  enum class ObjectType : uint8_t
+  Object(uint64_t i)
+    : integer(i)
   {
-    eVkCommandBuffer = 0,
-    eVkQueue,
-    eVkCommandPool,
-    eVkBuffer,
-    eVkSemaphore,
-    eVkFence,
-    eVkDevice,
-    eVkPhysicalDevice,
-    eVkSurfaceKHR,
-    eVkSwapchainKHR,
-    eVkImage,
-    eVkImageView,
-    eGLFWwindow
-  };
-
-  class IResource
+  }
+  Object(void* p)
+    : pointer(p)
   {
-   public:
-    IResource() = default;
-    IResource(const IResource& other) = delete;
-    IResource& operator=(const IResource& other) = delete;
-    IResource(IResource&& other) = default;  // allow moving
-    IResource& operator=(IResource&& other) = delete;
+  }
 
-    virtual Object getNativeObject(ObjectType objectType)
-    {
-      return nullptr;
-    }
-    virtual bool isValid() const = 0;
-    virtual void destroy() = 0;
-  };
-
-  template<typename T>
-  class ResourceGuard
+  template <typename T> operator T*() const
   {
-   public:
-    ResourceGuard(T* resource) : mResource(resource)
-    {
-    }
+    return static_cast<T*>(pointer);
+  }
+};
 
-    ~ResourceGuard()
-    {
-      mResource->destroy();
-    }
+enum class ObjectType : uint8_t
+{
+  eVkCommandBuffer = 0,
+  eVkQueue,
+  eVkCommandPool,
+  eVkBuffer,
+  eVkSemaphore,
+  eVkFence,
+  eVkDevice,
+  eVkPhysicalDevice,
+  eVkSurfaceKHR,
+  eVkSwapchainKHR,
+  eVkImage,
+  eVkImageView,
+  eGLFWwindow
+};
 
-   private:
-    T* mResource;
-  };
+class IResource
+{
+ public:
+  IResource() = default;
+  IResource(const IResource& other) = delete;
+  IResource& operator=(const IResource& other) = delete;
+  IResource(IResource&& other) = default; // allow moving
+  IResource& operator=(IResource&& other) = delete;
 
-  class ResourceHandle
+  virtual Object getNativeObject(ObjectType objectType)
   {
-   public:
-    bool isValid() const
-    {
-      return id > 0;
-    }
+    return nullptr;
+  }
+  virtual bool isValid() const = 0;
+  virtual void destroy() = 0;
+};
 
-    size_t id;
-  };
-}  // namespace mental::core::resource
+template <typename T> class ResourceGuard
+{
+ public:
+  ResourceGuard(T* resource)
+    : mResource(resource)
+  {
+  }
+
+  ~ResourceGuard()
+  {
+    mResource->destroy();
+  }
+
+ private:
+  T* mResource;
+};
+
+class ResourceHandle
+{
+ public:
+  bool isValid() const
+  {
+    return id > 0;
+  }
+
+  size_t id;
+};
+} // namespace mental::core::resource
