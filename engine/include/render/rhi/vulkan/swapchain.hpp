@@ -10,6 +10,7 @@ class Swapchain : public ISwapchain
 {
  public:
   virtual core::Result init(const SwapchainDesc& desc) override;
+  virtual core::Result resize(uint32_t width, uint32_t height) override;
   virtual void destroy() override;
 
   virtual bool isValid() const override;
@@ -24,14 +25,18 @@ class Swapchain : public ISwapchain
   virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
 
  private:
+  core::Result createSwapchain(VkSwapchainKHR oldSwapchain, uint32_t width, uint32_t height);
+  void destroyImageViewsAndWrappers();
+
   VkSurfaceFormatKHR chooseSurfaceFormat() const;
   VkPresentModeKHR choosePresentMode(const SwapchainDesc& desc) const;
   mental::rhi::TextureFormat surfaceFormatToTextureFormat(VkSurfaceFormatKHR surfaceFormat) const;
 
-  VkSwapchainKHR mSwapchain;
-  VkSurfaceFormatKHR mFormat;
-  VkPresentModeKHR mPresentMode;
-  VkExtent2D mExtent;
+  SwapchainDesc mDesc {};
+  VkSwapchainKHR mSwapchain = VK_NULL_HANDLE;
+  VkSurfaceFormatKHR mFormat {};
+  VkPresentModeKHR mPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+  VkExtent2D mExtent {};
   std::vector<vk::Texture> mTextures;
   std::vector<vk::TextureView> mTextureViews;
   bool mIsInit = false;

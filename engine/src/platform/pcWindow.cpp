@@ -59,6 +59,18 @@ void mental::platform::PCWindow::destroy()
   MENTAL_INFO("GLFW window destroyed");
 }
 
+mental::platform::WindowSize mental::platform::PCWindow::getWindowSize() const
+{
+  int width, height;
+  glfwGetFramebufferSize(mWindow, &width, &height);
+
+  WindowSize windowSize {};
+  windowSize.width = static_cast<uint32_t>(width);
+  windowSize.height = static_cast<uint32_t>(height);
+
+  return windowSize;
+}
+
 bool mental::platform::PCWindow::isValid() const
 {
   return mIsInitialized;
@@ -67,6 +79,11 @@ bool mental::platform::PCWindow::isValid() const
 void mental::platform::PCWindow::pollEvents() const
 {
   glfwPollEvents();
+}
+
+void mental::platform::PCWindow::waitEvents() const
+{
+  glfwWaitEvents();
 }
 
 double mental::platform::PCWindow::getTime() const

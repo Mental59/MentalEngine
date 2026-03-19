@@ -5,6 +5,25 @@
 #include <resource/resourceManager.hpp>
 #include <cstdint>
 
+namespace
+{
+struct FrameUpdater
+{
+  FrameUpdater(mental::render::RenderSystem& renderSystem)
+    : mRenderSystem(renderSystem)
+  {
+  }
+
+  ~FrameUpdater()
+  {
+    mRenderSystem.nextFrame();
+  }
+
+ private:
+  mental::render::RenderSystem& mRenderSystem;
+};
+} // namespace
+
 mental::core::Result mental::render::RenderSystem::init(const mental::render::RenderSystemConfig& conf)
 {
   if (mIsInitialized)
@@ -51,6 +70,7 @@ mental::core::Result mental::render::RenderSystem::init(const mental::render::Re
 
   mCurrentFrame = 0;
   mIsInitialized = true;
+  mWindow = conf.window;
   MENTAL_INFO("Render system initialized");
 
   return core::Result::eSuccess;
@@ -80,6 +100,7 @@ void mental::render::RenderSystem::destroy()
   mCurrentFrame = 0;
   mMaxFramesInFlight = 0;
   mIsInitialized = false;
+  mWindow = nullptr;
 
   MENTAL_INFO("Render system destroyed");
 }
@@ -89,8 +110,15 @@ bool mental::render::RenderSystem::isValid() const
   return mIsInitialized;
 }
 
+void mental::render::RenderSystem::nextFrame()
+{
+  mCurrentFrame = (mCurrentFrame + 1) % mMaxFramesInFlight;
+}
+
 mental::core::Result mental::render::RenderSystem::render()
 {
+  FrameUpdater frameUpdadater(*this);
+
   resource::FrameData frameData = mFrameDataHandles[mCurrentFrame].get();
   if (!frameData.isValid())
   {
@@ -117,9 +145,8 @@ mental::core::Result mental::render::RenderSystem::render()
   res = swapchain->acquireNextTexture(UINT64_MAX, frameData.imageAvailableSemaphore, nullptr, swapchainTextureIndex);
   if (res == core::Result::eSuboptimal)
   {
-    // TODO: resize swapchain, update current frame and return with success status
-    MENTAL_ERROR("Swapchain needs to resized");
-    return core::Result::eOperationFailed;
+    resizeSwapchain(swapchain);
+    return core::Result::eSuccess;
   }
   else if (res != core::Result::eSuccess && res != core::Result::eSuboptimal)
   {
@@ -203,9 +230,8 @@ mental::core::Result mental::render::RenderSystem::render()
   res = swapchain->present(swapchainTextureIndex, frameData.renderFinishedSemaphore);
   if (res == core::Result::eSuboptimal || res == core::Result::eOutOfDate)
   {
-    // TODO: resize swapchain, update current frame and return with success status
-    MENTAL_ERROR("Swapchain needs to resized");
-    return core::Result::eOperationFailed;
+    resizeSwapchain(swapchain);
+    return core::Result::eSuccess;
   }
   else if (res != core::Result::eSuccess)
   {
@@ -213,6 +239,20 @@ mental::core::Result mental::render::RenderSystem::render()
     return core::Result::eOperationFailed;
   }
 
-  mCurrentFrame = (mCurrentFrame + 1) % mMaxFramesInFlight;
   return core::Result::eSuccess;
+}
+
+void mental::render::RenderSystem::resizeSwapchain(rhi::ISwapchain* swapchain)
+{
+  MENTAL_ASSERT(mWindow != nullptr);
+
+  mental::platform::WindowSize windowSize {};
+  while (windowSize.width == 0 || windowSize.height == 0)
+  {
+    windowSize = mWindow->getWindowSize();
+    mWindow->waitEvents();
+  }
+
+  core::Result res = swapchain->resize(windowSize.width, windowSize.height);
+  MENTAL_ASSERT_MESSAGE(res == core::Result::eSuccess, "Failed to resize swapchain");
 }

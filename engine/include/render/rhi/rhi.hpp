@@ -175,6 +175,7 @@ class ISwapchain : public core::resource::IResource
 {
  public:
   virtual core::Result init(const SwapchainDesc& desc) = 0;
+  virtual core::Result resize(uint32_t width, uint32_t height) = 0;
   virtual core::Result acquireNextTexture(
     uint64_t timeout, ISemaphore* signalSemaphore, IFence* signalFence, uint32_t& textureIndex) = 0;
   virtual core::Result present(uint32_t textureIndex, ISemaphore* waitSemaphore) = 0;

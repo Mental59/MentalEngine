@@ -14,9 +14,12 @@ class PCWindow : public IWindow
   virtual core::Result init(const WindowDesc& desc) override;
   virtual void destroy() override;
 
+  virtual WindowSize getWindowSize() const override;
+
   virtual bool isValid() const override;
 
   virtual void pollEvents() const override;
+  virtual void waitEvents() const override;
   virtual double getTime() const override;
   virtual bool shouldClose() const override;
 

@@ -36,10 +36,13 @@ class RenderSystem : public core::resource::IResource
 
   virtual bool isValid() const override;
 
+  void nextFrame();
+
   core::Result render();
 
  private:
   RenderSystem() = default;
+  void resizeSwapchain(rhi::ISwapchain* swapchain);
 
   std::vector<resource::FrameDataHandle> mFrameDataHandles;
 
@@ -47,6 +50,7 @@ class RenderSystem : public core::resource::IResource
   uint32_t mMaxFramesInFlight = 0;
 
   bool mIsInitialized = false;
+  mental::platform::IWindow* mWindow;
 };
 
 inline RenderSystem& getRenderSystem()
