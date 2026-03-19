@@ -4,9 +4,16 @@
 #include <render/rhi/rhi.hpp>
 #include <resource/resourceManager.hpp>
 #include <cstdint>
+#include <cmath>
 
 namespace
 {
+float getAnimatedClearChannel(double timeSeconds, double phaseOffset)
+{
+  const double wave = std::sin(timeSeconds + phaseOffset);
+  return static_cast<float>(0.5 * (wave + 1.0));
+}
+
 struct FrameUpdater
 {
   FrameUpdater(mental::render::RenderSystem& renderSystem)
@@ -184,10 +191,11 @@ mental::core::Result mental::render::RenderSystem::render()
     .width = swapchainTextureDesc.extent.width,
     .height = swapchainTextureDesc.extent.height,
   };
-  renderingInfo.clearValue.color[0] = 0.2f;
-  renderingInfo.clearValue.color[1] = 0.2f;
-  renderingInfo.clearValue.color[2] = 0.2f;
-  renderingInfo.clearValue.color[3] = 0.0f;
+  const double timeSeconds = mWindow != nullptr ? mWindow->getTime() : 0.0;
+  renderingInfo.clearValue.color[0] = getAnimatedClearChannel(timeSeconds, 0.0);
+  renderingInfo.clearValue.color[1] = getAnimatedClearChannel(timeSeconds, 2.0943951023931953);
+  renderingInfo.clearValue.color[2] = getAnimatedClearChannel(timeSeconds, 4.1887902047863905);
+  renderingInfo.clearValue.color[3] = 1.0f;
   renderingInfo.clearValue.depth = 0.0f;
   renderingInfo.clearValue.stencil = 0;
   cmdList->beginRendering(renderingInfo);
