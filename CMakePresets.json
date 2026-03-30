@@ -12,7 +12,7 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++"
       },
-      "binaryDir": "${workspaceFolder}/build"
+      "binaryDir": "${sourceDir}/build"
     },
     {
       "name": "release",
@@ -25,7 +25,7 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++"
       },
-      "binaryDir": "${workspaceFolder}/build"
+      "binaryDir": "${sourceDir}/build"
     }
   ]
 }
