@@ -47,6 +47,7 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "")
 set(GLFW_INSTALL OFF CACHE BOOL "")
 
 add_subdirectory(deps/glfw)
+add_subdirectory(deps/entt)
 
 add_library(glm INTERFACE)
 target_include_directories(glm INTERFACE "${MENTAL_GLM_INCLUDE_DIR}")
@@ -71,7 +72,7 @@ target_link_libraries(imgui PRIVATE glfw Vulkan::Vulkan)
 target_compile_definitions(imgui PRIVATE IMGUI_IMPL_VULKAN_NO_PROTOTYPES NOMINMAX)
 
 target_include_directories(MentalEngine PUBLIC include ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(MentalEngine PRIVATE Vulkan::Vulkan glfw glm slang imgui)
+target_link_libraries(MentalEngine PRIVATE Vulkan::Vulkan glfw glm slang imgui EnTT::EnTT)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_WITH_VULKAN VK_NO_PROTOTYPES VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0 NOMINMAX)
 
 set(MENTAL_SLANG_DLL "${MENTAL_SLANG_DLL}" CACHE INTERNAL "Path to the Slang runtime DLL")
