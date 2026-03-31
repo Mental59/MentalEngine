@@ -4,6 +4,11 @@
 #include <resource/resourceManager.hpp>
 #include <vector>
 
+namespace mental::editor
+{
+struct FrameContext;
+}
+
 namespace mental::platform
 {
 class IWindow;
@@ -17,7 +22,14 @@ struct RenderSystemConfig
   mental::platform::IWindow* window;
 };
 
-class RenderSystem : public core::resource::IResource
+class IRenderSystem : public core::resource::IResource
+{
+ public:
+  virtual core::Result init(const RenderSystemConfig& conf) = 0;
+  [[nodiscard]] virtual core::Result render(const editor::FrameContext& frameContext) = 0;
+};
+
+class RenderSystem : public IRenderSystem
 {
  public:
   static RenderSystem& instance()
@@ -31,18 +43,18 @@ class RenderSystem : public core::resource::IResource
   RenderSystem& operator=(const RenderSystem&) = delete;
   RenderSystem& operator=(const RenderSystem&&) = delete;
 
-  core::Result init(const RenderSystemConfig& conf);
+  virtual core::Result init(const RenderSystemConfig& conf) override;
   virtual void destroy() override;
 
   virtual bool isValid() const override;
 
   void nextFrame();
 
-  core::Result render();
+  virtual core::Result render(const editor::FrameContext& frameContext) override;
 
  private:
   RenderSystem() = default;
-  void resizeSwapchain(rhi::ISwapchain* swapchain);
+  [[nodiscard]] core::Result resizeSwapchain(rhi::ISwapchain* swapchain);
 
   std::vector<resource::FrameDataHandle> mFrameDataHandles;
 

@@ -1,4 +1,7 @@
 #include <render/render.hpp>
+
+#include <editor/app/frameContext.hpp>
+
 #include <core/log.hpp>
 #include <platform/window.hpp>
 #include <render/rhi/rhi.hpp>
@@ -122,7 +125,7 @@ void mental::render::RenderSystem::nextFrame()
   mCurrentFrame = (mCurrentFrame + 1) % mMaxFramesInFlight;
 }
 
-mental::core::Result mental::render::RenderSystem::render()
+mental::core::Result mental::render::RenderSystem::render(const mental::editor::FrameContext& frameContext)
 {
   FrameUpdater frameUpdadater(*this);
 
@@ -150,12 +153,16 @@ mental::core::Result mental::render::RenderSystem::render()
   rhi::ISwapchain* swapchain = rhi::getDevice().getSwapchain();
   uint32_t swapchainTextureIndex = 0;
   res = swapchain->acquireNextTexture(UINT64_MAX, frameData.imageAvailableSemaphore, nullptr, swapchainTextureIndex);
-  if (res == core::Result::eSuboptimal)
+  if (res == core::Result::eSuboptimal || res == core::Result::eOutOfDate)
   {
-    resizeSwapchain(swapchain);
+    const core::Result resizeResult = resizeSwapchain(swapchain);
+    if (resizeResult != core::Result::eSuccess)
+    {
+      return resizeResult;
+    }
     return core::Result::eSuccess;
   }
-  else if (res != core::Result::eSuccess && res != core::Result::eSuboptimal)
+  else if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to acquire swapchain texture, error: {}", core::resultToString(res));
     return core::Result::eOperationFailed;
@@ -191,7 +198,7 @@ mental::core::Result mental::render::RenderSystem::render()
     .width = swapchainTextureDesc.extent.width,
     .height = swapchainTextureDesc.extent.height,
   };
-  const double timeSeconds = mWindow != nullptr ? mWindow->getTime() : 0.0;
+  const double timeSeconds = frameContext.absoluteTimeSeconds;
   renderingInfo.clearValue.color[0] = getAnimatedClearChannel(timeSeconds, 0.0);
   renderingInfo.clearValue.color[1] = getAnimatedClearChannel(timeSeconds, 2.0943951023931953);
   renderingInfo.clearValue.color[2] = getAnimatedClearChannel(timeSeconds, 4.1887902047863905);
@@ -238,7 +245,11 @@ mental::core::Result mental::render::RenderSystem::render()
   res = swapchain->present(swapchainTextureIndex, frameData.renderFinishedSemaphore);
   if (res == core::Result::eSuboptimal || res == core::Result::eOutOfDate)
   {
-    resizeSwapchain(swapchain);
+    const core::Result resizeResult = resizeSwapchain(swapchain);
+    if (resizeResult != core::Result::eSuccess)
+    {
+      return resizeResult;
+    }
     return core::Result::eSuccess;
   }
   else if (res != core::Result::eSuccess)
@@ -250,17 +261,26 @@ mental::core::Result mental::render::RenderSystem::render()
   return core::Result::eSuccess;
 }
 
-void mental::render::RenderSystem::resizeSwapchain(rhi::ISwapchain* swapchain)
+mental::core::Result mental::render::RenderSystem::resizeSwapchain(rhi::ISwapchain* swapchain)
 {
   MENTAL_ASSERT(mWindow != nullptr);
 
   mental::platform::WindowSize windowSize {};
   while (windowSize.width == 0 || windowSize.height == 0)
   {
+    if (mWindow->shouldClose())
+    {
+      return core::Result::eSuccess;
+    }
+
     windowSize = mWindow->getWindowSize();
-    mWindow->waitEvents();
+    if (windowSize.width == 0 || windowSize.height == 0)
+    {
+      mWindow->waitEvents();
+    }
   }
 
   core::Result res = swapchain->resize(windowSize.width, windowSize.height);
   MENTAL_ASSERT_MESSAGE(res == core::Result::eSuccess, "Failed to resize swapchain");
+  return res;
 }
