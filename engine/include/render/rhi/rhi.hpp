@@ -5,10 +5,9 @@
 #include <cstddef>
 #include <optional>
 
-namespace mental::platform
-{
-class IWindow;
-}
+#if defined MENTAL_WITH_VULKAN
+#include <Volk/volk.h>
+#endif
 
 namespace mental::rhi
 {
@@ -155,10 +154,10 @@ class ICommandQueue : public core::resource::IResource
   {
     ICommandList* const* cmdLists;
     uint32_t cmdListCount;
-    ISemaphore* const waitSemaphore;   // Semaphore to wait on before execution
-    PipelineStage waitStage;           // Stage at which to wait
-    ISemaphore* const signalSemaphore; // Semaphore to signal after execution
-    IFence* const signalFence;         // Fence to signal after execution
+    ISemaphore* const waitSemaphore;
+    PipelineStage waitStage;
+    ISemaphore* const signalSemaphore;
+    IFence* const signalFence;
   };
 
   virtual core::Result submit(const SubmitInfo& info) = 0;
@@ -276,7 +275,25 @@ class IDevice : public core::resource::IResource
   virtual ISwapchain* getSwapchain() = 0;
 };
 
-void initDevice(GraphicsApi api, mental::platform::IWindow* window);
+#if defined MENTAL_WITH_VULKAN
+struct VulkanSurfaceCreateInput
+{
+  using CreateSurfaceFn = core::Result (*)(VkInstance instance, void* userData, VkSurfaceKHR* surface);
+
+  CreateSurfaceFn createSurface = nullptr;
+  void* userData = nullptr;
+};
+#endif
+
+struct DeviceInitInput
+{
+#if defined MENTAL_WITH_VULKAN
+  VulkanSurfaceCreateInput vulkanSurface {};
+#endif
+};
+
+[[nodiscard]] core::Result validateDeviceInitInput(GraphicsApi api, const DeviceInitInput& initInput);
+[[nodiscard]] core::Result initDevice(GraphicsApi api, const DeviceInitInput& initInput);
 IDevice& getDevice();
 void destroyDevice();
 

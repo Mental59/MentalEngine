@@ -2,7 +2,6 @@
 #include <core/log.hpp>
 #include <core/types.hpp>
 #include <format>
-#include <platform/window.hpp>
 #if defined MENTAL_WITH_VULKAN
 #include <render/rhi/vulkan/factory.hpp>
 #endif
@@ -26,9 +25,37 @@ const char* graphicsApiToString(GraphicsApi api)
   }
 }
 
-void initDevice(GraphicsApi api, mental::platform::IWindow* window)
+core::Result validateDeviceInitInput(GraphicsApi api, const DeviceInitInput& initInput)
 {
-  MENTAL_ASSERT_DEBUG(window != nullptr);
+  switch (api)
+  {
+#if defined MENTAL_WITH_VULKAN
+    case GraphicsApi::Vulkan:
+    {
+      if (initInput.vulkanSurface.createSurface == nullptr || initInput.vulkanSurface.userData == nullptr)
+      {
+        MENTAL_ERROR("Missing Vulkan surface creation input");
+        return core::Result::eInitializationFailed;
+      }
+
+      return core::Result::eSuccess;
+    }
+#endif
+    default:
+    {
+      MENTAL_ERROR("Unsupported graphics api {}", graphicsApiToString(api));
+      return core::Result::eInitializationFailed;
+    }
+  }
+}
+
+core::Result initDevice(GraphicsApi api, const DeviceInitInput& initInput)
+{
+  const core::Result validationResult = validateDeviceInitInput(api, initInput);
+  if (validationResult != core::Result::eSuccess)
+  {
+    return validationResult;
+  }
 
   switch (api)
   {
@@ -40,30 +67,41 @@ void initDevice(GraphicsApi api, mental::platform::IWindow* window)
 
       rhi::vk::InstanceInfo instanceInfo;
       res = factory.createInstance(instanceInfo);
-      MENTAL_ASSERT_MESSAGE(res == core::Result::eSuccess,
-        std::format("Failed to create vulkan instance. Error: {}", core::resultToString(res)));
+      if (res != core::Result::eSuccess)
+      {
+        MENTAL_ERROR("Failed to create vulkan instance. Error: {}", core::resultToString(res));
+        return core::Result::eInitializationFailed;
+      }
 
       VkSurfaceKHR surface;
-      res = mental::platform::createVulkanSurface(window, instanceInfo.getInstance(), &surface);
-      MENTAL_ASSERT_MESSAGE(res == core::Result::eSuccess,
-        std::format("Failed to create vulkan surface. Error: {}", core::resultToString(res)));
+      res =
+        initInput.vulkanSurface.createSurface(instanceInfo.getInstance(), initInput.vulkanSurface.userData, &surface);
+      if (res != core::Result::eSuccess)
+      {
+        MENTAL_ERROR("Failed to create vulkan surface. Error: {}", core::resultToString(res));
+        return core::Result::eInitializationFailed;
+      }
 
       rhi::vk::DeviceFactory::SwapchainSettings swapchainSettings {};
       swapchainSettings.enableTripleBuffering = false;
       swapchainSettings.enableVerticalSync = true;
 
       res = factory.initDevice(instanceInfo, surface, swapchainSettings);
-      MENTAL_ASSERT_MESSAGE(res == core::Result::eSuccess,
-        std::format("Failed to create vulkan device. Error: {}", core::resultToString(res)));
+      if (res != core::Result::eSuccess)
+      {
+        MENTAL_ERROR("Failed to create vulkan device. Error: {}", core::resultToString(res));
+        return core::Result::eInitializationFailed;
+      }
 
       gDevice = &rhi::vk::getDevice();
-      break;
+      return core::Result::eSuccess;
     }
 #endif
 
     default:
     {
-      MENTAL_ASSERT_MESSAGE(false, std::format("Unsupported graphics api {}", graphicsApiToString(api)));
+      MENTAL_ERROR("Unsupported graphics api {}", graphicsApiToString(api));
+      return core::Result::eInitializationFailed;
     }
   }
 }
@@ -75,7 +113,11 @@ IDevice& getDevice()
 
 void destroyDevice()
 {
-  gDevice->destroy();
+  if (gDevice != nullptr)
+  {
+    gDevice->destroy();
+    gDevice = nullptr;
+  }
 }
 
 } // namespace mental::rhi
