@@ -148,7 +148,8 @@ void mental::render::RenderSystem::nextFrame()
   mCurrentFrame = (mCurrentFrame + 1) % mMaxFramesInFlight;
 }
 
-mental::core::Result mental::render::RenderSystem::render(const mental::editor::FrameContext& frameContext)
+mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
+  const mental::editor::FrameContext& frameContext)
 {
   FrameUpdater frameUpdadater(*this);
 
@@ -156,14 +157,14 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
   if (!frameData.isValid())
   {
     MENTAL_ERROR("Invalid frame data");
-    return core::Result::eOperationFailed;
+    return {.result = core::Result::eOperationFailed};
   }
 
   core::Result res = frameData.fence->wait();
   if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to wait for frame fence");
-    return core::Result::eOperationFailed;
+    return {.result = core::Result::eOperationFailed};
   }
 
   rhi::ISwapchain* swapchain = rhi::getDevice().getSwapchain();
@@ -174,14 +175,14 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
     const core::Result resizeResult = resizeSwapchain(swapchain);
     if (resizeResult != core::Result::eSuccess)
     {
-      return resizeResult;
+      return {.result = resizeResult};
     }
-    return core::Result::eSuccess;
+    return {.result = core::Result::eSuccess, .submitted = false};
   }
   else if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to acquire swapchain texture, error: {}", core::resultToString(res));
-    return core::Result::eOperationFailed;
+    return {.result = core::Result::eOperationFailed};
   }
 
   if (isSubmitEligibleAcquireResult(res))
@@ -190,7 +191,7 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
     if (res != core::Result::eSuccess)
     {
       MENTAL_ERROR("Failed to reset frame fence");
-      return core::Result::eOperationFailed;
+      return {.result = core::Result::eOperationFailed};
     }
   }
 
@@ -199,7 +200,7 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
   if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to begin command list");
-    return core::Result::eOperationFailed;
+    return {.result = core::Result::eOperationFailed};
   }
 
   rhi::ITexture* swapchainTexture = swapchain->getTexture(swapchainTextureIndex);
@@ -214,7 +215,7 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
   if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to transition swapchain texture to color attachment layout");
-    return core::Result::eOperationFailed;
+    return {.result = core::Result::eOperationFailed};
   }
 
   const rhi::TextureDesc& swapchainTextureDesc = swapchainTexture->getDesc();
@@ -243,14 +244,14 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
   if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to transition swapchain texture to present layout");
-    return core::Result::eOperationFailed;
+    return {.result = core::Result::eOperationFailed};
   }
 
   res = cmdList->end();
   if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to end command list");
-    return core::Result::eOperationFailed;
+    return {.result = core::Result::eOperationFailed};
   }
 
   rhi::ICommandList* submitCmdLists[] = {cmdList};
@@ -265,7 +266,7 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
   if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to submit command list");
-    return core::Result::eOperationFailed;
+    return {.result = core::Result::eOperationFailed};
   }
   frameUpdadater.commit();
 
@@ -275,17 +276,17 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
     const core::Result resizeResult = resizeSwapchain(swapchain);
     if (resizeResult != core::Result::eSuccess)
     {
-      return resizeResult;
+      return {.result = resizeResult};
     }
-    return core::Result::eSuccess;
+    return {.result = core::Result::eSuccess, .submitted = false};
   }
   else if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to present swapchain texture, error: {}", core::resultToString(res));
-    return core::Result::eOperationFailed;
+    return {.result = core::Result::eOperationFailed};
   }
 
-  return core::Result::eSuccess;
+  return {.result = core::Result::eSuccess, .submitted = true};
 }
 
 mental::core::Result mental::render::RenderSystem::resizeSwapchain(rhi::ISwapchain* swapchain)

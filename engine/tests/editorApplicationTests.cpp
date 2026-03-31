@@ -87,10 +87,13 @@ struct FakeRenderSystem final : mental::render::IRenderSystem
     return initialized && !destroyed;
   }
 
-  Result render(const FrameContext& frameContext) override
+  mental::render::RenderFrameOutcome render(const FrameContext& frameContext) override
   {
     frames.push_back(frameContext);
-    return renderResult;
+    return {
+      .result = renderResult,
+      .submitted = submitted,
+    };
   }
 
   mental::core::resource::Object getNativeObject(mental::core::resource::ObjectType) override
@@ -101,6 +104,7 @@ struct FakeRenderSystem final : mental::render::IRenderSystem
   bool initialized = true;
   bool destroyed = false;
   Result renderResult = Result::eSuccess;
+  bool submitted = true;
   std::vector<FrameContext> frames;
 };
 
@@ -312,6 +316,31 @@ void testRenderFrameBuildsFrameContext()
   require(renderer.frames[1].frameIndex.has_value() && renderer.frames[1].frameIndex.value() == 1u,
     "Second frame index should increment");
 }
+
+void testRenderFrameDoesNotAdvanceIndexForNoOpSuccess()
+{
+  FakeWindow window;
+  window.timeSeconds = 1.0;
+  FakeRenderSystem renderer;
+  renderer.submitted = false;
+  TestEditorApplication app {&window, &renderer};
+
+  require(app.init() == Result::eSuccess, "Application init should succeed for no-op render test");
+
+  window.timeSeconds = 2.0;
+  require(app.updatePlatform() == Result::eSuccess, "updatePlatform should succeed for first no-op frame");
+  require(app.renderFrame() == Result::eSuccess, "renderFrame should succeed for first no-op frame");
+  require(renderer.frames.size() == 1u, "Renderer should still observe the first no-op frame");
+  require(renderer.frames[0].frameIndex.has_value() && renderer.frames[0].frameIndex.value() == 0u,
+    "First no-op success should not advance the rendered frame index");
+
+  window.timeSeconds = 3.0;
+  require(app.updatePlatform() == Result::eSuccess, "updatePlatform should succeed for second no-op frame");
+  require(app.renderFrame() == Result::eSuccess, "renderFrame should succeed for second no-op frame");
+  require(renderer.frames.size() == 2u, "Renderer should still observe the second no-op frame");
+  require(renderer.frames[1].frameIndex.has_value() && renderer.frames[1].frameIndex.value() == 0u,
+    "Second no-op success should reuse the same rendered frame index");
+}
 } // namespace
 
 int main()
@@ -324,6 +353,7 @@ int main()
     testFailureStopsLoop();
     testMinimizedFrameWaitsWithoutRendering();
     testRenderFrameBuildsFrameContext();
+    testRenderFrameDoesNotAdvanceIndexForNoOpSuccess();
     return 0;
   }
   catch (const std::exception& exception)

@@ -13,6 +13,12 @@ namespace mental::render
 {
 [[nodiscard]] bool isSubmitEligibleAcquireResult(core::Result acquireResult);
 
+struct RenderFrameOutcome
+{
+  core::Result result = core::Result::eSuccess;
+  bool submitted = false;
+};
+
 struct RenderSystemConfig
 {
   rhi::GraphicsApi graphicsApi;
@@ -23,7 +29,7 @@ class IRenderSystem : public core::resource::IResource
 {
  public:
   virtual core::Result init(const RenderSystemConfig& conf) = 0;
-  [[nodiscard]] virtual core::Result render(const editor::FrameContext& frameContext) = 0;
+  [[nodiscard]] virtual RenderFrameOutcome render(const editor::FrameContext& frameContext) = 0;
 };
 
 class RenderSystem : public IRenderSystem
@@ -47,7 +53,7 @@ class RenderSystem : public IRenderSystem
 
   void nextFrame();
 
-  virtual core::Result render(const editor::FrameContext& frameContext) override;
+  virtual RenderFrameOutcome render(const editor::FrameContext& frameContext) override;
 
  private:
   RenderSystem() = default;

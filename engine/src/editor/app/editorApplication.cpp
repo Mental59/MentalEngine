@@ -138,13 +138,13 @@ core::Result EditorApplication::renderFrame()
   mFrameContext.framebufferResized = mFramebufferResized;
   mFrameContext.frameIndex = mRenderedFrameCount;
 
-  const core::Result res = mRenderSystem->render(mFrameContext);
-  if (res == core::Result::eSuccess)
+  const render::RenderFrameOutcome outcome = mRenderSystem->render(mFrameContext);
+  if (outcome.result == core::Result::eSuccess && outcome.submitted)
   {
     ++mRenderedFrameCount;
   }
 
-  return res;
+  return outcome.result;
 }
 
 core::Result EditorApplication::bootstrapScene()
