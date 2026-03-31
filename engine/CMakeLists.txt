@@ -86,6 +86,11 @@ add_executable(MentalEngineEditorApplicationTests tests/editorApplicationTests.c
 target_link_libraries(MentalEngineEditorApplicationTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineEditorApplicationTests COMMAND MentalEngineEditorApplicationTests)
 
+add_executable(MentalEngineRenderHostAdapterTests tests/renderHostAdapterTests.cpp)
+target_link_libraries(MentalEngineRenderHostAdapterTests PRIVATE MentalEngine)
+target_compile_definitions(MentalEngineRenderHostAdapterTests PRIVATE MENTAL_WITH_VULKAN)
+add_test(NAME MentalEngineRenderHostAdapterTests COMMAND MentalEngineRenderHostAdapterTests)
+
 if(WIN32)
 add_custom_command(
   TARGET MentalEngineSceneTests
@@ -99,6 +104,13 @@ add_custom_command(
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineEditorApplicationTests>/slang.dll"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineEditorApplicationTests>/slang-rt.dll"
+  VERBATIM
+)
+add_custom_command(
+  TARGET MentalEngineRenderHostAdapterTests
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineRenderHostAdapterTests>/slang.dll"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineRenderHostAdapterTests>/slang-rt.dll"
   VERBATIM
 )
 endif()

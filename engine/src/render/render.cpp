@@ -3,7 +3,7 @@
 #include <editor/app/frameContext.hpp>
 
 #include <core/log.hpp>
-#include <platform/window.hpp>
+#include <render/renderHostAdapter.hpp>
 #include <render/rhi/rhi.hpp>
 #include <resource/resourceManager.hpp>
 #include <cstdint>
@@ -24,15 +24,29 @@ struct FrameUpdater
   {
   }
 
+  void commit()
+  {
+    mShouldAdvance = true;
+  }
+
   ~FrameUpdater()
   {
-    mRenderSystem.nextFrame();
+    if (mShouldAdvance)
+    {
+      mRenderSystem.nextFrame();
+    }
   }
 
  private:
   mental::render::RenderSystem& mRenderSystem;
+  bool mShouldAdvance = false;
 };
 } // namespace
+
+bool mental::render::isSubmitEligibleAcquireResult(mental::core::Result acquireResult)
+{
+  return acquireResult == core::Result::eSuccess;
+}
 
 mental::core::Result mental::render::RenderSystem::init(const mental::render::RenderSystemConfig& conf)
 {
@@ -42,9 +56,18 @@ mental::core::Result mental::render::RenderSystem::init(const mental::render::Re
     return core::Result::eInitializationFailed;
   }
 
-  MENTAL_ASSERT_DEBUG(conf.window != nullptr);
+  if (conf.hostAdapter == nullptr)
+  {
+    MENTAL_ERROR("RenderSystem init requires a render host adapter");
+    return core::Result::eInitializationFailed;
+  }
 
-  rhi::initDevice(conf.graphicsApi, conf.window);
+  const core::Result initDeviceResult =
+    rhi::initDevice(conf.graphicsApi, conf.hostAdapter->createDeviceInitInput(conf.graphicsApi));
+  if (initDeviceResult != core::Result::eSuccess)
+  {
+    return initDeviceResult;
+  }
 
   uint32_t swapchainTextureCount = rhi::getDevice().getSwapchain()->getTextureCount();
   mMaxFramesInFlight = swapchainTextureCount;
@@ -80,7 +103,7 @@ mental::core::Result mental::render::RenderSystem::init(const mental::render::Re
 
   mCurrentFrame = 0;
   mIsInitialized = true;
-  mWindow = conf.window;
+  mHostAdapter = conf.hostAdapter;
   MENTAL_INFO("Render system initialized");
 
   return core::Result::eSuccess;
@@ -110,7 +133,7 @@ void mental::render::RenderSystem::destroy()
   mCurrentFrame = 0;
   mMaxFramesInFlight = 0;
   mIsInitialized = false;
-  mWindow = nullptr;
+  mHostAdapter = nullptr;
 
   MENTAL_INFO("Render system destroyed");
 }
@@ -143,13 +166,6 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
     return core::Result::eOperationFailed;
   }
 
-  res = frameData.fence->reset();
-  if (res != core::Result::eSuccess)
-  {
-    MENTAL_ERROR("Failed to reset frame fence");
-    return core::Result::eOperationFailed;
-  }
-
   rhi::ISwapchain* swapchain = rhi::getDevice().getSwapchain();
   uint32_t swapchainTextureIndex = 0;
   res = swapchain->acquireNextTexture(UINT64_MAX, frameData.imageAvailableSemaphore, nullptr, swapchainTextureIndex);
@@ -166,6 +182,16 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
   {
     MENTAL_ERROR("Failed to acquire swapchain texture, error: {}", core::resultToString(res));
     return core::Result::eOperationFailed;
+  }
+
+  if (isSubmitEligibleAcquireResult(res))
+  {
+    res = frameData.fence->reset();
+    if (res != core::Result::eSuccess)
+    {
+      MENTAL_ERROR("Failed to reset frame fence");
+      return core::Result::eOperationFailed;
+    }
   }
 
   rhi::ICommandList* cmdList = frameData.cmdList;
@@ -241,6 +267,7 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
     MENTAL_ERROR("Failed to submit command list");
     return core::Result::eOperationFailed;
   }
+  frameUpdadater.commit();
 
   res = swapchain->present(swapchainTextureIndex, frameData.renderFinishedSemaphore);
   if (res == core::Result::eSuboptimal || res == core::Result::eOutOfDate)
@@ -263,24 +290,15 @@ mental::core::Result mental::render::RenderSystem::render(const mental::editor::
 
 mental::core::Result mental::render::RenderSystem::resizeSwapchain(rhi::ISwapchain* swapchain)
 {
-  MENTAL_ASSERT(mWindow != nullptr);
+  MENTAL_ASSERT(mHostAdapter != nullptr);
 
-  mental::platform::WindowSize windowSize {};
-  while (windowSize.width == 0 || windowSize.height == 0)
+  const FramebufferExtentRecoveryResult recovery = mHostAdapter->recoverNextFramebufferExtent();
+  if (recovery.status == FramebufferExtentRecoveryStatus::eClosing)
   {
-    if (mWindow->shouldClose())
-    {
-      return core::Result::eSuccess;
-    }
-
-    windowSize = mWindow->getWindowSize();
-    if (windowSize.width == 0 || windowSize.height == 0)
-    {
-      mWindow->waitEvents();
-    }
+    return core::Result::eSuccess;
   }
 
-  core::Result res = swapchain->resize(windowSize.width, windowSize.height);
+  core::Result res = swapchain->resize(recovery.extent.width, recovery.extent.height);
   MENTAL_ASSERT_MESSAGE(res == core::Result::eSuccess, "Failed to resize swapchain");
   return res;
 }

@@ -9,17 +9,14 @@ namespace mental::editor
 struct FrameContext;
 }
 
-namespace mental::platform
-{
-class IWindow;
-}
-
 namespace mental::render
 {
+[[nodiscard]] bool isSubmitEligibleAcquireResult(core::Result acquireResult);
+
 struct RenderSystemConfig
 {
   rhi::GraphicsApi graphicsApi;
-  mental::platform::IWindow* window;
+  class IRenderHostAdapter* hostAdapter;
 };
 
 class IRenderSystem : public core::resource::IResource
@@ -62,7 +59,7 @@ class RenderSystem : public IRenderSystem
   uint32_t mMaxFramesInFlight = 0;
 
   bool mIsInitialized = false;
-  mental::platform::IWindow* mWindow;
+  IRenderHostAdapter* mHostAdapter = nullptr;
 };
 
 inline RenderSystem& getRenderSystem()

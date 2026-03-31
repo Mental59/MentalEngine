@@ -3,7 +3,8 @@
 #include <core/log.hpp>
 #include <platform/pcWindow.hpp>
 #include <render/render.hpp>
-#include "render/rhi/rhi.hpp"
+#include <render/renderHostAdapter.hpp>
+#include <render/rhi/rhi.hpp>
 
 int main()
 {
@@ -17,8 +18,9 @@ int main()
   }
   mental::core::resource::ResourceGuard<mental::platform::PCWindow> windowGuard(&window);
 
+  mental::render::WindowRenderHostAdapter renderHostAdapter(&window);
   mental::render::RenderSystem* renderSystem = &mental::render::getRenderSystem();
-  if (renderSystem->init({mental::rhi::GraphicsApi::Vulkan, &window}) != mental::core::Result::eSuccess)
+  if (renderSystem->init({mental::rhi::GraphicsApi::Vulkan, &renderHostAdapter}) != mental::core::Result::eSuccess)
   {
     return 1;
   }
