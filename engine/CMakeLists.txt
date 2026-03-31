@@ -72,8 +72,25 @@ target_link_libraries(imgui PRIVATE glfw Vulkan::Vulkan)
 target_compile_definitions(imgui PRIVATE IMGUI_IMPL_VULKAN_NO_PROTOTYPES NOMINMAX)
 
 target_include_directories(MentalEngine PUBLIC include ${Vulkan_INCLUDE_DIRS})
-target_link_libraries(MentalEngine PRIVATE Vulkan::Vulkan glfw glm slang imgui EnTT::EnTT)
+target_link_libraries(MentalEngine
+  PUBLIC glm EnTT::EnTT
+  PRIVATE Vulkan::Vulkan glfw slang imgui
+)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_WITH_VULKAN VK_NO_PROTOTYPES VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0 NOMINMAX)
+
+add_executable(MentalEngineSceneTests tests/editorSceneTests.cpp)
+target_link_libraries(MentalEngineSceneTests PRIVATE MentalEngine)
+add_test(NAME MentalEngineSceneTests COMMAND MentalEngineSceneTests)
+
+if(WIN32)
+add_custom_command(
+  TARGET MentalEngineSceneTests
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineSceneTests>/slang.dll"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineSceneTests>/slang-rt.dll"
+  VERBATIM
+)
+endif()
 
 set(MENTAL_SLANG_DLL "${MENTAL_SLANG_DLL}" CACHE INTERNAL "Path to the Slang runtime DLL")
 set(MENTAL_SLANG_RT_DLL "${MENTAL_SLANG_RT_DLL}" CACHE INTERNAL "Path to the Slang runtime support DLL")

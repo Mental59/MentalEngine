@@ -1,3 +1,5 @@
+#include <editor/scene/editorScene.hpp>
+
 #include <core/log.hpp>
 #include <platform/pcWindow.hpp>
 #include <render/render.hpp>
@@ -7,6 +9,14 @@ int main()
 {
   mental::core::log::Logger& logger = mental::core::log::Logger::getInstance();
   logger.enableOutputToDebug(true);
+
+  mental::editor::EditorScene editorScene;
+  entt::entity cube = entt::null;
+  if (editorScene.createPrimitive(mental::editor::PrimitiveType::eCube, cube) != mental::core::Result::eSuccess)
+  {
+    return 1;
+  }
+  (void)cube;
 
   mental::platform::PCWindow window;
   window.init({.title = "Editor", .width = 1280, .height = 720});
