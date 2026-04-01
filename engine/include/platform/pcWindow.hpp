@@ -15,6 +15,7 @@ class PCWindow : public IWindow
   virtual void destroy() override;
 
   virtual WindowSize getWindowSize() const override;
+  [[nodiscard]] virtual input::InputSnapshot sampleInput() const override;
 
   virtual bool isValid() const override;
 
@@ -24,7 +25,10 @@ class PCWindow : public IWindow
   virtual bool shouldClose() const override;
 
  private:
-  GLFWwindow* mWindow;
+  static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+
+  GLFWwindow* mWindow = nullptr;
+  mutable input::ScrollDelta mAccumulatedScrollDelta {};
   bool mIsInitialized = false;
 };
 

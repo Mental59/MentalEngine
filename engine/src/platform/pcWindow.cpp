@@ -3,6 +3,49 @@
 #include <core/log.hpp>
 #include "core/resource.hpp"
 
+namespace
+{
+constexpr int toGlfwKey(mental::input::KeyCode keyCode)
+{
+  switch (keyCode)
+  {
+    case mental::input::KeyCode::eW:
+      return GLFW_KEY_W;
+    case mental::input::KeyCode::eA:
+      return GLFW_KEY_A;
+    case mental::input::KeyCode::eS:
+      return GLFW_KEY_S;
+    case mental::input::KeyCode::eD:
+      return GLFW_KEY_D;
+    case mental::input::KeyCode::eQ:
+      return GLFW_KEY_Q;
+    case mental::input::KeyCode::eE:
+      return GLFW_KEY_E;
+    case mental::input::KeyCode::eR:
+      return GLFW_KEY_R;
+    case mental::input::KeyCode::eEscape:
+      return GLFW_KEY_ESCAPE;
+  }
+
+  return GLFW_KEY_UNKNOWN;
+}
+
+constexpr int toGlfwMouseButton(mental::input::MouseButton mouseButton)
+{
+  switch (mouseButton)
+  {
+    case mental::input::MouseButton::eLeft:
+      return GLFW_MOUSE_BUTTON_LEFT;
+    case mental::input::MouseButton::eRight:
+      return GLFW_MOUSE_BUTTON_RIGHT;
+    case mental::input::MouseButton::eMiddle:
+      return GLFW_MOUSE_BUTTON_MIDDLE;
+  }
+
+  return GLFW_MOUSE_BUTTON_LEFT;
+}
+} // namespace
+
 mental::core::resource::Object mental::platform::PCWindow::getNativeObject(core::resource::ObjectType objectType)
 {
   switch (objectType)
@@ -30,12 +73,9 @@ mental::core::Result mental::platform::PCWindow::init(const mental::platform::Wi
   mWindow = glfwCreateWindow(desc.width, desc.height, desc.title, nullptr, nullptr);
   MENTAL_ASSERT_MESSAGE(mWindow != nullptr, "Failed to create GLFW window");
 
-  glfwSetKeyCallback(mWindow,
-    [](::GLFWwindow* window, int key, int scancode, int action, int mods)
-    {
-      if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    });
+  mAccumulatedScrollDelta = {};
+  glfwSetWindowUserPointer(mWindow, this);
+  glfwSetScrollCallback(mWindow, &PCWindow::scrollCallback);
 
   MENTAL_INFO("GLFW window initialized");
   mIsInitialized = true;
@@ -51,7 +91,10 @@ void mental::platform::PCWindow::destroy()
     return;
   }
 
+  glfwSetWindowUserPointer(mWindow, nullptr);
   glfwDestroyWindow(mWindow);
+  mWindow = nullptr;
+  mAccumulatedScrollDelta = {};
   glfwTerminate();
 
   mIsInitialized = false;
@@ -69,6 +112,38 @@ mental::platform::WindowSize mental::platform::PCWindow::getWindowSize() const
   windowSize.height = static_cast<uint32_t>(height);
 
   return windowSize;
+}
+
+mental::input::InputSnapshot mental::platform::PCWindow::sampleInput() const
+{
+  input::InputSnapshot snapshot {};
+
+  if (mWindow == nullptr)
+  {
+    return snapshot;
+  }
+
+  double cursorX = 0.0;
+  double cursorY = 0.0;
+  glfwGetCursorPos(mWindow, &cursorX, &cursorY);
+
+  snapshot.cursorPosition = {cursorX, cursorY};
+  snapshot.scrollDelta = mAccumulatedScrollDelta;
+
+  for (const input::KeyCode keyCode : input::kKeyCodes)
+  {
+    snapshot.setKeyDown(keyCode, glfwGetKey(mWindow, toGlfwKey(keyCode)) == GLFW_PRESS);
+  }
+
+  for (const input::MouseButton mouseButton : input::kMouseButtons)
+  {
+    snapshot.setMouseButtonDown(
+      mouseButton, glfwGetMouseButton(mWindow, toGlfwMouseButton(mouseButton)) == GLFW_PRESS);
+  }
+
+  mAccumulatedScrollDelta = {};
+
+  return snapshot;
 }
 
 bool mental::platform::PCWindow::isValid() const
@@ -94,6 +169,15 @@ double mental::platform::PCWindow::getTime() const
 bool mental::platform::PCWindow::shouldClose() const
 {
   return glfwWindowShouldClose(mWindow);
+}
+
+void mental::platform::PCWindow::scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+{
+  if (auto* self = static_cast<PCWindow*>(glfwGetWindowUserPointer(window)); self != nullptr)
+  {
+    self->mAccumulatedScrollDelta.x += xoffset;
+    self->mAccumulatedScrollDelta.y += yoffset;
+  }
 }
 
 #ifdef MENTAL_WITH_VULKAN

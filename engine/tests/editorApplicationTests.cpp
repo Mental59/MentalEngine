@@ -3,6 +3,8 @@
 #include <render/frameContext.hpp>
 
 #include <core/types.hpp>
+#include <input/inputCodes.hpp>
+#include <input/inputSnapshot.hpp>
 #include <platform/window.hpp>
 
 #include <entt/entity/entity.hpp>
@@ -19,6 +21,11 @@ using mental::core::Result;
 using mental::editor::EditorApplication;
 using mental::render::FrameContext;
 
+mental::input::InputSnapshot makeInputSnapshot()
+{
+  return {};
+}
+
 struct FakeWindow final : mental::platform::IWindow
 {
   mutable int pollEventsCount = 0;
@@ -26,6 +33,7 @@ struct FakeWindow final : mental::platform::IWindow
   bool valid = true;
   bool closeRequested = false;
   mental::platform::WindowSize size {1280u, 720u};
+  mental::input::InputSnapshot inputSnapshot {};
   double timeSeconds = 0.0;
 
   Result init(const mental::platform::WindowDesc&) override
@@ -46,6 +54,11 @@ struct FakeWindow final : mental::platform::IWindow
   double getTime() const override
   {
     return timeSeconds;
+  }
+
+  mental::input::InputSnapshot sampleInput() const override
+  {
+    return inputSnapshot;
   }
 
   bool shouldClose() const override
@@ -114,6 +127,7 @@ struct TestEditorApplication : EditorApplication
   using EditorApplication::bootstrapScene;
   using EditorApplication::collectInput;
   using EditorApplication::frameContext;
+  using EditorApplication::inputState;
   using EditorApplication::isShutdownRequested;
   using EditorApplication::lastError;
   using EditorApplication::renderFrame;
@@ -140,6 +154,172 @@ void testDefaultConstruction()
   require(app.lastError() == Result::eSuccess, "Construction should start without an error");
   require(app.scene().registry().view<mental::editor::PrimitiveComponent>().size() == 0u,
     "Construction should not bootstrap the scene");
+}
+
+void testCollectInputReportsFirstFrameKeyPress()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for first-frame key press test");
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, true);
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for first-frame key press test");
+
+  require(app.inputState().isKeyDown(mental::input::KeyCode::eW), "First frame W should be down");
+  require(app.inputState().wasKeyPressed(mental::input::KeyCode::eW), "First frame W should report pressed");
+  require(!app.inputState().wasKeyReleased(mental::input::KeyCode::eW),
+    "First frame W should not report released");
+}
+
+void testCollectInputDoesNotRepeatPressedWhileHeld()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for held key test");
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, true);
+  require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for held key test");
+  require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for held key test");
+
+  require(app.inputState().isKeyDown(mental::input::KeyCode::eW), "Held W should remain down");
+  require(!app.inputState().wasKeyPressed(mental::input::KeyCode::eW),
+    "Held W should not re-report pressed");
+  require(!app.inputState().wasKeyReleased(mental::input::KeyCode::eW), "Held W should not report released");
+}
+
+void testCollectInputReportsKeyRelease()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for key release test");
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, true);
+  require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for key release test");
+
+  window.inputSnapshot = makeInputSnapshot();
+  require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for key release test");
+
+  require(!app.inputState().isKeyDown(mental::input::KeyCode::eW), "Released W should not remain down");
+  require(!app.inputState().wasKeyPressed(mental::input::KeyCode::eW),
+    "Released W should not report pressed");
+  require(app.inputState().wasKeyReleased(mental::input::KeyCode::eW), "Released W should report released");
+}
+
+void testCollectInputTracksMouseDeltaFromFrameToFrameMovement()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for mouse delta test");
+
+  window.inputSnapshot.cursorPosition = {100.0, 150.0};
+  require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for mouse delta test");
+  require(app.inputState().mouseDelta().x == 0.0, "First sampled frame should not invent mouse delta X");
+  require(app.inputState().mouseDelta().y == 0.0, "First sampled frame should not invent mouse delta Y");
+
+  window.inputSnapshot.cursorPosition = {112.5, 132.0};
+  require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for mouse delta test");
+
+  require(app.inputState().mousePosition().x == 112.5, "Mouse position X should match the current snapshot");
+  require(app.inputState().mousePosition().y == 132.0, "Mouse position Y should match the current snapshot");
+  require(app.inputState().mouseDelta().x == 12.5, "Mouse delta X should reflect frame-to-frame movement");
+  require(app.inputState().mouseDelta().y == -18.0, "Mouse delta Y should reflect frame-to-frame movement");
+}
+
+void testCollectInputConsumesOneFrameScrollDelta()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for scroll delta test");
+
+  window.inputSnapshot.scrollDelta = {1.5, -2.0};
+  require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for scroll delta test");
+  require(app.inputState().scrollDelta().x == 1.5, "Scroll delta X should be available on the sampled frame");
+  require(app.inputState().scrollDelta().y == -2.0, "Scroll delta Y should be available on the sampled frame");
+
+  window.inputSnapshot = makeInputSnapshot();
+  require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for scroll delta test");
+  require(app.inputState().scrollDelta().x == 0.0, "Scroll delta X should clear on the next frame");
+  require(app.inputState().scrollDelta().y == 0.0, "Scroll delta Y should clear on the next frame");
+}
+
+void testCollectInputRequestsTranslateModeWithW()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for W hotkey test");
+
+  app.scene().setGizmoMode(mental::editor::GizmoMode::eScale);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, true);
+
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for W hotkey test");
+  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eTranslate,
+    "W should request translate gizmo mode");
+}
+
+void testCollectInputRequestsRotateModeWithE()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for E hotkey test");
+
+  app.scene().setGizmoMode(mental::editor::GizmoMode::eScale);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eE, true);
+
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for E hotkey test");
+  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eRotate,
+    "E should request rotate gizmo mode");
+}
+
+void testCollectInputRequestsScaleModeWithR()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for R hotkey test");
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eR, true);
+
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for R hotkey test");
+  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eScale, "R should request scale gizmo mode");
+}
+
+void testCollectInputReportsFlyLookAndSelectionIntents()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for interaction intent test");
+
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eLeft, true);
+
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for interaction intent test");
+  require(app.inputState().isFlyLookActive(), "RMB held should report fly-look active");
+  require(app.inputState().wantsSelectionClick(), "LMB press should request a selection click");
+}
+
+void testCollectInputSamplesInputWhileMinimized()
+{
+  FakeWindow window;
+  window.size = {};
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for minimized input test");
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eE, true);
+
+  require(app.updatePlatform() == Result::eSuccess, "updatePlatform should succeed for minimized input test");
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for minimized input test");
+  require(window.waitEventsCount == 1, "Minimized input test should still wait for events");
+  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eRotate,
+    "collectInput should still process hotkeys while minimized");
 }
 
 void testBootstrapOccursInApplicationInit()
@@ -348,10 +528,20 @@ int main()
   try
   {
     testDefaultConstruction();
+    testCollectInputReportsFirstFrameKeyPress();
+    testCollectInputDoesNotRepeatPressedWhileHeld();
+    testCollectInputReportsKeyRelease();
+    testCollectInputTracksMouseDeltaFromFrameToFrameMovement();
+    testCollectInputConsumesOneFrameScrollDelta();
     testBootstrapOccursInApplicationInit();
+    testCollectInputRequestsTranslateModeWithW();
+    testCollectInputRequestsRotateModeWithE();
+    testCollectInputRequestsScaleModeWithR();
+    testCollectInputReportsFlyLookAndSelectionIntents();
     testRunCallsPhasesInOrder();
     testFailureStopsLoop();
     testMinimizedFrameWaitsWithoutRendering();
+    testCollectInputSamplesInputWhileMinimized();
     testRenderFrameBuildsFrameContext();
     testRenderFrameDoesNotAdvanceIndexForNoOpSuccess();
     return 0;
