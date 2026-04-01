@@ -1,5 +1,5 @@
 #include <core/types.hpp>
-#include <platform/inputSnapshot.hpp>
+#include <input/inputSnapshot.hpp>
 #include <platform/window.hpp>
 #include <render/render.hpp>
 #include <render/renderHostAdapter.hpp>
@@ -37,7 +37,7 @@ struct FakeWindow final : mental::platform::IWindow
     return 0.0;
   }
 
-  mental::platform::InputSnapshot sampleInput() const override
+  mental::input::InputSnapshot sampleInput() const override
   {
     return {};
   }

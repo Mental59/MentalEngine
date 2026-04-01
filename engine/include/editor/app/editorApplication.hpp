@@ -1,6 +1,6 @@
 #pragma once
 
-#include <editor/app/inputState.hpp>
+#include <editor/app/editorInputState.hpp>
 #include <editor/scene/editorScene.hpp>
 
 #include <core/types.hpp>
@@ -43,12 +43,12 @@ class EditorApplication
     return mFrameContext;
   }
 
-  [[nodiscard]] InputState& inputState() noexcept
+  [[nodiscard]] EditorInputState& inputState() noexcept
   {
     return mInputState;
   }
 
-  [[nodiscard]] const InputState& inputState() const noexcept
+  [[nodiscard]] const EditorInputState& inputState() const noexcept
   {
     return mInputState;
   }
@@ -69,7 +69,7 @@ class EditorApplication
   platform::IWindow* mWindow = nullptr;
   render::IRenderSystem* mRenderSystem = nullptr;
   EditorScene mScene;
-  InputState mInputState {};
+  EditorInputState mInputState {};
   render::FrameContext mFrameContext {};
   platform::WindowSize mObservedFramebufferSize {};
   double mAbsoluteTimeSeconds = 0.0;

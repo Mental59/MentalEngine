@@ -5,40 +5,40 @@
 
 namespace
 {
-constexpr int toGlfwKey(mental::platform::KeyCode keyCode)
+constexpr int toGlfwKey(mental::input::KeyCode keyCode)
 {
   switch (keyCode)
   {
-    case mental::platform::KeyCode::eW:
+    case mental::input::KeyCode::eW:
       return GLFW_KEY_W;
-    case mental::platform::KeyCode::eA:
+    case mental::input::KeyCode::eA:
       return GLFW_KEY_A;
-    case mental::platform::KeyCode::eS:
+    case mental::input::KeyCode::eS:
       return GLFW_KEY_S;
-    case mental::platform::KeyCode::eD:
+    case mental::input::KeyCode::eD:
       return GLFW_KEY_D;
-    case mental::platform::KeyCode::eQ:
+    case mental::input::KeyCode::eQ:
       return GLFW_KEY_Q;
-    case mental::platform::KeyCode::eE:
+    case mental::input::KeyCode::eE:
       return GLFW_KEY_E;
-    case mental::platform::KeyCode::eR:
+    case mental::input::KeyCode::eR:
       return GLFW_KEY_R;
-    case mental::platform::KeyCode::eEscape:
+    case mental::input::KeyCode::eEscape:
       return GLFW_KEY_ESCAPE;
   }
 
   return GLFW_KEY_UNKNOWN;
 }
 
-constexpr int toGlfwMouseButton(mental::platform::MouseButton mouseButton)
+constexpr int toGlfwMouseButton(mental::input::MouseButton mouseButton)
 {
   switch (mouseButton)
   {
-    case mental::platform::MouseButton::eLeft:
+    case mental::input::MouseButton::eLeft:
       return GLFW_MOUSE_BUTTON_LEFT;
-    case mental::platform::MouseButton::eRight:
+    case mental::input::MouseButton::eRight:
       return GLFW_MOUSE_BUTTON_RIGHT;
-    case mental::platform::MouseButton::eMiddle:
+    case mental::input::MouseButton::eMiddle:
       return GLFW_MOUSE_BUTTON_MIDDLE;
   }
 
@@ -114,9 +114,9 @@ mental::platform::WindowSize mental::platform::PCWindow::getWindowSize() const
   return windowSize;
 }
 
-mental::platform::InputSnapshot mental::platform::PCWindow::sampleInput() const
+mental::input::InputSnapshot mental::platform::PCWindow::sampleInput() const
 {
-  InputSnapshot snapshot {};
+  input::InputSnapshot snapshot {};
 
   if (mWindow == nullptr)
   {
@@ -130,12 +130,12 @@ mental::platform::InputSnapshot mental::platform::PCWindow::sampleInput() const
   snapshot.cursorPosition = {cursorX, cursorY};
   snapshot.scrollDelta = mAccumulatedScrollDelta;
 
-  for (const KeyCode keyCode : kKeyCodes)
+  for (const input::KeyCode keyCode : input::kKeyCodes)
   {
     snapshot.setKeyDown(keyCode, glfwGetKey(mWindow, toGlfwKey(keyCode)) == GLFW_PRESS);
   }
 
-  for (const MouseButton mouseButton : kMouseButtons)
+  for (const input::MouseButton mouseButton : input::kMouseButtons)
   {
     snapshot.setMouseButtonDown(
       mouseButton, glfwGetMouseButton(mWindow, toGlfwMouseButton(mouseButton)) == GLFW_PRESS);

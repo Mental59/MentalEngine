@@ -5,7 +5,7 @@
 
 #include "core/resource.hpp"
 #include "core/types.hpp"
-#include <platform/inputSnapshot.hpp>
+#include <input/inputSnapshot.hpp>
 
 namespace mental::platform
 {
@@ -29,7 +29,7 @@ class IWindow : public core::resource::IResource
   virtual void pollEvents() const = 0;
   virtual void waitEvents() const = 0;
   virtual double getTime() const = 0;
-  [[nodiscard]] virtual InputSnapshot sampleInput() const = 0;
+  [[nodiscard]] virtual input::InputSnapshot sampleInput() const = 0;
   virtual bool shouldClose() const = 0;
   virtual WindowSize getWindowSize() const = 0;
 };
