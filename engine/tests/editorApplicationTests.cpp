@@ -3,6 +3,8 @@
 #include <render/frameContext.hpp>
 
 #include <core/types.hpp>
+#include <platform/inputCodes.hpp>
+#include <platform/inputSnapshot.hpp>
 #include <platform/window.hpp>
 
 #include <entt/entity/entity.hpp>
@@ -26,6 +28,7 @@ struct FakeWindow final : mental::platform::IWindow
   bool valid = true;
   bool closeRequested = false;
   mental::platform::WindowSize size {1280u, 720u};
+  mental::platform::InputSnapshot inputSnapshot {};
   double timeSeconds = 0.0;
 
   Result init(const mental::platform::WindowDesc&) override
@@ -46,6 +49,11 @@ struct FakeWindow final : mental::platform::IWindow
   double getTime() const override
   {
     return timeSeconds;
+  }
+
+  mental::platform::InputSnapshot sampleInput() const override
+  {
+    return inputSnapshot;
   }
 
   bool shouldClose() const override
@@ -140,6 +148,45 @@ void testDefaultConstruction()
   require(app.lastError() == Result::eSuccess, "Construction should start without an error");
   require(app.scene().registry().view<mental::editor::PrimitiveComponent>().size() == 0u,
     "Construction should not bootstrap the scene");
+}
+
+void testInputSnapshotDefaultsToReleasedStatesAndZeroDeltas()
+{
+  const mental::platform::InputSnapshot snapshot {};
+
+  require(snapshot.cursorPosition.x == 0.0, "Default cursor X should be zero");
+  require(snapshot.cursorPosition.y == 0.0, "Default cursor Y should be zero");
+  require(snapshot.scrollDelta.x == 0.0, "Default scroll X should be zero");
+  require(snapshot.scrollDelta.y == 0.0, "Default scroll Y should be zero");
+  require(!snapshot.isKeyDown(mental::platform::KeyCode::eW), "Default W state should be released");
+  require(!snapshot.isKeyDown(mental::platform::KeyCode::eEscape), "Default Escape state should be released");
+  require(!snapshot.isMouseButtonDown(mental::platform::MouseButton::eLeft), "Default left button should be released");
+  require(!snapshot.isMouseButtonDown(mental::platform::MouseButton::eMiddle),
+    "Default middle button should be released");
+}
+
+void testFakeWindowReturnsConfiguredInputSnapshot()
+{
+  FakeWindow window;
+  window.inputSnapshot.cursorPosition = {320.0, 240.0};
+  window.inputSnapshot.scrollDelta = {-1.0, 2.0};
+  window.inputSnapshot.setKeyDown(mental::platform::KeyCode::eA, true);
+  window.inputSnapshot.setKeyDown(mental::platform::KeyCode::eEscape, true);
+  window.inputSnapshot.setMouseButtonDown(mental::platform::MouseButton::eRight, true);
+
+  const mental::platform::InputSnapshot snapshot = window.sampleInput();
+
+  require(snapshot.cursorPosition.x == 320.0, "Sampled cursor X should match configured value");
+  require(snapshot.cursorPosition.y == 240.0, "Sampled cursor Y should match configured value");
+  require(snapshot.scrollDelta.x == -1.0, "Sampled scroll X should match configured value");
+  require(snapshot.scrollDelta.y == 2.0, "Sampled scroll Y should match configured value");
+  require(snapshot.isKeyDown(mental::platform::KeyCode::eA), "Sampled A state should match configured value");
+  require(snapshot.isKeyDown(mental::platform::KeyCode::eEscape),
+    "Sampled Escape state should match configured value");
+  require(snapshot.isMouseButtonDown(mental::platform::MouseButton::eRight),
+    "Sampled right mouse state should match configured value");
+  require(!snapshot.isMouseButtonDown(mental::platform::MouseButton::eLeft),
+    "Unconfigured left mouse state should remain released");
 }
 
 void testBootstrapOccursInApplicationInit()
@@ -348,6 +395,8 @@ int main()
   try
   {
     testDefaultConstruction();
+    testInputSnapshotDefaultsToReleasedStatesAndZeroDeltas();
+    testFakeWindowReturnsConfiguredInputSnapshot();
     testBootstrapOccursInApplicationInit();
     testRunCallsPhasesInOrder();
     testFailureStopsLoop();
