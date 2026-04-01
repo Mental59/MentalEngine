@@ -1,6 +1,6 @@
 #include <editor/app/editorApplication.hpp>
-#include <editor/app/frameContext.hpp>
 #include <editor/scene/components.hpp>
+#include <render/frameContext.hpp>
 
 #include <core/types.hpp>
 #include <platform/window.hpp>
@@ -17,7 +17,7 @@ namespace
 {
 using mental::core::Result;
 using mental::editor::EditorApplication;
-using mental::editor::FrameContext;
+using mental::render::FrameContext;
 
 struct FakeWindow final : mental::platform::IWindow
 {

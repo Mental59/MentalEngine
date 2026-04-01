@@ -5,7 +5,7 @@
 
 #include <platform/window.hpp>
 
-namespace mental::editor
+namespace mental::render
 {
 struct FrameContext
 {
@@ -15,4 +15,4 @@ struct FrameContext
   bool framebufferResized = false;
   std::optional<std::uint64_t> frameIndex = std::nullopt;
 };
-} // namespace mental::editor
+} // namespace mental::render

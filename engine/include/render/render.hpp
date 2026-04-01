@@ -1,13 +1,9 @@
 #pragma once
 
+#include <render/frameContext.hpp>
 #include <render/rhi/rhi.hpp>
 #include <resource/resourceManager.hpp>
 #include <vector>
-
-namespace mental::editor
-{
-struct FrameContext;
-}
 
 namespace mental::render
 {
@@ -29,7 +25,7 @@ class IRenderSystem : public core::resource::IResource
 {
  public:
   virtual core::Result init(const RenderSystemConfig& conf) = 0;
-  [[nodiscard]] virtual RenderFrameOutcome render(const editor::FrameContext& frameContext) = 0;
+  [[nodiscard]] virtual RenderFrameOutcome render(const FrameContext& frameContext) = 0;
 };
 
 class RenderSystem : public IRenderSystem
@@ -53,7 +49,7 @@ class RenderSystem : public IRenderSystem
 
   void nextFrame();
 
-  virtual RenderFrameOutcome render(const editor::FrameContext& frameContext) override;
+  virtual RenderFrameOutcome render(const FrameContext& frameContext) override;
 
  private:
   RenderSystem() = default;

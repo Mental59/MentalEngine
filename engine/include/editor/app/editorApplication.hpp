@@ -1,10 +1,10 @@
 #pragma once
 
-#include <editor/app/frameContext.hpp>
 #include <editor/scene/editorScene.hpp>
 
 #include <core/types.hpp>
 #include <platform/window.hpp>
+#include <render/frameContext.hpp>
 #include <render/render.hpp>
 
 namespace mental::editor
@@ -37,7 +37,7 @@ class EditorApplication
     return mScene;
   }
 
-  [[nodiscard]] const FrameContext& frameContext() const noexcept
+  [[nodiscard]] const render::FrameContext& frameContext() const noexcept
   {
     return mFrameContext;
   }
@@ -58,7 +58,7 @@ class EditorApplication
   platform::IWindow* mWindow = nullptr;
   render::IRenderSystem* mRenderSystem = nullptr;
   EditorScene mScene;
-  FrameContext mFrameContext {};
+  render::FrameContext mFrameContext {};
   platform::WindowSize mObservedFramebufferSize {};
   double mAbsoluteTimeSeconds = 0.0;
   double mDeltaTimeSeconds = 0.0;

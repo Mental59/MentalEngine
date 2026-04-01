@@ -1,7 +1,5 @@
 #include <render/render.hpp>
 
-#include <editor/app/frameContext.hpp>
-
 #include <core/log.hpp>
 #include <render/renderHostAdapter.hpp>
 #include <render/rhi/rhi.hpp>
@@ -149,7 +147,7 @@ void mental::render::RenderSystem::nextFrame()
 }
 
 mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
-  const mental::editor::FrameContext& frameContext)
+  const mental::render::FrameContext& frameContext)
 {
   FrameUpdater frameUpdadater(*this);
 
