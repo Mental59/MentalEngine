@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 namespace mental::platform
@@ -40,4 +41,14 @@ inline constexpr std::array<MouseButton, 3> kMouseButtons = {
   MouseButton::eRight,
   MouseButton::eMiddle,
 };
+
+[[nodiscard]] constexpr std::size_t toIndex(KeyCode keyCode) noexcept
+{
+  return static_cast<std::size_t>(keyCode);
+}
+
+[[nodiscard]] constexpr std::size_t toIndex(MouseButton mouseButton) noexcept
+{
+  return static_cast<std::size_t>(mouseButton);
+}
 } // namespace mental::platform

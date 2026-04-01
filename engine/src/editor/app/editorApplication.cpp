@@ -29,6 +29,7 @@ core::Result EditorApplication::init()
   mAbsoluteTimeSeconds = mWindow->getTime();
   mDeltaTimeSeconds = 0.0;
   mRenderedFrameCount = 0;
+  mInputState = {};
   mFrameContext = {};
   mLastFrameTimeSeconds = mAbsoluteTimeSeconds;
   mShutdownRequested = false;
@@ -112,6 +113,14 @@ core::Result EditorApplication::updatePlatform()
 
 core::Result EditorApplication::collectInput()
 {
+  mInputState.advance(mWindow->sampleInput());
+
+  if (const std::optional<GizmoMode> requestedGizmoMode = mInputState.requestedGizmoMode();
+    requestedGizmoMode.has_value())
+  {
+    mScene.setGizmoMode(requestedGizmoMode.value());
+  }
+
   return core::Result::eSuccess;
 }
 

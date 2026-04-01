@@ -1,5 +1,6 @@
 #pragma once
 
+#include <editor/app/inputState.hpp>
 #include <editor/scene/editorScene.hpp>
 
 #include <core/types.hpp>
@@ -42,6 +43,16 @@ class EditorApplication
     return mFrameContext;
   }
 
+  [[nodiscard]] InputState& inputState() noexcept
+  {
+    return mInputState;
+  }
+
+  [[nodiscard]] const InputState& inputState() const noexcept
+  {
+    return mInputState;
+  }
+
   [[nodiscard]] bool isShutdownRequested() const noexcept
   {
     return mShutdownRequested;
@@ -58,6 +69,7 @@ class EditorApplication
   platform::IWindow* mWindow = nullptr;
   render::IRenderSystem* mRenderSystem = nullptr;
   EditorScene mScene;
+  InputState mInputState {};
   render::FrameContext mFrameContext {};
   platform::WindowSize mObservedFramebufferSize {};
   double mAbsoluteTimeSeconds = 0.0;
