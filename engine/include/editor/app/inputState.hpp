@@ -15,7 +15,17 @@ class InputState
   {
     mPreviousRawSnapshot = mCurrentRawSnapshot;
     mCurrentRawSnapshot = snapshot;
-    mPreviousCursorPosition = mCurrentCursorPosition;
+
+    if (mHasCurrentCursorPosition)
+    {
+      mPreviousCursorPosition = mCurrentCursorPosition;
+    }
+    else
+    {
+      mPreviousCursorPosition = snapshot.cursorPosition;
+      mHasCurrentCursorPosition = true;
+    }
+
     mCurrentCursorPosition = snapshot.cursorPosition;
   }
 
@@ -55,7 +65,7 @@ class InputState
     return mCurrentCursorPosition;
   }
 
-  [[nodiscard]] platform::ScrollDelta mouseDelta() const noexcept
+  [[nodiscard]] platform::CursorPosition mouseDelta() const noexcept
   {
     return {
       .x = mCurrentCursorPosition.x - mPreviousCursorPosition.x,
@@ -103,5 +113,6 @@ class InputState
   platform::InputSnapshot mCurrentRawSnapshot {};
   platform::CursorPosition mPreviousCursorPosition {};
   platform::CursorPosition mCurrentCursorPosition {};
+  bool mHasCurrentCursorPosition = false;
 };
 } // namespace mental::editor

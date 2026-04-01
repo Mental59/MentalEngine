@@ -5,23 +5,6 @@
 
 namespace
 {
-constexpr std::array<mental::platform::KeyCode, 8> kKeyCodes = {
-  mental::platform::KeyCode::eW,
-  mental::platform::KeyCode::eA,
-  mental::platform::KeyCode::eS,
-  mental::platform::KeyCode::eD,
-  mental::platform::KeyCode::eQ,
-  mental::platform::KeyCode::eE,
-  mental::platform::KeyCode::eR,
-  mental::platform::KeyCode::eEscape,
-};
-
-constexpr std::array<mental::platform::MouseButton, 3> kMouseButtons = {
-  mental::platform::MouseButton::eLeft,
-  mental::platform::MouseButton::eRight,
-  mental::platform::MouseButton::eMiddle,
-};
-
 constexpr int toGlfwKey(mental::platform::KeyCode keyCode)
 {
   switch (keyCode)

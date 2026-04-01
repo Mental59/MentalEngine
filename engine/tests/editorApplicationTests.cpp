@@ -217,6 +217,8 @@ void testCollectInputTracksMouseDeltaFromFrameToFrameMovement()
 
   window.inputSnapshot.cursorPosition = {100.0, 150.0};
   require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for mouse delta test");
+  require(app.inputState().mouseDelta().x == 0.0, "First sampled frame should not invent mouse delta X");
+  require(app.inputState().mouseDelta().y == 0.0, "First sampled frame should not invent mouse delta Y");
 
   window.inputSnapshot.cursorPosition = {112.5, 132.0};
   require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for mouse delta test");
