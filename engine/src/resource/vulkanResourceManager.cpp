@@ -16,8 +16,8 @@
 namespace mental::resource
 {
 constexpr size_t kInitialBuffersVectorSize = 16384;
-constexpr size_t kInitialTexturesVectorSize = 16;
-constexpr size_t kInitialTextureViewsVectorSize = 16;
+constexpr size_t kInitialTexturesVectorSize = 16384;
+constexpr size_t kInitialTextureViewsVectorSize = 16384;
 constexpr size_t kMaxCommandLists = 16;
 
 struct VulkanFrameData
