@@ -5,6 +5,8 @@
 namespace mental::resource
 {
 class BufferHandle;
+class TextureHandle;
+class TextureViewHandle;
 class CommandListHandle;
 class FrameDataHandle;
 
@@ -37,6 +39,14 @@ class IResourceManager
   virtual rhi::IBuffer* getBuffer(BufferHandle handle) = 0;
   virtual void destroyBuffer(BufferHandle handle) = 0;
 
+  virtual TextureHandle createTexture(const rhi::TextureDesc& desc) = 0;
+  virtual rhi::ITexture* getTexture(TextureHandle handle) = 0;
+  virtual void destroyTexture(TextureHandle handle) = 0;
+
+  virtual TextureViewHandle createTextureView(const rhi::TextureViewDesc& desc) = 0;
+  virtual rhi::ITextureView* getTextureView(TextureViewHandle handle) = 0;
+  virtual void destroyTextureView(TextureViewHandle handle) = 0;
+
   virtual CommandListHandle createCommandList(const rhi::CommandListDesc& desc) = 0;
   virtual rhi::ICommandList* getCommandList(CommandListHandle handle) = 0;
   virtual void destroyCommandList(CommandListHandle handle) = 0;
@@ -66,6 +76,44 @@ class BufferHandle : public core::resource::ResourceHandle
   inline rhi::IBuffer* get() const
   {
     return getResourceManager().getBuffer(*this);
+  }
+};
+
+class TextureHandle : public core::resource::ResourceHandle
+{
+ public:
+  static TextureHandle invalid()
+  {
+    return {0};
+  }
+
+  inline void destroy() const
+  {
+    getResourceManager().destroyTexture(*this);
+  }
+
+  inline rhi::ITexture* get() const
+  {
+    return getResourceManager().getTexture(*this);
+  }
+};
+
+class TextureViewHandle : public core::resource::ResourceHandle
+{
+ public:
+  static TextureViewHandle invalid()
+  {
+    return {0};
+  }
+
+  inline void destroy() const
+  {
+    getResourceManager().destroyTextureView(*this);
+  }
+
+  inline rhi::ITextureView* get() const
+  {
+    return getResourceManager().getTextureView(*this);
   }
 };
 

@@ -113,11 +113,10 @@ mental::core::Result mental::rhi::vk::Buffer::map(void** mappedData)
   return core::Result::eSuccess;
 }
 
-mental::core::Result mental::rhi::vk::Buffer::unmap()
+void mental::rhi::vk::Buffer::unmap()
 {
   vmaUnmapMemory(vk::getAllocator(), mAllocation);
   mIsMapped = false;
-  return core::Result::eSuccess;
 }
 
 mental::core::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, uint64_t offset)
