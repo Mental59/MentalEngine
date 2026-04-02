@@ -1,6 +1,42 @@
 #include <editor/app/editorApplication.hpp>
 
+#include <algorithm>
+
 #include <core/log.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+namespace
+{
+using mental::editor::PrimitiveComponent;
+using mental::editor::PrimitiveType;
+using mental::editor::TransformComponent;
+
+[[nodiscard]] mental::render::SceneGeometryKind toSceneGeometryKind(PrimitiveType type) noexcept
+{
+  switch (type)
+  {
+    case PrimitiveType::eCube:
+      return mental::render::SceneGeometryKind::eCube;
+    case PrimitiveType::ePlane:
+      return mental::render::SceneGeometryKind::ePlane;
+    case PrimitiveType::eSphere:
+      return mental::render::SceneGeometryKind::eSphere;
+  }
+
+  return mental::render::SceneGeometryKind::eCube;
+}
+
+[[nodiscard]] glm::mat4 buildWorldTransform(const TransformComponent& transform) noexcept
+{
+  glm::mat4 worldTransform {1.0f};
+  worldTransform = glm::translate(worldTransform, transform.position);
+  worldTransform = glm::rotate(worldTransform, glm::radians(transform.rotation.x), glm::vec3 {1.0f, 0.0f, 0.0f});
+  worldTransform = glm::rotate(worldTransform, glm::radians(transform.rotation.y), glm::vec3 {0.0f, 1.0f, 0.0f});
+  worldTransform = glm::rotate(worldTransform, glm::radians(transform.rotation.z), glm::vec3 {0.0f, 0.0f, 1.0f});
+  worldTransform = glm::scale(worldTransform, transform.scale);
+  return worldTransform;
+}
+} // namespace
 
 namespace
 {
@@ -193,6 +229,7 @@ core::Result EditorApplication::renderFrame()
   mFrameContext.deltaTimeSeconds = mDeltaTimeSeconds;
   mFrameContext.framebufferSize = mObservedFramebufferSize;
   mFrameContext.framebufferResized = mFramebufferResized;
+  mFrameContext.sceneRenderFrame = buildSceneRenderFrame();
   mFrameContext.frameIndex = mRenderedFrameCount;
 
   const render::RenderFrameOutcome outcome = mRenderSystem->render(mFrameContext);
@@ -222,6 +259,44 @@ core::Result EditorApplication::updateSceneCameraControl()
 
   applySceneCameraFlyLook(mScene.sceneCamera(), mInputState, mDeltaTimeSeconds);
   return core::Result::eSuccess;
+}
+
+render::SceneRenderFrame EditorApplication::buildSceneRenderFrame() const
+{
+  render::SceneRenderFrame sceneRenderFrame {};
+  const float aspectRatio =
+    static_cast<float>(mObservedFramebufferSize.width) / static_cast<float>(mObservedFramebufferSize.height);
+  const auto& sceneCamera = mScene.sceneCamera();
+
+  sceneRenderFrame.camera.worldPosition = sceneCamera.worldPosition();
+  sceneRenderFrame.camera.view = sceneCamera.viewMatrix();
+  sceneRenderFrame.camera.projection = sceneCamera.projectionMatrix(aspectRatio);
+  sceneRenderFrame.camera.viewProjection = sceneRenderFrame.camera.projection * sceneRenderFrame.camera.view;
+  sceneRenderFrame.camera.aspectRatio = aspectRatio;
+
+  const auto primitiveView = mScene.registry().view<const TransformComponent, const PrimitiveComponent>();
+  const std::size_t primitiveCount =
+    static_cast<std::size_t>(std::distance(primitiveView.begin(), primitiveView.end()));
+  sceneRenderFrame.objects.reserve(primitiveCount);
+
+  for (const entt::entity entity : primitiveView)
+  {
+    const TransformComponent& transform = mScene.registry().get<TransformComponent>(entity);
+    const PrimitiveComponent& primitive = mScene.registry().get<PrimitiveComponent>(entity);
+
+    sceneRenderFrame.objects.push_back(render::SceneRenderObject {
+      .objectIdentifier = static_cast<render::SceneObjectIdentifier>(entt::to_integral(entity)),
+      .geometryKind = toSceneGeometryKind(primitive.type),
+      .worldTransform = buildWorldTransform(transform),
+    });
+  }
+
+  std::sort(sceneRenderFrame.objects.begin(),
+    sceneRenderFrame.objects.end(),
+    [](const render::SceneRenderObject& lhs, const render::SceneRenderObject& rhs)
+    { return lhs.objectIdentifier < rhs.objectIdentifier; });
+
+  return sceneRenderFrame;
 }
 
 void EditorApplication::setSceneCameraControlActive(bool active) noexcept

@@ -261,10 +261,27 @@ void mental::rhi::vk::CommandList::beginRendering(CommandListBeginRenderingInfo&
 
   VkRenderingAttachmentInfoKHR colorAttachmentInfo {VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR};
   colorAttachmentInfo.imageView = swapchainImageView;
-  colorAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL_KHR;
+  colorAttachmentInfo.imageLayout = convertTextureLayout(TextureLayout::eColorAttachment);
   colorAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   colorAttachmentInfo.clearValue = clearColorValue;
+
+  VkRenderingAttachmentInfoKHR depthAttachmentInfo {VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO_KHR};
+  if (info.depthAttachmentView != nullptr)
+  {
+    VkImageView depthImageView = info.depthAttachmentView->getNativeObject(core::resource::ObjectType::eVkImageView);
+    MENTAL_ASSERT_DEBUG(depthImageView != VK_NULL_HANDLE);
+
+    VkClearValue clearDepthValue {};
+    clearDepthValue.depthStencil.depth = info.clearValue.depth;
+    clearDepthValue.depthStencil.stencil = info.clearValue.stencil;
+
+    depthAttachmentInfo.imageView = depthImageView;
+    depthAttachmentInfo.imageLayout = convertTextureLayout(TextureLayout::eDepthStencilAttachment);
+    depthAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+    depthAttachmentInfo.clearValue = clearDepthValue;
+  }
 
   VkRect2D renderArea {};
   renderArea.offset.x = renderArea.offset.y = 0;
@@ -276,6 +293,7 @@ void mental::rhi::vk::CommandList::beginRendering(CommandListBeginRenderingInfo&
   renderInfo.layerCount = 1;
   renderInfo.colorAttachmentCount = 1;
   renderInfo.pColorAttachments = &colorAttachmentInfo;
+  renderInfo.pDepthAttachment = info.depthAttachmentView != nullptr ? &depthAttachmentInfo : nullptr;
 
   vkCmdBeginRenderingKHR(mCmdBuffer, &renderInfo);
 }

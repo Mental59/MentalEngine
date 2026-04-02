@@ -1,6 +1,7 @@
 #include <editor/app/editorApplication.hpp>
 #include <editor/scene/components.hpp>
 #include <render/frameContext.hpp>
+#include <render/sceneRenderData.hpp>
 
 #include <cmath>
 #include <core/types.hpp>
@@ -30,6 +31,22 @@ bool nearlyEqual(float lhs, float rhs, float epsilon = 1.0e-4f)
 bool nearlyEqual(const glm::vec3& lhs, const glm::vec3& rhs, float epsilon = 1.0e-4f)
 {
   return nearlyEqual(lhs.x, rhs.x, epsilon) && nearlyEqual(lhs.y, rhs.y, epsilon) && nearlyEqual(lhs.z, rhs.z, epsilon);
+}
+
+bool nearlyEqual(const glm::mat4& lhs, const glm::mat4& rhs, float epsilon = 1.0e-4f)
+{
+  for (int column = 0; column < 4; ++column)
+  {
+    for (int row = 0; row < 4; ++row)
+    {
+      if (!nearlyEqual(lhs[column][row], rhs[column][row], epsilon))
+      {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 mental::input::InputSnapshot makeInputSnapshot()
@@ -150,9 +167,9 @@ struct FakeRenderSystem final : mental::render::IRenderSystem
 
 struct TestEditorApplication : EditorApplication
 {
-  using EditorApplication::EditorApplication;
   using EditorApplication::bootstrapScene;
   using EditorApplication::collectInput;
+  using EditorApplication::EditorApplication;
   using EditorApplication::frameContext;
   using EditorApplication::inputState;
   using EditorApplication::isShutdownRequested;
@@ -195,8 +212,7 @@ void testCollectInputReportsFirstFrameKeyPress()
 
   require(app.inputState().isKeyDown(mental::input::KeyCode::eW), "First frame W should be down");
   require(app.inputState().wasKeyPressed(mental::input::KeyCode::eW), "First frame W should report pressed");
-  require(!app.inputState().wasKeyReleased(mental::input::KeyCode::eW),
-    "First frame W should not report released");
+  require(!app.inputState().wasKeyReleased(mental::input::KeyCode::eW), "First frame W should not report released");
 }
 
 void testCollectInputDoesNotRepeatPressedWhileHeld()
@@ -211,8 +227,7 @@ void testCollectInputDoesNotRepeatPressedWhileHeld()
   require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for held key test");
 
   require(app.inputState().isKeyDown(mental::input::KeyCode::eW), "Held W should remain down");
-  require(!app.inputState().wasKeyPressed(mental::input::KeyCode::eW),
-    "Held W should not re-report pressed");
+  require(!app.inputState().wasKeyPressed(mental::input::KeyCode::eW), "Held W should not re-report pressed");
   require(!app.inputState().wasKeyReleased(mental::input::KeyCode::eW), "Held W should not report released");
 }
 
@@ -230,8 +245,7 @@ void testCollectInputReportsKeyRelease()
   require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for key release test");
 
   require(!app.inputState().isKeyDown(mental::input::KeyCode::eW), "Released W should not remain down");
-  require(!app.inputState().wasKeyPressed(mental::input::KeyCode::eW),
-    "Released W should not report pressed");
+  require(!app.inputState().wasKeyPressed(mental::input::KeyCode::eW), "Released W should not report pressed");
   require(app.inputState().wasKeyReleased(mental::input::KeyCode::eW), "Released W should report released");
 }
 
@@ -285,8 +299,7 @@ void testCollectInputRequestsTranslateModeWithW()
   window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, true);
 
   require(app.collectInput() == Result::eSuccess, "collectInput should succeed for W hotkey test");
-  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eTranslate,
-    "W should request translate gizmo mode");
+  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eTranslate, "W should request translate gizmo mode");
 }
 
 void testCollectInputRequestsRotateModeWithE()
@@ -300,8 +313,7 @@ void testCollectInputRequestsRotateModeWithE()
   window.inputSnapshot.setKeyDown(mental::input::KeyCode::eE, true);
 
   require(app.collectInput() == Result::eSuccess, "collectInput should succeed for E hotkey test");
-  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eRotate,
-    "E should request rotate gizmo mode");
+  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eRotate, "E should request rotate gizmo mode");
 }
 
 void testCollectInputRequestsScaleModeWithR()
@@ -380,31 +392,34 @@ void testUpdateEditorEntersAndLeavesFlyLookCursorMode()
   require(app.init() == Result::eSuccess, "Application init should succeed for fly-look cursor mode test");
 
   window.timeSeconds = 0.25;
-  require(app.updatePlatform() == Result::eSuccess, "First updatePlatform should succeed for fly-look cursor mode test");
+  require(
+    app.updatePlatform() == Result::eSuccess, "First updatePlatform should succeed for fly-look cursor mode test");
   require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for fly-look cursor mode test");
   require(app.updateEditor() == Result::eSuccess, "First updateEditor should succeed for fly-look cursor mode test");
-  require(window.cursorMode == mental::platform::CursorMode::eNormal,
-    "Cursor should remain normal before fly-look begins");
+  require(
+    window.cursorMode == mental::platform::CursorMode::eNormal, "Cursor should remain normal before fly-look begins");
   require(window.cursorModeSetCount == 0, "Cursor mode should not change before fly-look begins");
 
   window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
   window.timeSeconds = 0.5;
-  require(app.updatePlatform() == Result::eSuccess, "Second updatePlatform should succeed for fly-look cursor mode test");
+  require(
+    app.updatePlatform() == Result::eSuccess, "Second updatePlatform should succeed for fly-look cursor mode test");
   require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for fly-look cursor mode test");
   require(app.updateEditor() == Result::eSuccess, "Second updateEditor should succeed for fly-look cursor mode test");
-  require(window.cursorMode == mental::platform::CursorMode::eDisabled,
-    "Fly-look should disable the cursor while active");
+  require(
+    window.cursorMode == mental::platform::CursorMode::eDisabled, "Fly-look should disable the cursor while active");
   require(window.cursorModeSetCount == 1, "Fly-look start should request cursor mode once");
   require(window.rawMouseMotionEnabled, "Fly-look should enable raw mouse motion while active");
   require(window.rawMouseMotionSetCount == 1, "Fly-look start should request raw mouse motion once");
 
   window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, false);
   window.timeSeconds = 0.75;
-  require(app.updatePlatform() == Result::eSuccess, "Third updatePlatform should succeed for fly-look cursor mode test");
+  require(
+    app.updatePlatform() == Result::eSuccess, "Third updatePlatform should succeed for fly-look cursor mode test");
   require(app.collectInput() == Result::eSuccess, "Third collectInput should succeed for fly-look cursor mode test");
   require(app.updateEditor() == Result::eSuccess, "Third updateEditor should succeed for fly-look cursor mode test");
-  require(window.cursorMode == mental::platform::CursorMode::eNormal,
-    "Ending fly-look should restore the normal cursor");
+  require(
+    window.cursorMode == mental::platform::CursorMode::eNormal, "Ending fly-look should restore the normal cursor");
   require(window.cursorModeSetCount == 2, "Fly-look end should request cursor mode once more");
   require(!window.rawMouseMotionEnabled, "Ending fly-look should disable raw mouse motion");
   require(window.rawMouseMotionSetCount == 2, "Fly-look end should request raw mouse motion once more");
@@ -493,7 +508,8 @@ void testUpdateEditorDoesNotMoveSceneCameraWithoutFlyLookActive()
 
 void testUpdateEditorBoostMovesSceneCameraFartherThanUnboostedMovement()
 {
-  auto measureTravelDistance = [](bool boosted) {
+  auto measureTravelDistance = [](bool boosted)
+  {
     FakeWindow window;
     FakeRenderSystem renderer;
     TestEditorApplication app {&window, &renderer};
@@ -577,8 +593,8 @@ void testWindowContractTracksCursorAndRawMouseRequests()
   window.setRawMouseMotionEnabled(false);
   window.setCursorMode(mental::platform::CursorMode::eNormal);
 
-  require(window.cursorMode == mental::platform::CursorMode::eNormal,
-    "Window should store the requested normal cursor mode");
+  require(
+    window.cursorMode == mental::platform::CursorMode::eNormal, "Window should store the requested normal cursor mode");
   require(!window.rawMouseMotionEnabled, "Window should store the requested raw mouse motion disable state");
   require(window.cursorModeSetCount == 2, "Cursor mode requests should be tracked");
   require(window.rawMouseMotionSetCount == 2, "Raw mouse motion requests should be tracked");
@@ -596,8 +612,8 @@ void testShutdownRestoresFlyLookInputState()
   require(app.updatePlatform() == Result::eSuccess, "updatePlatform should succeed for shutdown cleanup test");
   require(app.collectInput() == Result::eSuccess, "collectInput should succeed for shutdown cleanup test");
   require(app.updateEditor() == Result::eSuccess, "updateEditor should succeed for shutdown cleanup test");
-  require(window.cursorMode == mental::platform::CursorMode::eDisabled,
-    "Fly-look should be active before shutdown cleanup");
+  require(
+    window.cursorMode == mental::platform::CursorMode::eDisabled, "Fly-look should be active before shutdown cleanup");
   require(window.rawMouseMotionEnabled, "Fly-look should enable raw mouse motion before shutdown cleanup");
 
   app.shutdown();
@@ -630,8 +646,7 @@ void testRunFailureRestoresFlyLookInputState()
   window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
   window.timeSeconds = 0.25;
   require(app.run() == Result::eOperationFailed, "Render failure should propagate from run for cleanup test");
-  require(window.cursorMode == mental::platform::CursorMode::eNormal,
-    "Run failure should restore the normal cursor");
+  require(window.cursorMode == mental::platform::CursorMode::eNormal, "Run failure should restore the normal cursor");
   require(!window.rawMouseMotionEnabled, "Run failure should disable raw mouse motion");
 }
 
@@ -682,8 +697,8 @@ void testBootstrapOccursInApplicationInit()
   }
 
   require(bootstrapEntity != entt::null, "Bootstrap primitive should exist");
-  require(app.scene().registry().get<mental::editor::PrimitiveComponent>(bootstrapEntity).type
-      == mental::editor::PrimitiveType::eCube,
+  require(app.scene().registry().get<mental::editor::PrimitiveComponent>(bootstrapEntity).type ==
+            mental::editor::PrimitiveType::eCube,
     "Bootstrap primitive should be a cube");
 }
 
@@ -838,6 +853,96 @@ void testRenderFrameBuildsFrameContext()
     "Second frame index should increment");
 }
 
+void testRenderFramePopulatesSceneRenderPayload()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+
+  require(app.init() == Result::eSuccess, "Application init should succeed for scene payload test");
+  require(app.updatePlatform() == Result::eSuccess, "updatePlatform should succeed for scene payload test");
+  require(app.renderFrame() == Result::eSuccess, "renderFrame should succeed for scene payload test");
+  require(renderer.frames.size() == 1u, "Renderer should receive one frame for scene payload test");
+
+  const FrameContext& frameContext = renderer.frames[0];
+  const mental::render::SceneRenderFrame& sceneRenderFrame = frameContext.sceneRenderFrame;
+  const float aspectRatio = 1280.0f / 720.0f;
+  const auto& sceneCamera = app.scene().sceneCamera();
+
+  require(nearlyEqual(sceneRenderFrame.camera.aspectRatio, aspectRatio),
+    "Scene camera payload should use the framebuffer aspect ratio");
+  require(nearlyEqual(sceneRenderFrame.camera.worldPosition, sceneCamera.worldPosition()),
+    "Scene camera payload should copy the camera world position");
+  require(nearlyEqual(sceneRenderFrame.camera.view, sceneCamera.viewMatrix()),
+    "Scene camera payload should copy the camera view matrix");
+  require(nearlyEqual(sceneRenderFrame.camera.projection, sceneCamera.projectionMatrix(aspectRatio)),
+    "Scene camera payload should copy the camera projection matrix");
+  require(nearlyEqual(
+            sceneRenderFrame.camera.viewProjection, sceneRenderFrame.camera.projection * sceneRenderFrame.camera.view),
+    "Scene camera payload should precompute viewProjection as projection * view");
+  require(sceneRenderFrame.objects.size() == 1u, "Bootstrap cube should be submitted as one render object");
+  require(sceneRenderFrame.objects[0].geometryKind == mental::render::SceneGeometryKind::eCube,
+    "Bootstrap cube should package as cube geometry");
+  require(nearlyEqual(sceneRenderFrame.objects[0].worldTransform, glm::mat4 {1.0f}),
+    "Bootstrap cube should use an identity world transform");
+}
+
+void testRenderFrameIncludesNewPrimitiveInScenePayload()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+
+  require(app.init() == Result::eSuccess, "Application init should succeed for primitive count test");
+
+  entt::entity plane = entt::null;
+  require(app.scene().createPrimitive(mental::editor::PrimitiveType::ePlane, plane) == Result::eSuccess,
+    "Creating a new primitive should succeed");
+
+  require(app.updatePlatform() == Result::eSuccess, "updatePlatform should succeed for primitive count test");
+  require(app.renderFrame() == Result::eSuccess, "renderFrame should succeed for primitive count test");
+  require(renderer.frames.size() == 1u, "Renderer should receive one frame for primitive count test");
+  require(renderer.frames[0].sceneRenderFrame.objects.size() == 2u,
+    "Adding a primitive should increase the submitted render object count");
+}
+
+void testRenderFramePreservesScenePayloadAcrossResize()
+{
+  FakeWindow window;
+  window.timeSeconds = 1.0;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+
+  require(app.init() == Result::eSuccess, "Application init should succeed for resize payload test");
+
+  window.timeSeconds = 1.5;
+  require(app.updatePlatform() == Result::eSuccess, "First updatePlatform should succeed for resize payload test");
+  require(app.renderFrame() == Result::eSuccess, "First renderFrame should succeed for resize payload test");
+  require(renderer.frames.size() == 1u, "Renderer should receive the first frame for resize payload test");
+
+  window.size = {1920u, 1080u};
+  window.timeSeconds = 2.0;
+  require(app.updatePlatform() == Result::eSuccess, "Second updatePlatform should succeed for resize payload test");
+  require(app.renderFrame() == Result::eSuccess, "Second renderFrame should succeed for resize payload test");
+  require(renderer.frames.size() == 2u, "Renderer should receive the second frame for resize payload test");
+
+  const FrameContext& resizedFrame = renderer.frames[1];
+  const mental::render::SceneRenderFrame& sceneRenderFrame = resizedFrame.sceneRenderFrame;
+  const float aspectRatio = 1920.0f / 1080.0f;
+
+  require(resizedFrame.absoluteTimeSeconds == 2.0, "Resize frame should update the absolute time");
+  require(resizedFrame.deltaTimeSeconds == 0.5, "Resize frame should update the delta time");
+  require(resizedFrame.framebufferSize.width == 1920u, "Resize frame should update the framebuffer width");
+  require(resizedFrame.framebufferSize.height == 1080u, "Resize frame should update the framebuffer height");
+  require(resizedFrame.framebufferResized, "Resize frame should report the framebuffer resize");
+  require(sceneRenderFrame.objects.size() == 1u, "Resize should preserve the bootstrap cube render payload");
+  require(nearlyEqual(sceneRenderFrame.camera.aspectRatio, aspectRatio),
+    "Resize should update the scene camera aspect ratio");
+  require(nearlyEqual(
+            sceneRenderFrame.camera.viewProjection, sceneRenderFrame.camera.projection * sceneRenderFrame.camera.view),
+    "Resize should keep the camera viewProjection consistent");
+}
+
 void testRenderFrameDoesNotAdvanceIndexForNoOpSuccess()
 {
   FakeWindow window;
@@ -896,6 +1001,9 @@ int main()
     testMinimizedFrameWaitsWithoutRendering();
     testCollectInputSamplesInputWhileMinimized();
     testRenderFrameBuildsFrameContext();
+    testRenderFramePopulatesSceneRenderPayload();
+    testRenderFrameIncludesNewPrimitiveInScenePayload();
+    testRenderFramePreservesScenePayloadAcrossResize();
     testRenderFrameDoesNotAdvanceIndexForNoOpSuccess();
     return 0;
   }

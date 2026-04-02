@@ -113,9 +113,10 @@ struct RenderArea
 };
 struct CommandListBeginRenderingInfo
 {
-  ITextureView* swapchainImageView;
-  ClearBufferValue clearValue;
-  RenderArea renderArea;
+  ITextureView* swapchainImageView = nullptr;
+  ITextureView* depthAttachmentView = nullptr;
+  ClearBufferValue clearValue {};
+  RenderArea renderArea {};
 };
 struct TextureTransitionInfo
 {
