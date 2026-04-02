@@ -203,7 +203,7 @@ void mental::render::RenderSystem::nextFrame()
 mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
   const mental::render::FrameContext& frameContext)
 {
-  FrameUpdater frameUpdadater(*this);
+  FrameUpdater frameUpdater(*this);
 
   resource::FrameData frameData = mFrameDataHandles[mCurrentFrame].get();
   if (!frameData.isValid())
@@ -379,7 +379,7 @@ mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
     MENTAL_ERROR("Failed to submit command list");
     return {.result = core::Result::eOperationFailed};
   }
-  frameUpdadater.commit();
+  frameUpdater.commit();
 
   res = swapchain->present(swapchainTextureIndex, frameData.renderFinishedSemaphore);
   if (res == core::Result::eSuboptimal || res == core::Result::eOutOfDate)
