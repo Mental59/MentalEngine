@@ -9,8 +9,6 @@
 
 namespace
 {
-constexpr mental::rhi::TextureFormat kDepthTextureFormat = mental::rhi::TextureFormat::eD32_SFLOAT;
-
 struct CameraUploadData
 {
   glm::vec4 worldPosition {0.0f, 0.0f, 0.0f, 1.0f};
@@ -463,7 +461,7 @@ mental::core::Result mental::render::RenderSystem::ensureDepthTarget(const platf
   destroyDepthTarget();
 
   rhi::TextureDesc depthTextureDesc {};
-  depthTextureDesc.format = kDepthTextureFormat;
+  depthTextureDesc.format = mental::rhi::TextureFormat::eD32_SFLOAT;
   depthTextureDesc.layout = rhi::TextureLayout::eUndefined;
   depthTextureDesc.tiling = rhi::TextureTiling::eOptimal;
   depthTextureDesc.usage = rhi::TextureUsageFlagBits::eTextureUsageDepthStencilAttachmentBit;
