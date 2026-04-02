@@ -52,6 +52,14 @@ struct FakeWindow final : mental::platform::IWindow
     return currentSize;
   }
 
+  void setCursorMode(mental::platform::CursorMode) override
+  {
+  }
+
+  void setRawMouseMotionEnabled(bool) override
+  {
+  }
+
   bool isValid() const override
   {
     return valid;

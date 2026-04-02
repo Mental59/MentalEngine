@@ -82,6 +82,15 @@ add_executable(MentalEngineSceneTests tests/editorSceneTests.cpp)
 target_link_libraries(MentalEngineSceneTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineSceneTests COMMAND MentalEngineSceneTests)
 
+add_executable(MentalEngineCameraTests tests/cameraTests.cpp src/camera/camera.cpp)
+target_include_directories(MentalEngineCameraTests PRIVATE include)
+target_link_libraries(MentalEngineCameraTests PRIVATE glm)
+add_test(NAME MentalEngineCameraTests COMMAND MentalEngineCameraTests)
+
+add_executable(MentalEngineSceneCameraTests tests/sceneCameraTests.cpp)
+target_link_libraries(MentalEngineSceneCameraTests PRIVATE MentalEngine)
+add_test(NAME MentalEngineSceneCameraTests COMMAND MentalEngineSceneCameraTests)
+
 add_executable(MentalEngineEditorApplicationTests tests/editorApplicationTests.cpp)
 target_link_libraries(MentalEngineEditorApplicationTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineEditorApplicationTests COMMAND MentalEngineEditorApplicationTests)

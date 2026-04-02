@@ -22,6 +22,12 @@ struct WindowSize
   uint32_t height = 0;
 };
 
+enum class CursorMode
+{
+  eNormal = 0,
+  eDisabled,
+};
+
 class IWindow : public core::resource::IResource
 {
  public:
@@ -30,6 +36,9 @@ class IWindow : public core::resource::IResource
   virtual void waitEvents() const = 0;
   virtual double getTime() const = 0;
   [[nodiscard]] virtual input::InputSnapshot sampleInput() const = 0;
+  virtual void setCursorMode(CursorMode mode) = 0;
+  virtual void setRawMouseMotionEnabled(bool enabled) = 0;
+
   virtual bool shouldClose() const = 0;
   virtual WindowSize getWindowSize() const = 0;
 };
