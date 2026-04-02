@@ -53,13 +53,13 @@ class Camera
  private:
   void clampPitch() noexcept;
 
-  glm::vec3 worldPosition_ {0.0f, 0.0f, 0.0f};
-  float yawDegrees_ {-90.0f};
-  float pitchDegrees_ {0.0f};
-  float verticalFieldOfViewDegrees_ {60.0f};
-  float nearClip_ {0.1f};
-  float farClip_ {1000.0f};
-  float pitchMinimumDegrees_ {-89.0f};
-  float pitchMaximumDegrees_ {89.0f};
+  glm::vec3 mWorldPosition {0.0f, 0.0f, 0.0f};
+  float mYawDegrees {-90.0f};
+  float mPitchDegrees {0.0f};
+  float mVerticalFieldOfViewDegrees {60.0f};
+  float mNearClip {0.1f};
+  float mFarClip {1000.0f};
+  float mPitchMinimumDegrees {-89.0f};
+  float mPitchMaximumDegrees {89.0f};
 };
 } // namespace mental::camera

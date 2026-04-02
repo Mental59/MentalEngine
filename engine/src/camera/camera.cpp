@@ -17,91 +17,91 @@ Camera::Camera() noexcept = default;
 
 glm::vec3 Camera::worldPosition() const noexcept
 {
-  return worldPosition_;
+  return mWorldPosition;
 }
 
 void Camera::setWorldPosition(const glm::vec3& worldPosition) noexcept
 {
-  worldPosition_ = worldPosition;
+  mWorldPosition = worldPosition;
 }
 
 float Camera::yawDegrees() const noexcept
 {
-  return yawDegrees_;
+  return mYawDegrees;
 }
 
 void Camera::setYawDegrees(float yawDegrees) noexcept
 {
-  yawDegrees_ = yawDegrees;
+  mYawDegrees = yawDegrees;
 }
 
 float Camera::pitchDegrees() const noexcept
 {
-  return pitchDegrees_;
+  return mPitchDegrees;
 }
 
 void Camera::setPitchDegrees(float pitchDegrees) noexcept
 {
-  pitchDegrees_ = pitchDegrees;
+  mPitchDegrees = pitchDegrees;
   clampPitch();
 }
 
 float Camera::verticalFieldOfViewDegrees() const noexcept
 {
-  return verticalFieldOfViewDegrees_;
+  return mVerticalFieldOfViewDegrees;
 }
 
 void Camera::setVerticalFieldOfViewDegrees(float verticalFieldOfViewDegrees) noexcept
 {
-  verticalFieldOfViewDegrees_ = verticalFieldOfViewDegrees;
+  mVerticalFieldOfViewDegrees = verticalFieldOfViewDegrees;
 }
 
 float Camera::nearClip() const noexcept
 {
-  return nearClip_;
+  return mNearClip;
 }
 
 void Camera::setNearClip(float nearClip) noexcept
 {
-  nearClip_ = nearClip;
+  mNearClip = nearClip;
 }
 
 float Camera::farClip() const noexcept
 {
-  return farClip_;
+  return mFarClip;
 }
 
 void Camera::setFarClip(float farClip) noexcept
 {
-  farClip_ = farClip;
+  mFarClip = farClip;
 }
 
 float Camera::pitchMinimumDegrees() const noexcept
 {
-  return pitchMinimumDegrees_;
+  return mPitchMinimumDegrees;
 }
 
 void Camera::setPitchMinimumDegrees(float pitchMinimumDegrees) noexcept
 {
-  pitchMinimumDegrees_ = pitchMinimumDegrees;
+  mPitchMinimumDegrees = pitchMinimumDegrees;
   clampPitch();
 }
 
 float Camera::pitchMaximumDegrees() const noexcept
 {
-  return pitchMaximumDegrees_;
+  return mPitchMaximumDegrees;
 }
 
 void Camera::setPitchMaximumDegrees(float pitchMaximumDegrees) noexcept
 {
-  pitchMaximumDegrees_ = pitchMaximumDegrees;
+  mPitchMaximumDegrees = pitchMaximumDegrees;
   clampPitch();
 }
 
 glm::vec3 Camera::forward() const noexcept
 {
-  const float yawRadians = glm::radians(yawDegrees_);
-  const float pitchRadians = glm::radians(pitchDegrees_);
+  const float yawRadians = glm::radians(mYawDegrees);
+  const float pitchRadians = glm::radians(mPitchDegrees);
 
   const glm::vec3 direction {
     std::cos(pitchRadians) * std::cos(yawRadians),
@@ -126,15 +126,15 @@ glm::vec3 Camera::up() const noexcept
 
 glm::mat4 Camera::viewMatrix() const noexcept
 {
-  return glm::lookAt(worldPosition_, worldPosition_ + forward(), up());
+  return glm::lookAt(mWorldPosition, mWorldPosition + forward(), up());
 }
 
 glm::mat4 Camera::projectionMatrix(float aspectRatio) const noexcept
 {
   const float safeAspectRatio = aspectRatio > 0.0001f ? aspectRatio : 1.0f;
-  const float safeVerticalFieldOfViewDegrees = std::clamp(verticalFieldOfViewDegrees_, 0.0001f, 179.0f);
-  const float safeNearClip = std::max(nearClip_, 0.0001f);
-  const float safeFarClip = std::max(farClip_, safeNearClip + 0.0001f);
+  const float safeVerticalFieldOfViewDegrees = std::clamp(mVerticalFieldOfViewDegrees, 0.0001f, 179.0f);
+  const float safeNearClip = std::max(mNearClip, 0.0001f);
+  const float safeFarClip = std::max(mFarClip, safeNearClip + 0.0001f);
 
   glm::mat4 projection =
     glm::perspective(glm::radians(safeVerticalFieldOfViewDegrees), safeAspectRatio, safeNearClip, safeFarClip);
@@ -146,7 +146,7 @@ Ray Camera::viewportRay(const glm::vec2& viewportPosition, const glm::vec2& view
 {
   if (viewportSize.x <= 0.0f || viewportSize.y <= 0.0f)
   {
-    return {worldPosition_, forward()};
+    return {mWorldPosition, forward()};
   }
 
   const float aspectRatio = viewportSize.x / viewportSize.y;
@@ -166,30 +166,30 @@ Ray Camera::viewportRay(const glm::vec2& viewportPosition, const glm::vec2& view
     worldSpacePosition /= worldSpacePosition.w;
   }
 
-  const glm::vec3 direction = glm::normalize(glm::vec3 {worldSpacePosition} - worldPosition_);
-  return {worldPosition_, direction};
+  const glm::vec3 direction = glm::normalize(glm::vec3 {worldSpacePosition} - mWorldPosition);
+  return {mWorldPosition, direction};
 }
 
 void Camera::applyYawPitchDelta(float yawDeltaDegrees, float pitchDeltaDegrees) noexcept
 {
-  yawDegrees_ += yawDeltaDegrees;
-  pitchDegrees_ += pitchDeltaDegrees;
+  mYawDegrees += yawDeltaDegrees;
+  mPitchDegrees += pitchDeltaDegrees;
   clampPitch();
 }
 
 void Camera::translateLocal(const glm::vec3& localOffset) noexcept
 {
-  worldPosition_ += right() * localOffset.x + up() * localOffset.y + forward() * localOffset.z;
+  mWorldPosition += right() * localOffset.x + up() * localOffset.y + forward() * localOffset.z;
 }
 
 void Camera::clampPitch() noexcept
 {
-  pitchMinimumDegrees_ = std::clamp(pitchMinimumDegrees_, -maxPitchMagnitudeDegrees, maxPitchMagnitudeDegrees);
-  pitchMaximumDegrees_ = std::clamp(pitchMaximumDegrees_, -maxPitchMagnitudeDegrees, maxPitchMagnitudeDegrees);
-  if (pitchMinimumDegrees_ > pitchMaximumDegrees_)
+  mPitchMinimumDegrees = std::clamp(mPitchMinimumDegrees, -maxPitchMagnitudeDegrees, maxPitchMagnitudeDegrees);
+  mPitchMaximumDegrees = std::clamp(mPitchMaximumDegrees, -maxPitchMagnitudeDegrees, maxPitchMagnitudeDegrees);
+  if (mPitchMinimumDegrees > mPitchMaximumDegrees)
   {
-    std::swap(pitchMinimumDegrees_, pitchMaximumDegrees_);
+    std::swap(mPitchMinimumDegrees, mPitchMaximumDegrees);
   }
-  pitchDegrees_ = std::clamp(pitchDegrees_, pitchMinimumDegrees_, pitchMaximumDegrees_);
+  mPitchDegrees = std::clamp(mPitchDegrees, mPitchMinimumDegrees, mPitchMaximumDegrees);
 }
 } // namespace mental::camera
