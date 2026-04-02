@@ -67,7 +67,7 @@ class EditorApplication
   [[nodiscard]] core::Result executePhase(core::Result (EditorApplication::*phase)());
   void setSceneCameraControlActive(bool active) noexcept;
   [[nodiscard]] core::Result updateSceneCameraControl();
-  [[nodiscard]] render::SceneRenderFrame buildSceneRenderFrame() const;
+  void buildSceneRenderFrame(render::SceneRenderFrame& sceneRenderFrame) const;
 
   platform::IWindow* mWindow = nullptr;
   render::IRenderSystem* mRenderSystem = nullptr;

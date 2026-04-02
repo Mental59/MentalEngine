@@ -229,7 +229,7 @@ core::Result EditorApplication::renderFrame()
   mFrameContext.deltaTimeSeconds = mDeltaTimeSeconds;
   mFrameContext.framebufferSize = mObservedFramebufferSize;
   mFrameContext.framebufferResized = mFramebufferResized;
-  mFrameContext.sceneRenderFrame = buildSceneRenderFrame();
+  buildSceneRenderFrame(mFrameContext.sceneRenderFrame);
   mFrameContext.frameIndex = mRenderedFrameCount;
 
   const render::RenderFrameOutcome outcome = mRenderSystem->render(mFrameContext);
@@ -261,9 +261,8 @@ core::Result EditorApplication::updateSceneCameraControl()
   return core::Result::eSuccess;
 }
 
-render::SceneRenderFrame EditorApplication::buildSceneRenderFrame() const
+void EditorApplication::buildSceneRenderFrame(render::SceneRenderFrame& sceneRenderFrame) const
 {
-  render::SceneRenderFrame sceneRenderFrame {};
   const float aspectRatio =
     static_cast<float>(mObservedFramebufferSize.width) / static_cast<float>(mObservedFramebufferSize.height);
   const auto& sceneCamera = mScene.sceneCamera();
@@ -277,6 +276,7 @@ render::SceneRenderFrame EditorApplication::buildSceneRenderFrame() const
   const auto primitiveView = mScene.registry().view<const TransformComponent, const PrimitiveComponent>();
   const std::size_t primitiveCount =
     static_cast<std::size_t>(std::distance(primitiveView.begin(), primitiveView.end()));
+  sceneRenderFrame.objects.clear();
   sceneRenderFrame.objects.reserve(primitiveCount);
 
   for (const entt::entity entity : primitiveView)
@@ -295,8 +295,6 @@ render::SceneRenderFrame EditorApplication::buildSceneRenderFrame() const
     sceneRenderFrame.objects.end(),
     [](const render::SceneRenderObject& lhs, const render::SceneRenderObject& rhs)
     { return lhs.objectIdentifier < rhs.objectIdentifier; });
-
-  return sceneRenderFrame;
 }
 
 void EditorApplication::setSceneCameraControlActive(bool active) noexcept
