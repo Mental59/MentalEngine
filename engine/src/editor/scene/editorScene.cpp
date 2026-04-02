@@ -37,6 +37,16 @@ namespace
 }
 } // namespace
 
+SceneCamera& EditorScene::sceneCamera() noexcept
+{
+  return mSceneCamera;
+}
+
+const SceneCamera& EditorScene::sceneCamera() const noexcept
+{
+  return mSceneCamera;
+}
+
 mental::core::Result EditorScene::createPrimitive(PrimitiveType type, entt::entity& entity) noexcept
 {
   entity = entt::null;

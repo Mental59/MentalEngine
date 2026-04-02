@@ -65,6 +65,8 @@ class EditorApplication
 
  private:
   [[nodiscard]] core::Result executePhase(core::Result (EditorApplication::*phase)());
+  void setSceneCameraControlActive(bool active) noexcept;
+  [[nodiscard]] core::Result updateSceneCameraControl();
 
   platform::IWindow* mWindow = nullptr;
   render::IRenderSystem* mRenderSystem = nullptr;
@@ -80,6 +82,7 @@ class EditorApplication
   bool mIsInitialized = false;
   bool mShouldAttemptFrame = true;
   bool mFramebufferResized = false;
+  bool mSceneCameraControlActive = false;
   core::Result mLastError = core::Result::eSuccess;
 };
 } // namespace mental::editor

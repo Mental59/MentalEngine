@@ -10,6 +10,7 @@
 
 #include <editor/scene/components.hpp>
 #include <editor/scene/editorState.hpp>
+#include <editor/scene/sceneCamera.hpp>
 
 namespace mental::editor
 {
@@ -34,6 +35,10 @@ class EditorScene
   {
     return mEditorState;
   }
+
+  [[nodiscard]] SceneCamera& sceneCamera() noexcept;
+
+  [[nodiscard]] const SceneCamera& sceneCamera() const noexcept;
 
   [[nodiscard]] entt::entity selectedEntity() const noexcept
   {
@@ -61,8 +66,9 @@ class EditorScene
   void setGizmoMode(GizmoMode mode) noexcept;
 
  private:
-  entt::registry mRegistry;
+  SceneCamera mSceneCamera {};
   EditorState mEditorState;
+  entt::registry mRegistry;
   std::array<std::uint32_t, kPrimitiveTypeInfos.size()> mNextPrimitiveDisplayIndices = []
   {
     std::array<std::uint32_t, kPrimitiveTypeInfos.size()> indices {};

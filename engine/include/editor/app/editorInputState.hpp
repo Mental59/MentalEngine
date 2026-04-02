@@ -16,6 +16,11 @@ class EditorInputState : public input::InputState
     return isMouseButtonDown(input::MouseButton::eRight);
   }
 
+  [[nodiscard]] bool isCameraBoostActive() const noexcept
+  {
+    return isKeyDown(input::KeyCode::eLeftShift);
+  }
+
   [[nodiscard]] bool wantsSelectionClick() const noexcept
   {
     return wasMouseButtonPressed(input::MouseButton::eLeft);

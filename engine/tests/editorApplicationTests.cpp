@@ -2,6 +2,7 @@
 #include <editor/scene/components.hpp>
 #include <render/frameContext.hpp>
 
+#include <cmath>
 #include <core/types.hpp>
 #include <input/inputCodes.hpp>
 #include <input/inputSnapshot.hpp>
@@ -21,6 +22,16 @@ using mental::core::Result;
 using mental::editor::EditorApplication;
 using mental::render::FrameContext;
 
+bool nearlyEqual(float lhs, float rhs, float epsilon = 1.0e-4f)
+{
+  return std::fabs(lhs - rhs) <= epsilon;
+}
+
+bool nearlyEqual(const glm::vec3& lhs, const glm::vec3& rhs, float epsilon = 1.0e-4f)
+{
+  return nearlyEqual(lhs.x, rhs.x, epsilon) && nearlyEqual(lhs.y, rhs.y, epsilon) && nearlyEqual(lhs.z, rhs.z, epsilon);
+}
+
 mental::input::InputSnapshot makeInputSnapshot()
 {
   return {};
@@ -30,9 +41,13 @@ struct FakeWindow final : mental::platform::IWindow
 {
   mutable int pollEventsCount = 0;
   mutable int waitEventsCount = 0;
+  mutable int cursorModeSetCount = 0;
+  mutable int rawMouseMotionSetCount = 0;
   bool valid = true;
   bool closeRequested = false;
   mental::platform::WindowSize size {1280u, 720u};
+  mental::platform::CursorMode cursorMode = mental::platform::CursorMode::eNormal;
+  bool rawMouseMotionEnabled = false;
   mental::input::InputSnapshot inputSnapshot {};
   double timeSeconds = 0.0;
 
@@ -69,6 +84,18 @@ struct FakeWindow final : mental::platform::IWindow
   mental::platform::WindowSize getWindowSize() const override
   {
     return size;
+  }
+
+  void setCursorMode(mental::platform::CursorMode mode) override
+  {
+    ++cursorModeSetCount;
+    cursorMode = mode;
+  }
+
+  void setRawMouseMotionEnabled(bool enabled) override
+  {
+    ++rawMouseMotionSetCount;
+    rawMouseMotionEnabled = enabled;
   }
 
   bool isValid() const override
@@ -305,6 +332,320 @@ void testCollectInputReportsFlyLookAndSelectionIntents()
   require(app.inputState().wantsSelectionClick(), "LMB press should request a selection click");
 }
 
+void testCollectInputReportsCameraBoostWithLeftShift()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for camera boost test");
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eLeftShift, true);
+
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for camera boost test");
+  require(app.inputState().isCameraBoostActive(), "Left shift should report camera boost active");
+}
+
+void testCollectInputSuppressesGizmoHotkeysWhileFlyLookActive()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for fly-look hotkey suppression test");
+
+  app.scene().setGizmoMode(mental::editor::GizmoMode::eScale);
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, true);
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed while fly-look is active");
+  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eScale,
+    "W should not change gizmo mode while fly-look is active");
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, false);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eE, true);
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for fly-look E hotkey suppression");
+  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eScale,
+    "E should not change gizmo mode while fly-look is active");
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eE, false);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eR, true);
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for fly-look R hotkey suppression");
+  require(app.scene().gizmoMode() == mental::editor::GizmoMode::eScale,
+    "R should not change gizmo mode while fly-look is active");
+}
+
+void testUpdateEditorEntersAndLeavesFlyLookCursorMode()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for fly-look cursor mode test");
+
+  window.timeSeconds = 0.25;
+  require(app.updatePlatform() == Result::eSuccess, "First updatePlatform should succeed for fly-look cursor mode test");
+  require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for fly-look cursor mode test");
+  require(app.updateEditor() == Result::eSuccess, "First updateEditor should succeed for fly-look cursor mode test");
+  require(window.cursorMode == mental::platform::CursorMode::eNormal,
+    "Cursor should remain normal before fly-look begins");
+  require(window.cursorModeSetCount == 0, "Cursor mode should not change before fly-look begins");
+
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.timeSeconds = 0.5;
+  require(app.updatePlatform() == Result::eSuccess, "Second updatePlatform should succeed for fly-look cursor mode test");
+  require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for fly-look cursor mode test");
+  require(app.updateEditor() == Result::eSuccess, "Second updateEditor should succeed for fly-look cursor mode test");
+  require(window.cursorMode == mental::platform::CursorMode::eDisabled,
+    "Fly-look should disable the cursor while active");
+  require(window.cursorModeSetCount == 1, "Fly-look start should request cursor mode once");
+  require(window.rawMouseMotionEnabled, "Fly-look should enable raw mouse motion while active");
+  require(window.rawMouseMotionSetCount == 1, "Fly-look start should request raw mouse motion once");
+
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, false);
+  window.timeSeconds = 0.75;
+  require(app.updatePlatform() == Result::eSuccess, "Third updatePlatform should succeed for fly-look cursor mode test");
+  require(app.collectInput() == Result::eSuccess, "Third collectInput should succeed for fly-look cursor mode test");
+  require(app.updateEditor() == Result::eSuccess, "Third updateEditor should succeed for fly-look cursor mode test");
+  require(window.cursorMode == mental::platform::CursorMode::eNormal,
+    "Ending fly-look should restore the normal cursor");
+  require(window.cursorModeSetCount == 2, "Fly-look end should request cursor mode once more");
+  require(!window.rawMouseMotionEnabled, "Ending fly-look should disable raw mouse motion");
+  require(window.rawMouseMotionSetCount == 2, "Fly-look end should request raw mouse motion once more");
+}
+
+void testUpdateEditorAppliesMouseDeltaToSceneCameraOrientation()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for mouse-look test");
+
+  auto& camera = app.scene().sceneCamera();
+  camera.setMouseLookSensitivity(0.25f);
+
+  window.inputSnapshot.cursorPosition = {100.0, 100.0};
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.timeSeconds = 1.0;
+  require(app.updatePlatform() == Result::eSuccess, "First updatePlatform should succeed for mouse-look test");
+  require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for mouse-look test");
+  require(app.updateEditor() == Result::eSuccess, "First updateEditor should succeed for mouse-look test");
+
+  window.inputSnapshot.cursorPosition = {116.0, 92.0};
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.timeSeconds = 1.5;
+  require(app.updatePlatform() == Result::eSuccess, "Second updatePlatform should succeed for mouse-look test");
+  require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for mouse-look test");
+  require(app.updateEditor() == Result::eSuccess, "Second updateEditor should succeed for mouse-look test");
+
+  require(nearlyEqual(camera.yawDegrees(), -86.0f), "Mouse delta X should adjust yaw by sensitivity");
+  require(nearlyEqual(camera.pitchDegrees(), 2.0f), "Mouse delta Y should adjust pitch by sensitivity");
+}
+
+void testUpdateEditorMovesSceneCameraInLocalSpaceWithDeltaTimeAndBoost()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for movement test");
+
+  auto& camera = app.scene().sceneCamera();
+  camera.setMoveSpeed(8.0f);
+  camera.setBoostMultiplier(2.0f);
+
+  window.inputSnapshot.cursorPosition = {50.0, 50.0};
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.timeSeconds = 1.0;
+  require(app.updatePlatform() == Result::eSuccess, "First updatePlatform should succeed for movement test");
+  require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for movement test");
+  require(app.updateEditor() == Result::eSuccess, "First updateEditor should succeed for movement test");
+
+  window.inputSnapshot.cursorPosition = {50.0, 50.0};
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, true);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eD, true);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eLeftShift, true);
+  window.timeSeconds = 1.5;
+  require(app.updatePlatform() == Result::eSuccess, "Second updatePlatform should succeed for movement test");
+  require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for movement test");
+  require(app.updateEditor() == Result::eSuccess, "Second updateEditor should succeed for movement test");
+
+  require(nearlyEqual(camera.worldPosition(), glm::vec3 {8.0f, 0.0f, -3.0f}),
+    "Fly-look movement should use local axes, delta time, and boost");
+}
+
+void testUpdateEditorDoesNotMoveSceneCameraWithoutFlyLookActive()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for no-fly-look movement test");
+
+  auto& camera = app.scene().sceneCamera();
+  camera.setMoveSpeed(4.0f);
+  const glm::vec3 initialPosition = camera.worldPosition();
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, true);
+  window.timeSeconds = 0.5;
+  require(app.updatePlatform() == Result::eSuccess, "updatePlatform should succeed for no-fly-look movement test");
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for no-fly-look movement test");
+  require(app.updateEditor() == Result::eSuccess, "updateEditor should succeed for no-fly-look movement test");
+
+  require(nearlyEqual(camera.worldPosition(), initialPosition),
+    "W should not move the scene camera unless fly-look is active");
+}
+
+void testUpdateEditorBoostMovesSceneCameraFartherThanUnboostedMovement()
+{
+  auto measureTravelDistance = [](bool boosted) {
+    FakeWindow window;
+    FakeRenderSystem renderer;
+    TestEditorApplication app {&window, &renderer};
+    require(app.init() == Result::eSuccess, "Application init should succeed for boost comparison test");
+
+    auto& camera = app.scene().sceneCamera();
+    camera.setMoveSpeed(4.0f);
+    camera.setBoostMultiplier(2.0f);
+
+    window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+    window.inputSnapshot.setKeyDown(mental::input::KeyCode::eW, true);
+    if (boosted)
+    {
+      window.inputSnapshot.setKeyDown(mental::input::KeyCode::eLeftShift, true);
+    }
+    window.timeSeconds = 0.5;
+    require(app.updatePlatform() == Result::eSuccess, "updatePlatform should succeed for boost comparison test");
+    require(app.collectInput() == Result::eSuccess, "collectInput should succeed for boost comparison test");
+    require(app.updateEditor() == Result::eSuccess, "updateEditor should succeed for boost comparison test");
+
+    return camera.worldPosition().z;
+  };
+
+  const float initialZ = 5.0f;
+  const float unboostedZ = measureTravelDistance(false);
+  const float boostedZ = measureTravelDistance(true);
+  const float unboostedTravel = initialZ - unboostedZ;
+  const float boostedTravel = initialZ - boostedZ;
+
+  require(nearlyEqual(unboostedTravel, 2.0f), "Unboosted movement should travel the base distance over the frame");
+  require(nearlyEqual(boostedTravel, 4.0f), "Boosted movement should travel twice the base distance over the frame");
+  require(boostedTravel > unboostedTravel, "Boost should increase travel distance over the same delta time");
+}
+
+void testUpdateEditorMovesSceneCameraVerticallyWithQAndE()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for vertical movement test");
+
+  auto& camera = app.scene().sceneCamera();
+  camera.setMoveSpeed(4.0f);
+
+  window.inputSnapshot.cursorPosition = {25.0, 25.0};
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.timeSeconds = 0.5;
+  require(app.updatePlatform() == Result::eSuccess, "First updatePlatform should succeed for vertical movement test");
+  require(app.collectInput() == Result::eSuccess, "First collectInput should succeed for vertical movement test");
+  require(app.updateEditor() == Result::eSuccess, "First updateEditor should succeed for vertical movement test");
+
+  window.inputSnapshot.cursorPosition = {25.0, 25.0};
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eE, true);
+  window.timeSeconds = 0.75;
+  require(app.updatePlatform() == Result::eSuccess, "Second updatePlatform should succeed for vertical movement test");
+  require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for vertical movement test");
+  require(app.updateEditor() == Result::eSuccess, "Second updateEditor should succeed for vertical movement test");
+  require(nearlyEqual(camera.worldPosition(), glm::vec3 {0.0f, 1.0f, 5.0f}),
+    "E should move the fly camera upward in local space");
+
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eE, false);
+  window.inputSnapshot.setKeyDown(mental::input::KeyCode::eQ, true);
+  window.timeSeconds = 1.0;
+  require(app.updatePlatform() == Result::eSuccess, "Third updatePlatform should succeed for vertical movement test");
+  require(app.collectInput() == Result::eSuccess, "Third collectInput should succeed for vertical movement test");
+  require(app.updateEditor() == Result::eSuccess, "Third updateEditor should succeed for vertical movement test");
+  require(nearlyEqual(camera.worldPosition(), glm::vec3 {0.0f, 0.0f, 5.0f}),
+    "Q should move the fly camera downward in local space");
+}
+
+void testWindowContractTracksCursorAndRawMouseRequests()
+{
+  FakeWindow window;
+
+  require(window.cursorMode == mental::platform::CursorMode::eNormal, "Window should start in normal cursor mode");
+  require(!window.rawMouseMotionEnabled, "Window should start with raw mouse motion disabled");
+
+  window.setCursorMode(mental::platform::CursorMode::eDisabled);
+  window.setRawMouseMotionEnabled(true);
+  window.setRawMouseMotionEnabled(false);
+  window.setCursorMode(mental::platform::CursorMode::eNormal);
+
+  require(window.cursorMode == mental::platform::CursorMode::eNormal,
+    "Window should store the requested normal cursor mode");
+  require(!window.rawMouseMotionEnabled, "Window should store the requested raw mouse motion disable state");
+  require(window.cursorModeSetCount == 2, "Cursor mode requests should be tracked");
+  require(window.rawMouseMotionSetCount == 2, "Raw mouse motion requests should be tracked");
+}
+
+void testShutdownRestoresFlyLookInputState()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for shutdown cleanup test");
+
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.timeSeconds = 0.25;
+  require(app.updatePlatform() == Result::eSuccess, "updatePlatform should succeed for shutdown cleanup test");
+  require(app.collectInput() == Result::eSuccess, "collectInput should succeed for shutdown cleanup test");
+  require(app.updateEditor() == Result::eSuccess, "updateEditor should succeed for shutdown cleanup test");
+  require(window.cursorMode == mental::platform::CursorMode::eDisabled,
+    "Fly-look should be active before shutdown cleanup");
+  require(window.rawMouseMotionEnabled, "Fly-look should enable raw mouse motion before shutdown cleanup");
+
+  app.shutdown();
+
+  require(window.cursorMode == mental::platform::CursorMode::eNormal,
+    "Shutdown should restore the normal cursor immediately");
+  require(!window.rawMouseMotionEnabled, "Shutdown should disable raw mouse motion immediately");
+  require(window.cursorModeSetCount == 2, "Shutdown cleanup should issue one extra cursor request");
+  require(window.rawMouseMotionSetCount == 2, "Shutdown cleanup should issue one extra raw mouse request");
+}
+
+void testRunFailureRestoresFlyLookInputState()
+{
+  FakeWindow window;
+  FakeRenderSystem renderer;
+
+  struct FailingRenderApp final : TestEditorApplication
+  {
+    using TestEditorApplication::TestEditorApplication;
+
+    Result renderFrame() override
+    {
+      return Result::eOperationFailed;
+    }
+  };
+
+  FailingRenderApp app {&window, &renderer};
+  require(app.init() == Result::eSuccess, "Application init should succeed for failure cleanup test");
+
+  window.inputSnapshot.setMouseButtonDown(mental::input::MouseButton::eRight, true);
+  window.timeSeconds = 0.25;
+  require(app.run() == Result::eOperationFailed, "Render failure should propagate from run for cleanup test");
+  require(window.cursorMode == mental::platform::CursorMode::eNormal,
+    "Run failure should restore the normal cursor");
+  require(!window.rawMouseMotionEnabled, "Run failure should disable raw mouse motion");
+}
+
+void testInitFailureUpdatesLastError()
+{
+  FakeWindow window;
+  window.valid = false;
+  FakeRenderSystem renderer;
+  TestEditorApplication app {&window, &renderer};
+
+  require(app.init() == Result::eInitializationFailed, "Init should fail for an invalid window");
+  require(app.lastError() == Result::eInitializationFailed, "Failed init should update lastError");
+}
+
 void testCollectInputSamplesInputWhileMinimized()
 {
   FakeWindow window;
@@ -537,7 +878,19 @@ int main()
     testCollectInputRequestsTranslateModeWithW();
     testCollectInputRequestsRotateModeWithE();
     testCollectInputRequestsScaleModeWithR();
+    testCollectInputSuppressesGizmoHotkeysWhileFlyLookActive();
     testCollectInputReportsFlyLookAndSelectionIntents();
+    testCollectInputReportsCameraBoostWithLeftShift();
+    testUpdateEditorEntersAndLeavesFlyLookCursorMode();
+    testUpdateEditorAppliesMouseDeltaToSceneCameraOrientation();
+    testUpdateEditorMovesSceneCameraInLocalSpaceWithDeltaTimeAndBoost();
+    testUpdateEditorDoesNotMoveSceneCameraWithoutFlyLookActive();
+    testUpdateEditorBoostMovesSceneCameraFartherThanUnboostedMovement();
+    testUpdateEditorMovesSceneCameraVerticallyWithQAndE();
+    testWindowContractTracksCursorAndRawMouseRequests();
+    testShutdownRestoresFlyLookInputState();
+    testRunFailureRestoresFlyLookInputState();
+    testInitFailureUpdatesLastError();
     testRunCallsPhasesInOrder();
     testFailureStopsLoop();
     testMinimizedFrameWaitsWithoutRendering();

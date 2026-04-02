@@ -15,6 +15,7 @@ enum class KeyCode : std::uint8_t
   eQ,
   eE,
   eR,
+  eLeftShift,
   eEscape,
 };
 
@@ -25,7 +26,7 @@ enum class MouseButton : std::uint8_t
   eMiddle,
 };
 
-inline constexpr std::array<KeyCode, 8> kKeyCodes = {
+inline constexpr std::array<KeyCode, 9> kKeyCodes = {
   KeyCode::eW,
   KeyCode::eA,
   KeyCode::eS,
@@ -33,6 +34,7 @@ inline constexpr std::array<KeyCode, 8> kKeyCodes = {
   KeyCode::eQ,
   KeyCode::eE,
   KeyCode::eR,
+  KeyCode::eLeftShift,
   KeyCode::eEscape,
 };
 

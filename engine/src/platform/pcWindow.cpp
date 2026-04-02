@@ -5,6 +5,33 @@
 
 namespace
 {
+int gGlfwWindowRefCount = 0;
+
+bool acquireGlfw()
+{
+  if (gGlfwWindowRefCount == 0 && glfwInit() != GLFW_TRUE)
+  {
+    return false;
+  }
+
+  ++gGlfwWindowRefCount;
+  return true;
+}
+
+void releaseGlfw()
+{
+  if (gGlfwWindowRefCount == 0)
+  {
+    return;
+  }
+
+  --gGlfwWindowRefCount;
+  if (gGlfwWindowRefCount == 0)
+  {
+    glfwTerminate();
+  }
+}
+
 constexpr int toGlfwKey(mental::input::KeyCode keyCode)
 {
   switch (keyCode)
@@ -23,6 +50,8 @@ constexpr int toGlfwKey(mental::input::KeyCode keyCode)
       return GLFW_KEY_E;
     case mental::input::KeyCode::eR:
       return GLFW_KEY_R;
+    case mental::input::KeyCode::eLeftShift:
+      return GLFW_KEY_LEFT_SHIFT;
     case mental::input::KeyCode::eEscape:
       return GLFW_KEY_ESCAPE;
   }
@@ -43,6 +72,19 @@ constexpr int toGlfwMouseButton(mental::input::MouseButton mouseButton)
   }
 
   return GLFW_MOUSE_BUTTON_LEFT;
+}
+
+constexpr int toGlfwCursorMode(mental::platform::CursorMode cursorMode)
+{
+  switch (cursorMode)
+  {
+    case mental::platform::CursorMode::eNormal:
+      return GLFW_CURSOR_NORMAL;
+    case mental::platform::CursorMode::eDisabled:
+      return GLFW_CURSOR_DISABLED;
+  }
+
+  return GLFW_CURSOR_NORMAL;
 }
 } // namespace
 
@@ -65,17 +107,28 @@ mental::core::Result mental::platform::PCWindow::init(const mental::platform::Wi
     return core::Result::eInitializationFailed;
   }
 
-  glfwInit();
+  if (!acquireGlfw())
+  {
+    MENTAL_ERROR("Failed to initialize GLFW");
+    return core::Result::eInitializationFailed;
+  }
 
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GL_TRUE);
 
   mWindow = glfwCreateWindow(desc.width, desc.height, desc.title, nullptr, nullptr);
-  MENTAL_ASSERT_MESSAGE(mWindow != nullptr, "Failed to create GLFW window");
+  if (mWindow == nullptr)
+  {
+    MENTAL_ERROR("Failed to create GLFW window");
+    releaseGlfw();
+    return core::Result::eInitializationFailed;
+  }
 
   mAccumulatedScrollDelta = {};
   glfwSetWindowUserPointer(mWindow, this);
   glfwSetScrollCallback(mWindow, &PCWindow::scrollCallback);
+  setCursorMode(CursorMode::eNormal);
+  setRawMouseMotionEnabled(false);
 
   MENTAL_INFO("GLFW window initialized");
   mIsInitialized = true;
@@ -91,11 +144,13 @@ void mental::platform::PCWindow::destroy()
     return;
   }
 
+  setRawMouseMotionEnabled(false);
+  setCursorMode(CursorMode::eNormal);
   glfwSetWindowUserPointer(mWindow, nullptr);
   glfwDestroyWindow(mWindow);
   mWindow = nullptr;
   mAccumulatedScrollDelta = {};
-  glfwTerminate();
+  releaseGlfw();
 
   mIsInitialized = false;
 
@@ -137,13 +192,42 @@ mental::input::InputSnapshot mental::platform::PCWindow::sampleInput() const
 
   for (const input::MouseButton mouseButton : input::kMouseButtons)
   {
-    snapshot.setMouseButtonDown(
-      mouseButton, glfwGetMouseButton(mWindow, toGlfwMouseButton(mouseButton)) == GLFW_PRESS);
+    snapshot.setMouseButtonDown(mouseButton, glfwGetMouseButton(mWindow, toGlfwMouseButton(mouseButton)) == GLFW_PRESS);
   }
 
   mAccumulatedScrollDelta = {};
 
   return snapshot;
+}
+
+void mental::platform::PCWindow::setCursorMode(CursorMode mode)
+{
+  mCursorMode = mode;
+  if (mWindow == nullptr)
+  {
+    return;
+  }
+
+  glfwSetInputMode(mWindow, GLFW_CURSOR, toGlfwCursorMode(mode));
+}
+
+void mental::platform::PCWindow::setRawMouseMotionEnabled(bool enabled)
+{
+  const bool supported = glfwRawMouseMotionSupported() == GLFW_TRUE;
+  if (!supported)
+  {
+    mRawMouseMotionEnabled = false;
+    return;
+  }
+
+  mRawMouseMotionEnabled = enabled;
+
+  if (mWindow == nullptr)
+  {
+    return;
+  }
+
+  glfwSetInputMode(mWindow, GLFW_RAW_MOUSE_MOTION, mRawMouseMotionEnabled ? GLFW_TRUE : GLFW_FALSE);
 }
 
 bool mental::platform::PCWindow::isValid() const

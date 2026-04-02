@@ -16,6 +16,8 @@ class PCWindow : public IWindow
 
   virtual WindowSize getWindowSize() const override;
   [[nodiscard]] virtual input::InputSnapshot sampleInput() const override;
+  virtual void setCursorMode(CursorMode mode) override;
+  virtual void setRawMouseMotionEnabled(bool enabled) override;
 
   virtual bool isValid() const override;
 
@@ -29,6 +31,8 @@ class PCWindow : public IWindow
 
   GLFWwindow* mWindow = nullptr;
   mutable input::ScrollDelta mAccumulatedScrollDelta {};
+  CursorMode mCursorMode = CursorMode::eNormal;
+  bool mRawMouseMotionEnabled = false;
   bool mIsInitialized = false;
 };
 
