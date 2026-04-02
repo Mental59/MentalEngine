@@ -58,7 +58,7 @@ class IBuffer : public core::resource::IResource
   virtual core::Result init(const BufferDesc& desc) = 0;
   virtual const BufferDesc& getDesc() const = 0;
   virtual core::Result map(void** mappedData) = 0;
-  virtual core::Result unmap() = 0;
+  virtual void unmap() = 0;
   virtual core::Result copy(void* data, uint64_t size, uint64_t offset = 0) = 0;
 };
 

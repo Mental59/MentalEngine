@@ -317,8 +317,8 @@ mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
   }
 
   res = cameraBuffer->copy(const_cast<CameraUploadData*>(&cameraUploadData), sizeof(cameraUploadData));
-  const core::Result unmapResult = cameraBuffer->unmap();
-  if (res != core::Result::eSuccess || unmapResult != core::Result::eSuccess)
+  cameraBuffer->unmap();
+  if (res != core::Result::eSuccess)
   {
     MENTAL_ERROR("Failed to upload camera data");
     return {.result = core::Result::eOperationFailed};

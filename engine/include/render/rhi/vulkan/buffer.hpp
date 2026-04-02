@@ -24,7 +24,7 @@ class Buffer : public IBuffer
     return mDesc;
   };
   virtual core::Result map(void** mappedData) override;
-  virtual core::Result unmap() override;
+  virtual void unmap() override;
   virtual core::Result copy(void* data, uint64_t size, uint64_t offset = 0) override;
 
  private:
