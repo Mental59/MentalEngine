@@ -34,15 +34,18 @@ struct CameraUploadData
   return framebufferSize.width > 0 && framebufferSize.height > 0;
 }
 
-void recordSceneObjectPlaceholder(const mental::render::SceneRenderObject& object)
+[[nodiscard]] const mental::render::PrimitiveMeshView* resolvePrimitiveMeshView(
+  const mental::render::PrimitiveMeshLibrary& primitiveMeshLibrary, mental::render::SceneGeometryKind geometryKind)
 {
-  switch (object.geometryKind)
+  switch (geometryKind)
   {
     case mental::render::SceneGeometryKind::eCube:
     case mental::render::SceneGeometryKind::ePlane:
     case mental::render::SceneGeometryKind::eSphere:
-      break;
+      return primitiveMeshLibrary.findMeshView(geometryKind);
   }
+
+  return nullptr;
 }
 
 struct FrameUpdater
@@ -147,6 +150,10 @@ mental::core::Result mental::render::RenderSystem::init(const mental::render::Re
     return cameraBufferResult;
   }
 
+  const core::Result primitiveMeshLibraryResult = mPrimitiveMeshLibrary.init();
+  MENTAL_ASSERT_MESSAGE(
+    primitiveMeshLibraryResult == core::Result::eSuccess, "Failed to initialize primitive mesh library");
+
   mCurrentFrame = 0;
   mIsInitialized = true;
   mHostAdapter = conf.hostAdapter;
@@ -166,6 +173,7 @@ void mental::render::RenderSystem::destroy()
   rhi::getDevice().waitIdle();
 
   destroyDepthTarget();
+  mPrimitiveMeshLibrary.destroy();
   destroyCameraUploadBuffers();
   for (const resource::FrameDataHandle frameDataHandle : mFrameDataHandles)
   {
@@ -340,7 +348,18 @@ mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
 
   for (const SceneRenderObject& object : frameContext.sceneRenderFrame.objects)
   {
-    recordSceneObjectPlaceholder(object);
+    const PrimitiveMeshView* primitiveMeshView = resolvePrimitiveMeshView(mPrimitiveMeshLibrary, object.geometryKind);
+    MENTAL_ASSERT_MESSAGE(primitiveMeshView != nullptr,
+      std::format(
+        "Failed to resolve primitive mesh view for kind={}", static_cast<std::uint32_t>(object.geometryKind)));
+
+    rhi::IBuffer* primitiveStorageBuffer = primitiveMeshView->storageBufferHandle.get();
+    MENTAL_ASSERT_MESSAGE(primitiveStorageBuffer != nullptr && primitiveMeshView->indexCount != 0u,
+      std::format(
+        "Failed to resolve primitive mesh view for kind={}", static_cast<std::uint32_t>(object.geometryKind)));
+
+    (void)primitiveStorageBuffer;
+    (void)primitiveMeshView;
   }
 
   cmdList->endRendering();
