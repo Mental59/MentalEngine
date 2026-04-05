@@ -175,7 +175,10 @@ mental::core::Result mental::rhi::vk::GraphicsPipeline::init(const GraphicsPipel
   colorBlendState.logicOp = VK_LOGIC_OP_COPY;
   colorBlendState.attachmentCount = 1;
   colorBlendState.pAttachments = &colorBlendAttachment;
-  colorBlendState.blendConstants = {0.0f, 0.0f, 0.0f, 0.0f};
+  colorBlendState.blendConstants[0] = 0.0f;
+  colorBlendState.blendConstants[1] = 0.0f;
+  colorBlendState.blendConstants[2] = 0.0f;
+  colorBlendState.blendConstants[3] = 0.0f;
 
   std::array<VkDynamicState, 2> dynamicStates {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
   VkPipelineDynamicStateCreateInfo dynamicState {VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
