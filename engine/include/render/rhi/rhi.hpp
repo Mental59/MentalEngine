@@ -20,9 +20,8 @@ class IFence;
 class ICommandList;
 class ICommandQueue;
 class IDevice;
-class IDescriptorSet;
-class IDescriptorSetLayout;
-class IDescriptorPool;
+class IResourceSet;
+class IResourceLayout;
 class IShaderModule;
 class IPipelineLayout;
 class IGraphicsPipeline;
@@ -178,79 +177,58 @@ class IShaderModule : public core::resource::IResource
   virtual const ShaderModuleDesc& getDesc() const = 0;
 };
 
-enum class DescriptorType : uint8_t
+enum class ResourceBindingType : uint8_t
 {
   eUniformBuffer = 0,
   eStorageBuffer,
 };
 
-struct DescriptorBindingDesc
+struct ResourceBindingDesc
 {
   uint32_t binding = 0;
-  DescriptorType type = DescriptorType::eUniformBuffer;
+  ResourceBindingType type = ResourceBindingType::eUniformBuffer;
   uint32_t descriptorCount = 1;
   ShaderStageFlags stageFlags = 0;
 };
 
-struct DescriptorSetLayoutDesc
+struct ResourceLayoutDesc
 {
-  const DescriptorBindingDesc* bindings = nullptr;
+  const ResourceBindingDesc* bindings = nullptr;
   uint32_t bindingCount = 0;
 };
 
-class IDescriptorSetLayout : public core::resource::IResource
+class IResourceLayout : public core::resource::IResource
 {
  public:
-  virtual core::Result init(const DescriptorSetLayoutDesc& desc) = 0;
-  virtual const DescriptorSetLayoutDesc& getDesc() const = 0;
+  virtual core::Result init(const ResourceLayoutDesc& desc) = 0;
+  virtual const ResourceLayoutDesc& getDesc() const = 0;
 };
 
-struct DescriptorPoolSizeDesc
+struct ResourceSetDesc
 {
-  DescriptorType type = DescriptorType::eUniformBuffer;
-  uint32_t descriptorCount = 0;
+  IResourceLayout* resourceLayout = nullptr;
 };
 
-struct DescriptorPoolDesc
-{
-  const DescriptorPoolSizeDesc* poolSizes = nullptr;
-  uint32_t poolSizeCount = 0;
-  uint32_t maxSetCount = 0;
-};
-
-class IDescriptorPool : public core::resource::IResource
+class IResourceSet : public core::resource::IResource
 {
  public:
-  virtual core::Result init(const DescriptorPoolDesc& desc) = 0;
-  virtual const DescriptorPoolDesc& getDesc() const = 0;
+  virtual core::Result init(const ResourceSetDesc& desc) = 0;
+  virtual IResourceLayout* getResourceLayout() const = 0;
 };
 
-struct DescriptorSetDesc
-{
-  IDescriptorPool* descriptorPool = nullptr;
-  IDescriptorSetLayout* descriptorSetLayout = nullptr;
-};
-
-class IDescriptorSet : public core::resource::IResource
-{
- public:
-  virtual core::Result init(const DescriptorSetDesc& desc) = 0;
-  virtual IDescriptorSetLayout* getDescriptorSetLayout() const = 0;
-};
-
-struct BufferDescriptorWrite
+struct BufferResourceWrite
 {
   IBuffer* buffer = nullptr;
   uint64_t offset = 0;
   uint64_t range = 0;
 };
 
-struct DescriptorWriteDesc
+struct ResourceWriteDesc
 {
-  IDescriptorSet* descriptorSet = nullptr;
+  IResourceSet* resourceSet = nullptr;
   uint32_t binding = 0;
-  DescriptorType type = DescriptorType::eUniformBuffer;
-  BufferDescriptorWrite buffer {};
+  ResourceBindingType type = ResourceBindingType::eUniformBuffer;
+  BufferResourceWrite buffer {};
 };
 
 struct PushConstantRangeDesc
@@ -262,8 +240,8 @@ struct PushConstantRangeDesc
 
 struct PipelineLayoutDesc
 {
-  IDescriptorSetLayout* const* descriptorSetLayouts = nullptr;
-  uint32_t descriptorSetLayoutCount = 0;
+  IResourceLayout* const* resourceLayouts = nullptr;
+  uint32_t resourceLayoutCount = 0;
   const PushConstantRangeDesc* pushConstantRanges = nullptr;
   uint32_t pushConstantRangeCount = 0;
 };
@@ -390,10 +368,10 @@ class ICommandList : public core::resource::IResource
   virtual void endRendering() = 0;
 
   virtual void bindGraphicsPipeline(IGraphicsPipeline* pipeline) = 0;
-  virtual void bindDescriptorSets(IPipelineLayout* pipelineLayout,
+  virtual void bindResourceSets(IPipelineLayout* pipelineLayout,
     uint32_t firstSet,
-    IDescriptorSet* const* descriptorSets,
-    uint32_t descriptorSetCount) = 0;
+    IResourceSet* const* resourceSets,
+    uint32_t resourceSetCount) = 0;
   virtual core::Result pushConstants(
     IPipelineLayout* pipelineLayout, const PushConstantRangeDesc& range, const void* data) = 0;
   virtual void draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) = 0;
@@ -471,12 +449,11 @@ class IDevice : public core::resource::IResource
   virtual GraphicsApi getGraphicsApi() = 0;
 
   virtual std::unique_ptr<IShaderModule> createShaderModule() = 0;
-  virtual std::unique_ptr<IDescriptorSetLayout> createDescriptorSetLayout() = 0;
-  virtual std::unique_ptr<IDescriptorPool> createDescriptorPool() = 0;
-  virtual std::unique_ptr<IDescriptorSet> createDescriptorSet() = 0;
+  virtual std::unique_ptr<IResourceLayout> createResourceLayout() = 0;
+  virtual std::unique_ptr<IResourceSet> createResourceSet() = 0;
   virtual std::unique_ptr<IPipelineLayout> createPipelineLayout() = 0;
   virtual std::unique_ptr<IGraphicsPipeline> createGraphicsPipeline() = 0;
-  virtual core::Result updateDescriptorSets(const DescriptorWriteDesc* writes, uint32_t writeCount) = 0;
+  virtual core::Result updateResourceSets(const ResourceWriteDesc* writes, uint32_t writeCount) = 0;
 
   virtual ICommandQueue* getGraphicsQueue() = 0;
   virtual ISwapchain* getSwapchain() = 0;

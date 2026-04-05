@@ -9,7 +9,7 @@ VkFormat convertTextureFormat(TextureFormat format);
 VkImageLayout convertTextureLayout(TextureLayout layout);
 VkPipelineStageFlags convertPipelineStage(PipelineStage stage);
 VkShaderStageFlags convertShaderStageFlags(ShaderStageFlags stageFlags);
-VkDescriptorType convertDescriptorType(DescriptorType type);
+VkDescriptorType convertResourceBindingType(ResourceBindingType type);
 VkPrimitiveTopology convertPrimitiveTopology(PrimitiveTopology topology);
 VkPolygonMode convertPolygonMode(PolygonMode polygonMode);
 VkCullModeFlags convertCullMode(CullMode cullMode);

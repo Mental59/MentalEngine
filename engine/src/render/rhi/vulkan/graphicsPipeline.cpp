@@ -15,9 +15,9 @@ mental::core::Result mental::rhi::vk::PipelineLayout::init(const PipelineLayoutD
     return core::Result::eInitializationFailed;
   }
 
-  if (desc.descriptorSetLayoutCount > 0u)
+  if (desc.resourceLayoutCount > 0u)
   {
-    mDescriptorSetLayouts.assign(desc.descriptorSetLayouts, desc.descriptorSetLayouts + desc.descriptorSetLayoutCount);
+    mResourceLayouts.assign(desc.resourceLayouts, desc.resourceLayouts + desc.resourceLayoutCount);
   }
   if (desc.pushConstantRangeCount > 0u)
   {
@@ -25,12 +25,12 @@ mental::core::Result mental::rhi::vk::PipelineLayout::init(const PipelineLayoutD
   }
 
   std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts {};
-  vkDescriptorSetLayouts.reserve(mDescriptorSetLayouts.size());
-  for (IDescriptorSetLayout* descriptorSetLayout : mDescriptorSetLayouts)
+  vkDescriptorSetLayouts.reserve(mResourceLayouts.size());
+  for (IResourceLayout* resourceLayout : mResourceLayouts)
   {
-    MENTAL_ASSERT_DEBUG(descriptorSetLayout != nullptr);
+    MENTAL_ASSERT_DEBUG(resourceLayout != nullptr);
     vkDescriptorSetLayouts.push_back(
-      descriptorSetLayout->getNativeObject(core::resource::ObjectType::eVkDescriptorSetLayout));
+      resourceLayout->getNativeObject(core::resource::ObjectType::eVkDescriptorSetLayout));
   }
 
   std::vector<VkPushConstantRange> vkPushConstantRanges {};
@@ -58,8 +58,8 @@ mental::core::Result mental::rhi::vk::PipelineLayout::init(const PipelineLayoutD
     return core::Result::eInitializationFailed;
   }
 
-  mDesc.descriptorSetLayouts = mDescriptorSetLayouts.data();
-  mDesc.descriptorSetLayoutCount = static_cast<uint32_t>(mDescriptorSetLayouts.size());
+  mDesc.resourceLayouts = mResourceLayouts.data();
+  mDesc.resourceLayoutCount = static_cast<uint32_t>(mResourceLayouts.size());
   mDesc.pushConstantRanges = mPushConstantRanges.data();
   mDesc.pushConstantRangeCount = static_cast<uint32_t>(mPushConstantRanges.size());
   mIsInitialized = true;
@@ -74,7 +74,7 @@ void mental::rhi::vk::PipelineLayout::destroy()
   }
 
   vkDestroyPipelineLayout(vk::getDevice().getVirtualDevice(), mPipelineLayout, nullptr);
-  mDescriptorSetLayouts.clear();
+  mResourceLayouts.clear();
   mPushConstantRanges.clear();
   mDesc = {};
   mPipelineLayout = VK_NULL_HANDLE;

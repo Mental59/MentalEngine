@@ -42,7 +42,7 @@ struct ScenePipelineLibraryConfig
   rhi::IBuffer* geometryStorageBuffer = nullptr;
 };
 
-[[nodiscard]] std::array<rhi::DescriptorBindingDesc, 2> buildSceneDescriptorBindings();
+[[nodiscard]] std::array<rhi::ResourceBindingDesc, 2> buildSceneResourceBindings();
 [[nodiscard]] rhi::PushConstantRangeDesc buildPrimitivePushConstantRange();
 [[nodiscard]] rhi::PushConstantRangeDesc buildGridPushConstantRange();
 [[nodiscard]] rhi::GraphicsPipelineDesc buildPrimitiveGraphicsPipelineDesc(rhi::IPipelineLayout* pipelineLayout,
@@ -63,7 +63,7 @@ class ScenePipelineLibrary
   void destroy();
   [[nodiscard]] bool isValid() const noexcept;
 
-  [[nodiscard]] core::Result updateFrameDescriptorSet(std::uint32_t frameIndex, rhi::IBuffer* cameraBuffer);
+  [[nodiscard]] core::Result updateFrameResourceSet(std::uint32_t frameIndex, rhi::IBuffer* cameraBuffer);
   [[nodiscard]] core::Result recordGridDraw(rhi::ICommandList* cmdList, std::uint32_t frameIndex) const;
   [[nodiscard]] core::Result recordPrimitiveDraw(rhi::ICommandList* cmdList,
     std::uint32_t frameIndex,
@@ -72,14 +72,13 @@ class ScenePipelineLibrary
 
  private:
   [[nodiscard]] core::Result createShaders(const std::filesystem::path& shaderRootPath);
-  [[nodiscard]] core::Result createSceneDescriptorResources();
+  [[nodiscard]] core::Result createSceneResourceSets();
   [[nodiscard]] core::Result createPipelines();
   [[nodiscard]] bool isFrameIndexValid(std::uint32_t frameIndex) const noexcept;
 
   ScenePipelineLibraryConfig mConfig {};
-  std::vector<std::unique_ptr<rhi::IDescriptorSet>> mSceneDescriptorSets {};
-  std::unique_ptr<rhi::IDescriptorSetLayout> mSceneDescriptorSetLayout {};
-  std::unique_ptr<rhi::IDescriptorPool> mDescriptorPool {};
+  std::vector<std::unique_ptr<rhi::IResourceSet>> mSceneResourceSets {};
+  std::unique_ptr<rhi::IResourceLayout> mSceneResourceLayout {};
   std::unique_ptr<rhi::IShaderModule> mPrimitiveVertexShader {};
   std::unique_ptr<rhi::IShaderModule> mPrimitiveFragmentShader {};
   std::unique_ptr<rhi::IShaderModule> mGridVertexShader {};

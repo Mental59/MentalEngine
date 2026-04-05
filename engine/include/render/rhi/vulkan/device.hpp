@@ -4,7 +4,7 @@
 #include <render/rhi/rhi.hpp>
 #include <memory>
 #include <render/rhi/vulkan/commandQueue.hpp>
-#include <render/rhi/vulkan/descriptorSet.hpp>
+#include <render/rhi/vulkan/resourceSet.hpp>
 #include <render/rhi/vulkan/graphicsPipeline.hpp>
 #include <render/rhi/vulkan/shaderModule.hpp>
 #include <render/rhi/vulkan/swapchain.hpp>
@@ -84,12 +84,11 @@ class Device : public IDevice
   virtual void waitIdle() override;
   virtual GraphicsApi getGraphicsApi() override;
   virtual std::unique_ptr<IShaderModule> createShaderModule() override;
-  virtual std::unique_ptr<IDescriptorSetLayout> createDescriptorSetLayout() override;
-  virtual std::unique_ptr<IDescriptorPool> createDescriptorPool() override;
-  virtual std::unique_ptr<IDescriptorSet> createDescriptorSet() override;
+  virtual std::unique_ptr<IResourceLayout> createResourceLayout() override;
+  virtual std::unique_ptr<IResourceSet> createResourceSet() override;
   virtual std::unique_ptr<IPipelineLayout> createPipelineLayout() override;
   virtual std::unique_ptr<IGraphicsPipeline> createGraphicsPipeline() override;
-  virtual core::Result updateDescriptorSets(const DescriptorWriteDesc* writes, uint32_t writeCount) override;
+  virtual core::Result updateResourceSets(const ResourceWriteDesc* writes, uint32_t writeCount) override;
   virtual ICommandQueue* getGraphicsQueue() override;
   virtual ISwapchain* getSwapchain() override;
 
@@ -117,12 +116,20 @@ class Device : public IDevice
   {
     return mContext.mPresentModes;
   }
+  inline VkDescriptorPool getResourceDescriptorPool() const
+  {
+    return mResourceDescriptorPool;
+  }
 
  private:
+  [[nodiscard]] core::Result initResourceDescriptorPool();
+  void destroyResourceDescriptorPool();
+
   bool mIsInit = false;
   Context mContext;
   CommandQueue mGraphicsQueue;
   Swapchain mSwapchain;
+  VkDescriptorPool mResourceDescriptorPool = VK_NULL_HANDLE;
 };
 
 inline Device& getDevice()

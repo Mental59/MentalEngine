@@ -8,7 +8,7 @@
 
 namespace
 {
-constexpr std::uint32_t kSceneDescriptorSetIndex = 0u;
+constexpr std::uint32_t kSceneResourceSetIndex = 0u;
 
 [[nodiscard]] std::filesystem::path resolveShaderRootPath(const mental::render::ScenePipelineLibraryConfig& config)
 {
@@ -51,21 +51,21 @@ constexpr std::uint32_t kSceneDescriptorSetIndex = 0u;
 }
 } // namespace
 
-std::array<mental::rhi::DescriptorBindingDesc, 2> mental::render::buildSceneDescriptorBindings()
+std::array<mental::rhi::ResourceBindingDesc, 2> mental::render::buildSceneResourceBindings()
 {
   return {
-    rhi::DescriptorBindingDesc {
-                                .binding = 0u,
-                                .type = rhi::DescriptorType::eUniformBuffer,
-                                .descriptorCount = 1u,
-                                .stageFlags = rhi::ShaderStageFlagBits::eShaderStageVertexBit | rhi::ShaderStageFlagBits::eShaderStageFragmentBit,
-                                },
-    rhi::DescriptorBindingDesc {
-                                .binding = 1u,
-                                .type = rhi::DescriptorType::eStorageBuffer,
-                                .descriptorCount = 1u,
-                                .stageFlags = rhi::ShaderStageFlagBits::eShaderStageVertexBit,
-                                },
+    rhi::ResourceBindingDesc {
+                              .binding = 0u,
+                              .type = rhi::ResourceBindingType::eUniformBuffer,
+                              .descriptorCount = 1u,
+                              .stageFlags = rhi::ShaderStageFlagBits::eShaderStageVertexBit | rhi::ShaderStageFlagBits::eShaderStageFragmentBit,
+                              },
+    rhi::ResourceBindingDesc {
+                              .binding = 1u,
+                              .type = rhi::ResourceBindingType::eStorageBuffer,
+                              .descriptorCount = 1u,
+                              .stageFlags = rhi::ShaderStageFlagBits::eShaderStageVertexBit,
+                              },
   };
 }
 
@@ -163,7 +163,7 @@ mental::core::Result mental::render::ScenePipelineLibrary::init(const ScenePipel
     return result;
   }
 
-  result = createSceneDescriptorResources();
+  result = createSceneResourceSets();
   if (result != core::Result::eSuccess)
   {
     destroy();
@@ -204,25 +204,20 @@ void mental::render::ScenePipelineLibrary::destroy()
     mGridPipelineLayout.reset();
   }
 
-  for (std::unique_ptr<rhi::IDescriptorSet>& descriptorSet : mSceneDescriptorSets)
+  for (std::unique_ptr<rhi::IResourceSet>& resourceSet : mSceneResourceSets)
   {
-    if (descriptorSet)
+    if (resourceSet)
     {
-      descriptorSet->destroy();
-      descriptorSet.reset();
+      resourceSet->destroy();
+      resourceSet.reset();
     }
   }
-  mSceneDescriptorSets.clear();
+  mSceneResourceSets.clear();
 
-  if (mDescriptorPool)
+  if (mSceneResourceLayout)
   {
-    mDescriptorPool->destroy();
-    mDescriptorPool.reset();
-  }
-  if (mSceneDescriptorSetLayout)
-  {
-    mSceneDescriptorSetLayout->destroy();
-    mSceneDescriptorSetLayout.reset();
+    mSceneResourceLayout->destroy();
+    mSceneResourceLayout.reset();
   }
 
   if (mPrimitiveVertexShader)
@@ -255,7 +250,7 @@ bool mental::render::ScenePipelineLibrary::isValid() const noexcept
   return mIsInitialized;
 }
 
-mental::core::Result mental::render::ScenePipelineLibrary::updateFrameDescriptorSet(
+mental::core::Result mental::render::ScenePipelineLibrary::updateFrameResourceSet(
   const std::uint32_t frameIndex, rhi::IBuffer* cameraBuffer)
 {
   if (!isFrameIndexValid(frameIndex) || cameraBuffer == nullptr)
@@ -263,22 +258,22 @@ mental::core::Result mental::render::ScenePipelineLibrary::updateFrameDescriptor
     return core::Result::eOperationFailed;
   }
 
-  std::array<rhi::DescriptorWriteDesc, 2> writes {
-    rhi::DescriptorWriteDesc {
-                              .descriptorSet = mSceneDescriptorSets[frameIndex].get(),
-                              .binding = 0u,
-                              .type = rhi::DescriptorType::eUniformBuffer,
-                              .buffer =
+  std::array<rhi::ResourceWriteDesc, 2> writes {
+    rhi::ResourceWriteDesc {
+                            .resourceSet = mSceneResourceSets[frameIndex].get(),
+                            .binding = 0u,
+                            .type = rhi::ResourceBindingType::eUniformBuffer,
+                            .buffer =
         {
           .buffer = cameraBuffer,
           .offset = 0u,
           .range = cameraBuffer->getDesc().byteSize,
         }, },
-    rhi::DescriptorWriteDesc {
-                              .descriptorSet = mSceneDescriptorSets[frameIndex].get(),
-                              .binding = 1u,
-                              .type = rhi::DescriptorType::eStorageBuffer,
-                              .buffer =
+    rhi::ResourceWriteDesc {
+                            .resourceSet = mSceneResourceSets[frameIndex].get(),
+                            .binding = 1u,
+                            .type = rhi::ResourceBindingType::eStorageBuffer,
+                            .buffer =
         {
           .buffer = mConfig.geometryStorageBuffer,
           .offset = 0u,
@@ -286,7 +281,7 @@ mental::core::Result mental::render::ScenePipelineLibrary::updateFrameDescriptor
         }, },
   };
 
-  return rhi::getDevice().updateDescriptorSets(writes.data(), static_cast<std::uint32_t>(writes.size()));
+  return rhi::getDevice().updateResourceSets(writes.data(), static_cast<std::uint32_t>(writes.size()));
 }
 
 mental::core::Result mental::render::ScenePipelineLibrary::recordGridDraw(
@@ -297,12 +292,12 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordGridDraw(
     return core::Result::eOperationFailed;
   }
 
-  rhi::IDescriptorSet* descriptorSets[] = {mSceneDescriptorSets[frameIndex].get()};
+  rhi::IResourceSet* resourceSets[] = {mSceneResourceSets[frameIndex].get()};
   const GridDrawPushConstants pushConstants {};
   const rhi::PushConstantRangeDesc pushConstantRange = buildGridPushConstantRange();
 
   cmdList->bindGraphicsPipeline(mGridPipeline.get());
-  cmdList->bindDescriptorSets(mGridPipelineLayout.get(), kSceneDescriptorSetIndex, descriptorSets, 1u);
+  cmdList->bindResourceSets(mGridPipelineLayout.get(), kSceneResourceSetIndex, resourceSets, 1u);
   const core::Result pushResult = cmdList->pushConstants(mGridPipelineLayout.get(), pushConstantRange, &pushConstants);
   if (pushResult != core::Result::eSuccess)
   {
@@ -331,7 +326,7 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordPrimitiveDraw(r
     return core::Result::eOperationFailed;
   }
 
-  rhi::IDescriptorSet* descriptorSets[] = {mSceneDescriptorSets[frameIndex].get()};
+  rhi::IResourceSet* resourceSets[] = {mSceneResourceSets[frameIndex].get()};
   const PrimitiveDrawPushConstants pushConstants {
     .worldTransform = worldTransform,
     .vertexOffsetBytes = static_cast<std::uint32_t>(primitiveMeshView.vertexOffsetBytes),
@@ -340,7 +335,7 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordPrimitiveDraw(r
   const rhi::PushConstantRangeDesc pushConstantRange = buildPrimitivePushConstantRange();
 
   cmdList->bindGraphicsPipeline(mPrimitivePipeline.get());
-  cmdList->bindDescriptorSets(mPrimitivePipelineLayout.get(), kSceneDescriptorSetIndex, descriptorSets, 1u);
+  cmdList->bindResourceSets(mPrimitivePipelineLayout.get(), kSceneResourceSetIndex, resourceSets, 1u);
   const core::Result pushResult =
     cmdList->pushConstants(mPrimitivePipelineLayout.get(), pushConstantRange, &pushConstants);
   if (pushResult != core::Result::eSuccess)
@@ -395,19 +390,18 @@ mental::core::Result mental::render::ScenePipelineLibrary::createShaders(const s
     *mGridFragmentShader, compiler, shaderRootPath, "editorGrid.slang", "fragmentMain", ShaderStage::eFragment);
 }
 
-mental::core::Result mental::render::ScenePipelineLibrary::createSceneDescriptorResources()
+mental::core::Result mental::render::ScenePipelineLibrary::createSceneResourceSets()
 {
   rhi::IDevice& device = rhi::getDevice();
-  const auto sceneBindings = buildSceneDescriptorBindings();
+  const auto sceneBindings = buildSceneResourceBindings();
 
-  mSceneDescriptorSetLayout = device.createDescriptorSetLayout();
-  mDescriptorPool = device.createDescriptorPool();
-  if (!mSceneDescriptorSetLayout || !mDescriptorPool)
+  mSceneResourceLayout = device.createResourceLayout();
+  if (!mSceneResourceLayout)
   {
     return core::Result::eInitializationFailed;
   }
 
-  core::Result result = mSceneDescriptorSetLayout->init({
+  core::Result result = mSceneResourceLayout->init({
     .bindings = sceneBindings.data(),
     .bindingCount = static_cast<std::uint32_t>(sceneBindings.size()),
   });
@@ -416,42 +410,24 @@ mental::core::Result mental::render::ScenePipelineLibrary::createSceneDescriptor
     return result;
   }
 
-  std::array<rhi::DescriptorPoolSizeDesc, 2> poolSizes {
-    rhi::DescriptorPoolSizeDesc {
-                                 .type = rhi::DescriptorType::eUniformBuffer, .descriptorCount = mConfig.framesInFlight},
-    rhi::DescriptorPoolSizeDesc {
-                                 .type = rhi::DescriptorType::eStorageBuffer, .descriptorCount = mConfig.framesInFlight},
-  };
-
-  result = mDescriptorPool->init({
-    .poolSizes = poolSizes.data(),
-    .poolSizeCount = static_cast<std::uint32_t>(poolSizes.size()),
-    .maxSetCount = mConfig.framesInFlight,
-  });
-  if (result != core::Result::eSuccess)
-  {
-    return result;
-  }
-
-  mSceneDescriptorSets.reserve(mConfig.framesInFlight);
+  mSceneResourceSets.reserve(mConfig.framesInFlight);
   for (std::uint32_t frameIndex = 0u; frameIndex < mConfig.framesInFlight; ++frameIndex)
   {
-    std::unique_ptr<rhi::IDescriptorSet> descriptorSet = device.createDescriptorSet();
-    if (!descriptorSet)
+    std::unique_ptr<rhi::IResourceSet> resourceSet = device.createResourceSet();
+    if (!resourceSet)
     {
       return core::Result::eInitializationFailed;
     }
 
-    result = descriptorSet->init({
-      .descriptorPool = mDescriptorPool.get(),
-      .descriptorSetLayout = mSceneDescriptorSetLayout.get(),
+    result = resourceSet->init({
+      .resourceLayout = mSceneResourceLayout.get(),
     });
     if (result != core::Result::eSuccess)
     {
       return result;
     }
 
-    mSceneDescriptorSets.push_back(std::move(descriptorSet));
+    mSceneResourceSets.push_back(std::move(resourceSet));
   }
 
   return core::Result::eSuccess;
@@ -470,13 +446,13 @@ mental::core::Result mental::render::ScenePipelineLibrary::createPipelines()
     return core::Result::eInitializationFailed;
   }
 
-  rhi::IDescriptorSetLayout* descriptorSetLayouts[] = {mSceneDescriptorSetLayout.get()};
+  rhi::IResourceLayout* resourceLayouts[] = {mSceneResourceLayout.get()};
   const rhi::PushConstantRangeDesc primitivePushConstantRange = buildPrimitivePushConstantRange();
   const rhi::PushConstantRangeDesc gridPushConstantRange = buildGridPushConstantRange();
 
   core::Result result = mPrimitivePipelineLayout->init({
-    .descriptorSetLayouts = descriptorSetLayouts,
-    .descriptorSetLayoutCount = 1u,
+    .resourceLayouts = resourceLayouts,
+    .resourceLayoutCount = 1u,
     .pushConstantRanges = &primitivePushConstantRange,
     .pushConstantRangeCount = 1u,
   });
@@ -486,8 +462,8 @@ mental::core::Result mental::render::ScenePipelineLibrary::createPipelines()
   }
 
   result = mGridPipelineLayout->init({
-    .descriptorSetLayouts = descriptorSetLayouts,
-    .descriptorSetLayoutCount = 1u,
+    .resourceLayouts = resourceLayouts,
+    .resourceLayoutCount = 1u,
     .pushConstantRanges = &gridPushConstantRange,
     .pushConstantRangeCount = 1u,
   });
@@ -515,5 +491,5 @@ mental::core::Result mental::render::ScenePipelineLibrary::createPipelines()
 
 bool mental::render::ScenePipelineLibrary::isFrameIndexValid(const std::uint32_t frameIndex) const noexcept
 {
-  return frameIndex < mSceneDescriptorSets.size() && mSceneDescriptorSets[frameIndex] != nullptr;
+  return frameIndex < mSceneResourceSets.size() && mSceneResourceSets[frameIndex] != nullptr;
 }

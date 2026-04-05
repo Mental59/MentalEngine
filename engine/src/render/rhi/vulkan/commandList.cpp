@@ -325,32 +325,30 @@ void mental::rhi::vk::CommandList::bindGraphicsPipeline(IGraphicsPipeline* pipel
   vkCmdBindPipeline(mCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
 }
 
-void mental::rhi::vk::CommandList::bindDescriptorSets(IPipelineLayout* pipelineLayout,
-  uint32_t firstSet,
-  IDescriptorSet* const* descriptorSets,
-  uint32_t descriptorSetCount)
+void mental::rhi::vk::CommandList::bindResourceSets(
+  IPipelineLayout* pipelineLayout, uint32_t firstSet, IResourceSet* const* resourceSets, uint32_t resourceSetCount)
 {
   MENTAL_ASSERT_DEBUG(pipelineLayout != nullptr);
-  MENTAL_ASSERT_DEBUG(descriptorSets != nullptr);
+  MENTAL_ASSERT_DEBUG(resourceSets != nullptr);
 
   const VkPipelineLayout vkPipelineLayout =
     pipelineLayout->getNativeObject(core::resource::ObjectType::eVkPipelineLayout);
   MENTAL_ASSERT_DEBUG(vkPipelineLayout != VK_NULL_HANDLE);
 
   std::vector<VkDescriptorSet> vkDescriptorSets {};
-  vkDescriptorSets.reserve(descriptorSetCount);
-  for (uint32_t descriptorSetIndex = 0; descriptorSetIndex < descriptorSetCount; ++descriptorSetIndex)
+  vkDescriptorSets.reserve(resourceSetCount);
+  for (uint32_t resourceSetIndex = 0; resourceSetIndex < resourceSetCount; ++resourceSetIndex)
   {
-    MENTAL_ASSERT_DEBUG(descriptorSets[descriptorSetIndex] != nullptr);
+    MENTAL_ASSERT_DEBUG(resourceSets[resourceSetIndex] != nullptr);
     vkDescriptorSets.push_back(
-      descriptorSets[descriptorSetIndex]->getNativeObject(core::resource::ObjectType::eVkDescriptorSet));
+      resourceSets[resourceSetIndex]->getNativeObject(core::resource::ObjectType::eVkDescriptorSet));
   }
 
   vkCmdBindDescriptorSets(mCmdBuffer,
     VK_PIPELINE_BIND_POINT_GRAPHICS,
     vkPipelineLayout,
     firstSet,
-    descriptorSetCount,
+    resourceSetCount,
     vkDescriptorSets.data(),
     0,
     nullptr);

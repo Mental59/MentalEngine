@@ -47,34 +47,31 @@ void testRuntimeShaderRootContainsExpectedShaders()
 void testPrimitiveSceneShaderEntryPointsCompile()
 {
   const std::filesystem::path shaderRoot = mental::render::ShaderCompiler::getRuntimeShaderRoot();
-  requireCompiledShader(
-    shaderRoot, "primitiveScene.slang", "primitiveSceneVertexMain", mental::render::ShaderStage::eVertex);
-  requireCompiledShader(
-    shaderRoot, "primitiveScene.slang", "primitiveSceneFragmentMain", mental::render::ShaderStage::eFragment);
+  requireCompiledShader(shaderRoot, "primitiveScene.slang", "vertexMain", mental::render::ShaderStage::eVertex);
+  requireCompiledShader(shaderRoot, "primitiveScene.slang", "fragmentMain", mental::render::ShaderStage::eFragment);
 }
 
 void testEditorGridShaderEntryPointsCompile()
 {
   const std::filesystem::path shaderRoot = mental::render::ShaderCompiler::getRuntimeShaderRoot();
-  requireCompiledShader(shaderRoot, "editorGrid.slang", "editorGridVertexMain", mental::render::ShaderStage::eVertex);
-  requireCompiledShader(
-    shaderRoot, "editorGrid.slang", "editorGridFragmentMain", mental::render::ShaderStage::eFragment);
+  requireCompiledShader(shaderRoot, "editorGrid.slang", "vertexMain", mental::render::ShaderStage::eVertex);
+  requireCompiledShader(shaderRoot, "editorGrid.slang", "fragmentMain", mental::render::ShaderStage::eFragment);
 }
 
-void testSceneDescriptorLayoutBindingsMatchTheSceneContract()
+void testSceneResourceLayoutBindingsMatchTheSceneContract()
 {
-  const auto bindings = mental::render::buildSceneDescriptorBindings();
-  require(bindings.size() == 2u, "Scene descriptor set layout should expose exactly two bindings");
+  const auto bindings = mental::render::buildSceneResourceBindings();
+  require(bindings.size() == 2u, "Scene resource layout should expose exactly two bindings");
 
   require(bindings[0].binding == 0u, "Camera binding should stay at binding 0");
-  require(
-    bindings[0].type == mental::rhi::DescriptorType::eUniformBuffer, "Camera binding should stay a uniform buffer");
+  require(bindings[0].type == mental::rhi::ResourceBindingType::eUniformBuffer,
+    "Camera binding should stay a uniform buffer");
   require(bindings[0].stageFlags == (mental::rhi::ShaderStageFlagBits::eShaderStageVertexBit |
                                       mental::rhi::ShaderStageFlagBits::eShaderStageFragmentBit),
     "Camera binding should be visible to both shader stages");
 
   require(bindings[1].binding == 1u, "Primitive geometry binding should stay at binding 1");
-  require(bindings[1].type == mental::rhi::DescriptorType::eStorageBuffer,
+  require(bindings[1].type == mental::rhi::ResourceBindingType::eStorageBuffer,
     "Primitive geometry binding should stay a storage buffer");
   require(bindings[1].stageFlags == mental::rhi::ShaderStageFlagBits::eShaderStageVertexBit,
     "Primitive geometry binding should stay vertex-only for programmable vertex pulling");
@@ -145,7 +142,7 @@ int main()
     testRuntimeShaderRootContainsExpectedShaders();
     testPrimitiveSceneShaderEntryPointsCompile();
     testEditorGridShaderEntryPointsCompile();
-    testSceneDescriptorLayoutBindingsMatchTheSceneContract();
+    testSceneResourceLayoutBindingsMatchTheSceneContract();
     testPushConstantRangesMatchThePrimitiveAndGridContracts();
     testPrimitivePipelineDefaultsMatchTheMvpContract();
     testGridPipelineDefaultsMatchTheMvpContract();

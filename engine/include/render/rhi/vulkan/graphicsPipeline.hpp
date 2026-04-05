@@ -20,7 +20,7 @@ class PipelineLayout : public IPipelineLayout
   virtual const PipelineLayoutDesc& getDesc() const override;
 
  private:
-  std::vector<IDescriptorSetLayout*> mDescriptorSetLayouts {};
+  std::vector<IResourceLayout*> mResourceLayouts {};
   std::vector<PushConstantRangeDesc> mPushConstantRanges {};
   PipelineLayoutDesc mDesc {};
   VkPipelineLayout mPipelineLayout = VK_NULL_HANDLE;

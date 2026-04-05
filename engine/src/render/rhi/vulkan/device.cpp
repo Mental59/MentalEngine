@@ -3,6 +3,7 @@
 #include <core/log.hpp>
 #include <render/rhi/vulkan/constants.hpp>
 #include <render/rhi/vulkan/allocator.hpp>
+#include <array>
 #include <memory>
 #include <vector>
 #include "core/resource.hpp"
@@ -72,19 +73,14 @@ std::unique_ptr<mental::rhi::IShaderModule> mental::rhi::vk::Device::createShade
   return std::make_unique<ShaderModule>();
 }
 
-std::unique_ptr<mental::rhi::IDescriptorSetLayout> mental::rhi::vk::Device::createDescriptorSetLayout()
+std::unique_ptr<mental::rhi::IResourceLayout> mental::rhi::vk::Device::createResourceLayout()
 {
-  return std::make_unique<DescriptorSetLayout>();
+  return std::make_unique<ResourceLayout>();
 }
 
-std::unique_ptr<mental::rhi::IDescriptorPool> mental::rhi::vk::Device::createDescriptorPool()
+std::unique_ptr<mental::rhi::IResourceSet> mental::rhi::vk::Device::createResourceSet()
 {
-  return std::make_unique<DescriptorPool>();
-}
-
-std::unique_ptr<mental::rhi::IDescriptorSet> mental::rhi::vk::Device::createDescriptorSet()
-{
-  return std::make_unique<DescriptorSet>();
+  return std::make_unique<ResourceSet>();
 }
 
 std::unique_ptr<mental::rhi::IPipelineLayout> mental::rhi::vk::Device::createPipelineLayout()
@@ -97,8 +93,7 @@ std::unique_ptr<mental::rhi::IGraphicsPipeline> mental::rhi::vk::Device::createG
   return std::make_unique<GraphicsPipeline>();
 }
 
-mental::core::Result mental::rhi::vk::Device::updateDescriptorSets(
-  const DescriptorWriteDesc* writes, uint32_t writeCount)
+mental::core::Result mental::rhi::vk::Device::updateResourceSets(const ResourceWriteDesc* writes, uint32_t writeCount)
 {
   if (writes == nullptr || writeCount == 0u)
   {
@@ -110,15 +105,15 @@ mental::core::Result mental::rhi::vk::Device::updateDescriptorSets(
 
   for (uint32_t writeIndex = 0; writeIndex < writeCount; ++writeIndex)
   {
-    const DescriptorWriteDesc& write = writes[writeIndex];
-    if (write.descriptorSet == nullptr || write.buffer.buffer == nullptr)
+    const ResourceWriteDesc& write = writes[writeIndex];
+    if (write.resourceSet == nullptr || write.buffer.buffer == nullptr)
     {
-      MENTAL_ERROR("Descriptor write requires both a descriptor set and buffer");
+      MENTAL_ERROR("Resource write requires both a resource set and buffer");
       return core::Result::eOperationFailed;
     }
 
     const VkDescriptorSet descriptorSet =
-      write.descriptorSet->getNativeObject(core::resource::ObjectType::eVkDescriptorSet);
+      write.resourceSet->getNativeObject(core::resource::ObjectType::eVkDescriptorSet);
     const VkBuffer buffer = write.buffer.buffer->getNativeObject(core::resource::ObjectType::eVkBuffer);
     MENTAL_ASSERT_DEBUG(descriptorSet != VK_NULL_HANDLE);
     MENTAL_ASSERT_DEBUG(buffer != VK_NULL_HANDLE);
@@ -132,7 +127,7 @@ mental::core::Result mental::rhi::vk::Device::updateDescriptorSets(
     vkWrites[writeIndex].dstSet = descriptorSet;
     vkWrites[writeIndex].dstBinding = write.binding;
     vkWrites[writeIndex].descriptorCount = 1;
-    vkWrites[writeIndex].descriptorType = convertDescriptorType(write.type);
+    vkWrites[writeIndex].descriptorType = convertResourceBindingType(write.type);
     vkWrites[writeIndex].pBufferInfo = &bufferInfos[writeIndex];
   }
 
@@ -203,6 +198,13 @@ core::Result Device::init(const DeviceDesc& desc)
     return core::Result::eInitializationFailed;
   }
 
+  res = initResourceDescriptorPool();
+  if (res != core::Result::eSuccess)
+  {
+    MENTAL_ERROR("Failed to initialize the shared resource descriptor pool, error: {}", core::resultToString(res));
+    return core::Result::eInitializationFailed;
+  }
+
   SwapchainDesc swapchainDesc {};
   swapchainDesc.enableVerticalSync = desc.enableTripleBuffering;
   swapchainDesc.textureCount = desc.enableTripleBuffering ? 3 : 2;
@@ -227,6 +229,7 @@ void Device::destroy()
     return;
   }
 
+  destroyResourceDescriptorPool();
   destroyAllocator();
   mSwapchain.destroy();
   mGraphicsQueue.destroy();
@@ -234,6 +237,49 @@ void Device::destroy()
   mIsInit = false;
 
   MENTAL_INFO("Vulkan device destroyed");
+}
+
+core::Result Device::initResourceDescriptorPool()
+{
+  constexpr std::uint32_t kMaxResourceSetCount = 256u;
+  constexpr std::uint32_t kUniformBufferDescriptorCount = 512u;
+  constexpr std::uint32_t kStorageBufferDescriptorCount = 512u;
+
+  std::array<VkDescriptorPoolSize, 2> poolSizes {
+    VkDescriptorPoolSize {
+                          .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                          .descriptorCount = kUniformBufferDescriptorCount,
+                          },
+    VkDescriptorPoolSize {
+                          .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                          .descriptorCount = kStorageBufferDescriptorCount,
+                          },
+  };
+
+  VkDescriptorPoolCreateInfo createInfo {VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO};
+  createInfo.maxSets = kMaxResourceSetCount;
+  createInfo.poolSizeCount = static_cast<std::uint32_t>(poolSizes.size());
+  createInfo.pPoolSizes = poolSizes.data();
+
+  const VkResult result = vkCreateDescriptorPool(mContext.mDevice, &createInfo, nullptr, &mResourceDescriptorPool);
+  if (result != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to create the shared Vulkan resource descriptor pool, error: {}", vkResultToString(result));
+    return core::Result::eInitializationFailed;
+  }
+
+  return core::Result::eSuccess;
+}
+
+void Device::destroyResourceDescriptorPool()
+{
+  if (mResourceDescriptorPool == VK_NULL_HANDLE)
+  {
+    return;
+  }
+
+  vkDestroyDescriptorPool(mContext.mDevice, mResourceDescriptorPool, nullptr);
+  mResourceDescriptorPool = VK_NULL_HANDLE;
 }
 
 bool Device::isValid() const

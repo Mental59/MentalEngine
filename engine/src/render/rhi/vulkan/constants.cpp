@@ -159,13 +159,13 @@ VkShaderStageFlags mental::rhi::vk::convertShaderStageFlags(mental::rhi::ShaderS
   return vkStageFlags;
 }
 
-VkDescriptorType mental::rhi::vk::convertDescriptorType(mental::rhi::DescriptorType type)
+VkDescriptorType mental::rhi::vk::convertResourceBindingType(mental::rhi::ResourceBindingType type)
 {
   switch (type)
   {
-    case DescriptorType::eUniformBuffer:
+    case ResourceBindingType::eUniformBuffer:
       return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    case DescriptorType::eStorageBuffer:
+    case ResourceBindingType::eStorageBuffer:
       return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
   }
 }

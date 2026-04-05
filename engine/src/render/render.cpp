@@ -411,10 +411,10 @@ mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
     return {.result = core::Result::eOperationFailed};
   }
 
-  res = mScenePipelineLibrary.updateFrameDescriptorSet(mCurrentFrame, cameraBuffer);
+  res = mScenePipelineLibrary.updateFrameResourceSet(mCurrentFrame, cameraBuffer);
   if (res != core::Result::eSuccess)
   {
-    MENTAL_ERROR("Failed to update scene descriptor set for frame {}", mCurrentFrame);
+    MENTAL_ERROR("Failed to update scene resource set for frame {}", mCurrentFrame);
     return {.result = core::Result::eOperationFailed};
   }
 
