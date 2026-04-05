@@ -2,7 +2,11 @@
 
 #include <volk/volk.h>
 #include <render/rhi/rhi.hpp>
+#include <memory>
 #include <render/rhi/vulkan/commandQueue.hpp>
+#include <render/rhi/vulkan/resourceSet.hpp>
+#include <render/rhi/vulkan/graphicsPipeline.hpp>
+#include <render/rhi/vulkan/shaderModule.hpp>
 #include <render/rhi/vulkan/swapchain.hpp>
 #include <string>
 #include <unordered_set>
@@ -79,6 +83,10 @@ class Device : public IDevice
 
   virtual void waitIdle() override;
   virtual GraphicsApi getGraphicsApi() override;
+  virtual std::unique_ptr<IShaderModule> createShaderModule() override;
+  virtual std::unique_ptr<IResourceSet> createResourceSet() override;
+  virtual std::unique_ptr<IGraphicsPipeline> createGraphicsPipeline() override;
+  virtual core::Result updateResourceSets(const ResourceWriteDesc* writes, uint32_t writeCount) override;
   virtual ICommandQueue* getGraphicsQueue() override;
   virtual ISwapchain* getSwapchain() override;
 
@@ -106,12 +114,20 @@ class Device : public IDevice
   {
     return mContext.mPresentModes;
   }
+  inline VkDescriptorPool getResourceDescriptorPool() const
+  {
+    return mResourceDescriptorPool;
+  }
 
  private:
+  [[nodiscard]] core::Result initResourceDescriptorPool();
+  void destroyResourceDescriptorPool();
+
   bool mIsInit = false;
   Context mContext;
   CommandQueue mGraphicsQueue;
   Swapchain mSwapchain;
+  VkDescriptorPool mResourceDescriptorPool = VK_NULL_HANDLE;
 };
 
 inline Device& getDevice()

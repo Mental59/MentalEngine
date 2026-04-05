@@ -3,6 +3,8 @@
 #include <render/rhi/vulkan/device.hpp>
 #include <core/log.hpp>
 #include <render/rhi/vulkan/constants.hpp>
+#include <vector>
+#include <array>
 #include "core/resource.hpp"
 
 mental::core::Result mental::rhi::vk::CommandList::init(const mental::rhi::CommandListDesc& desc)
@@ -296,9 +298,82 @@ void mental::rhi::vk::CommandList::beginRendering(CommandListBeginRenderingInfo&
   renderInfo.pDepthAttachment = info.depthAttachmentView != nullptr ? &depthAttachmentInfo : nullptr;
 
   vkCmdBeginRenderingKHR(mCmdBuffer, &renderInfo);
+
+  VkViewport viewport {};
+  viewport.x = 0.0f;
+  viewport.y = 0.0f;
+  viewport.width = static_cast<float>(info.renderArea.width);
+  viewport.height = static_cast<float>(info.renderArea.height);
+  viewport.minDepth = 0.0f;
+  viewport.maxDepth = 1.0f;
+  vkCmdSetViewport(mCmdBuffer, 0, 1, &viewport);
+
+  VkRect2D scissor {};
+  scissor.extent = renderArea.extent;
+  vkCmdSetScissor(mCmdBuffer, 0, 1, &scissor);
 }
 
 void mental::rhi::vk::CommandList::endRendering()
 {
   vkCmdEndRenderingKHR(mCmdBuffer);
+}
+
+void mental::rhi::vk::CommandList::bindGraphicsPipeline(IGraphicsPipeline* pipeline)
+{
+  MENTAL_ASSERT_DEBUG(pipeline != nullptr);
+  const VkPipeline vkPipeline = pipeline->getNativeObject(core::resource::ObjectType::eVkPipeline);
+  MENTAL_ASSERT_DEBUG(vkPipeline != VK_NULL_HANDLE);
+  vkCmdBindPipeline(mCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
+}
+
+void mental::rhi::vk::CommandList::bindResourceSets(
+  IGraphicsPipeline* graphicsPipeline, uint32_t firstSet, IResourceSet* const* resourceSets, uint32_t resourceSetCount)
+{
+  constexpr uint32_t kMaxResourceSets = 32;
+
+  MENTAL_ASSERT(resourceSetCount <= kMaxResourceSets);
+  MENTAL_ASSERT_DEBUG(graphicsPipeline != nullptr);
+  MENTAL_ASSERT_DEBUG(resourceSets != nullptr);
+
+  const VkPipelineLayout vkPipelineLayout = graphicsPipeline->getPipelineLayoutNativeObject();
+  MENTAL_ASSERT_DEBUG(vkPipelineLayout != VK_NULL_HANDLE);
+
+  std::array<VkDescriptorSet, kMaxResourceSets> vkDescriptorSets;
+  for (uint32_t resourceSetIndex = 0; resourceSetIndex < resourceSetCount; ++resourceSetIndex)
+  {
+    MENTAL_ASSERT_DEBUG(resourceSets[resourceSetIndex] != nullptr);
+    vkDescriptorSets[resourceSetIndex] =
+      resourceSets[resourceSetIndex]->getNativeObject(core::resource::ObjectType::eVkDescriptorSet);
+  }
+
+  vkCmdBindDescriptorSets(mCmdBuffer,
+    VK_PIPELINE_BIND_POINT_GRAPHICS,
+    vkPipelineLayout,
+    firstSet,
+    resourceSetCount,
+    vkDescriptorSets.data(),
+    0,
+    nullptr);
+}
+
+mental::core::Result mental::rhi::vk::CommandList::pushConstants(
+  IGraphicsPipeline* graphicsPipeline, const PushConstantRangeDesc& range, const void* data)
+{
+  if (graphicsPipeline == nullptr || data == nullptr || range.size == 0u)
+  {
+    MENTAL_ERROR("Push constants require a graphics pipeline, payload, and non-zero size");
+    return core::Result::eOperationFailed;
+  }
+
+  const VkPipelineLayout vkPipelineLayout = graphicsPipeline->getPipelineLayoutNativeObject();
+  MENTAL_ASSERT_DEBUG(vkPipelineLayout != VK_NULL_HANDLE);
+  vkCmdPushConstants(
+    mCmdBuffer, vkPipelineLayout, convertShaderStageFlags(range.stageFlags), range.offset, range.size, data);
+  return core::Result::eSuccess;
+}
+
+void mental::rhi::vk::CommandList::draw(
+  uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)
+{
+  vkCmdDraw(mCmdBuffer, vertexCount, instanceCount, firstVertex, firstInstance);
 }

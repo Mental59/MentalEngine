@@ -21,6 +21,7 @@ set(MENTAL_SLANG_INCLUDE_DIR "${MENTAL_VULKAN_SDK}/Include")
 set(MENTAL_SLANG_IMPORT_LIB "${MENTAL_VULKAN_SDK}/Lib/slang.lib")
 set(MENTAL_SLANG_DLL "${MENTAL_VULKAN_SDK}/Bin/slang.dll")
 set(MENTAL_SLANG_RT_DLL "${MENTAL_VULKAN_SDK}/Bin/slang-rt.dll")
+set(MENTAL_SHADER_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
 
 foreach(MENTAL_REQUIRED_PATH
     "${MENTAL_GLM_INCLUDE_DIR}/glm"
@@ -33,6 +34,10 @@ foreach(MENTAL_REQUIRED_PATH
   endif()
 endforeach()
 
+set(MENTAL_SLANG_DLL "${MENTAL_SLANG_DLL}" CACHE INTERNAL "Path to the Slang runtime DLL")
+set(MENTAL_SLANG_RT_DLL "${MENTAL_SLANG_RT_DLL}" CACHE INTERNAL "Path to the Slang runtime support DLL")
+set(MENTAL_SHADER_SOURCE_DIR "${MENTAL_SHADER_SOURCE_DIR}" CACHE INTERNAL "Path to MentalEngine runtime shader assets")
+
 if(WIN32)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_WIN32 VK_USE_PLATFORM_WIN32_KHR)
 elseif(LINUX)
@@ -40,6 +45,8 @@ target_compile_definitions(MentalEngine PRIVATE MENTAL_LINUX VK_USE_PLATFORM_XCB
 else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
+
+target_compile_definitions(MentalEngine PRIVATE MENTAL_RUNTIME_SHADER_ROOT="${MENTAL_SHADER_SOURCE_DIR}")
 
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "")
@@ -113,6 +120,10 @@ target_link_libraries(MentalEngineRenderHostAdapterTests PRIVATE MentalEngine)
 target_compile_definitions(MentalEngineRenderHostAdapterTests PRIVATE MENTAL_WITH_VULKAN)
 add_test(NAME MentalEngineRenderHostAdapterTests COMMAND MentalEngineRenderHostAdapterTests)
 
+add_executable(MentalEngineShaderCompilerTests tests/shaderCompilerTests.cpp)
+target_link_libraries(MentalEngineShaderCompilerTests PRIVATE MentalEngine)
+add_test(NAME MentalEngineShaderCompilerTests COMMAND MentalEngineShaderCompilerTests)
+
 if(WIN32)
 add_custom_command(
   TARGET MentalEngineSceneTests
@@ -149,7 +160,12 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineRenderHostAdapterTests>/slang-rt.dll"
   VERBATIM
 )
+add_custom_command(
+  TARGET MentalEngineShaderCompilerTests
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineShaderCompilerTests>/slang.dll"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineShaderCompilerTests>/slang-rt.dll"
+  COMMAND ${CMAKE_COMMAND} -E copy_directory "${MENTAL_SHADER_SOURCE_DIR}" "$<TARGET_FILE_DIR:MentalEngineShaderCompilerTests>/shaders"
+  VERBATIM
+)
 endif()
-
-set(MENTAL_SLANG_DLL "${MENTAL_SLANG_DLL}" CACHE INTERNAL "Path to the Slang runtime DLL")
-set(MENTAL_SLANG_RT_DLL "${MENTAL_SLANG_RT_DLL}" CACHE INTERNAL "Path to the Slang runtime support DLL")
