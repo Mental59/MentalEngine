@@ -95,14 +95,21 @@ mental::core::Result mental::rhi::vk::ResourceSet::init(const ResourceSetDesc& d
     return core::Result::eInitializationFailed;
   }
 
-  if (desc.resourceLayout == nullptr)
+  if (desc.pipelineLayout == nullptr)
   {
-    MENTAL_ERROR("Resource set init requires a resource layout");
+    MENTAL_ERROR("Resource set init requires a pipeline layout");
+    return core::Result::eInitializationFailed;
+  }
+
+  IResourceLayout* resourceLayout = desc.pipelineLayout->getResourceLayout(desc.resourceSetIndex);
+  if (resourceLayout == nullptr)
+  {
+    MENTAL_ERROR("Resource set init requires a valid pipeline layout resource set index");
     return core::Result::eInitializationFailed;
   }
 
   const VkDescriptorSetLayout vkDescriptorSetLayout =
-    desc.resourceLayout->getNativeObject(core::resource::ObjectType::eVkDescriptorSetLayout);
+    resourceLayout->getNativeObject(core::resource::ObjectType::eVkDescriptorSetLayout);
   const VkDescriptorPool vkDescriptorPool = vk::getDevice().getResourceDescriptorPool();
   MENTAL_ASSERT_DEBUG(vkDescriptorPool != VK_NULL_HANDLE);
   MENTAL_ASSERT_DEBUG(vkDescriptorSetLayout != VK_NULL_HANDLE);
@@ -119,7 +126,7 @@ mental::core::Result mental::rhi::vk::ResourceSet::init(const ResourceSetDesc& d
     return core::Result::eInitializationFailed;
   }
 
-  mResourceLayout = desc.resourceLayout;
+  mResourceLayout = resourceLayout;
   mIsInitialized = true;
   return core::Result::eSuccess;
 }

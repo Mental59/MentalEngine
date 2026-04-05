@@ -1,5 +1,6 @@
 #pragma once
 
+#include <render/rhi/vulkan/resourceSet.hpp>
 #include <render/rhi/rhi.hpp>
 
 #include <vector>
@@ -18,9 +19,11 @@ class PipelineLayout : public IPipelineLayout
   virtual bool isValid() const override;
   virtual core::resource::Object getNativeObject(core::resource::ObjectType objectType) override;
   virtual const PipelineLayoutDesc& getDesc() const override;
+  virtual IResourceLayout* getResourceLayout(uint32_t resourceSetIndex) const override;
 
  private:
-  std::vector<IResourceLayout*> mResourceLayouts {};
+  std::vector<ResourceLayout> mResourceLayouts {};
+  std::vector<ResourceLayoutDesc> mResourceLayoutDescs {};
   std::vector<PushConstantRangeDesc> mPushConstantRanges {};
   PipelineLayoutDesc mDesc {};
   VkPipelineLayout mPipelineLayout = VK_NULL_HANDLE;

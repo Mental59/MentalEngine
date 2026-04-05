@@ -73,11 +73,6 @@ std::unique_ptr<mental::rhi::IShaderModule> mental::rhi::vk::Device::createShade
   return std::make_unique<ShaderModule>();
 }
 
-std::unique_ptr<mental::rhi::IResourceLayout> mental::rhi::vk::Device::createResourceLayout()
-{
-  return std::make_unique<ResourceLayout>();
-}
-
 std::unique_ptr<mental::rhi::IResourceSet> mental::rhi::vk::Device::createResourceSet()
 {
   return std::make_unique<ResourceSet>();

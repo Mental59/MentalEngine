@@ -43,8 +43,7 @@ struct ScenePipelineLibraryConfig
 };
 
 [[nodiscard]] std::array<rhi::ResourceBindingDesc, 2> buildSceneResourceBindings();
-[[nodiscard]] rhi::PushConstantRangeDesc buildPrimitivePushConstantRange();
-[[nodiscard]] rhi::PushConstantRangeDesc buildGridPushConstantRange();
+[[nodiscard]] rhi::PushConstantRangeDesc buildScenePushConstantRange();
 [[nodiscard]] rhi::GraphicsPipelineDesc buildPrimitiveGraphicsPipelineDesc(rhi::IPipelineLayout* pipelineLayout,
   rhi::IShaderModule* vertexShaderModule,
   rhi::IShaderModule* fragmentShaderModule,
@@ -78,13 +77,11 @@ class ScenePipelineLibrary
 
   ScenePipelineLibraryConfig mConfig {};
   std::vector<std::unique_ptr<rhi::IResourceSet>> mSceneResourceSets {};
-  std::unique_ptr<rhi::IResourceLayout> mSceneResourceLayout {};
   std::unique_ptr<rhi::IShaderModule> mPrimitiveVertexShader {};
   std::unique_ptr<rhi::IShaderModule> mPrimitiveFragmentShader {};
   std::unique_ptr<rhi::IShaderModule> mGridVertexShader {};
   std::unique_ptr<rhi::IShaderModule> mGridFragmentShader {};
-  std::unique_ptr<rhi::IPipelineLayout> mPrimitivePipelineLayout {};
-  std::unique_ptr<rhi::IPipelineLayout> mGridPipelineLayout {};
+  std::unique_ptr<rhi::IPipelineLayout> mScenePipelineLayout {};
   std::unique_ptr<rhi::IGraphicsPipeline> mPrimitivePipeline {};
   std::unique_ptr<rhi::IGraphicsPipeline> mGridPipeline {};
   bool mIsInitialized = false;

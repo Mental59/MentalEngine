@@ -206,7 +206,8 @@ class IResourceLayout : public core::resource::IResource
 
 struct ResourceSetDesc
 {
-  IResourceLayout* resourceLayout = nullptr;
+  IPipelineLayout* pipelineLayout = nullptr;
+  uint32_t resourceSetIndex = 0;
 };
 
 class IResourceSet : public core::resource::IResource
@@ -240,8 +241,8 @@ struct PushConstantRangeDesc
 
 struct PipelineLayoutDesc
 {
-  IResourceLayout* const* resourceLayouts = nullptr;
-  uint32_t resourceLayoutCount = 0;
+  const ResourceLayoutDesc* resourceLayoutDescs = nullptr;
+  uint32_t resourceLayoutDescCount = 0;
   const PushConstantRangeDesc* pushConstantRanges = nullptr;
   uint32_t pushConstantRangeCount = 0;
 };
@@ -251,6 +252,7 @@ class IPipelineLayout : public core::resource::IResource
  public:
   virtual core::Result init(const PipelineLayoutDesc& desc) = 0;
   virtual const PipelineLayoutDesc& getDesc() const = 0;
+  virtual IResourceLayout* getResourceLayout(uint32_t resourceSetIndex) const = 0;
 };
 
 enum class PrimitiveTopology : uint8_t
@@ -449,7 +451,6 @@ class IDevice : public core::resource::IResource
   virtual GraphicsApi getGraphicsApi() = 0;
 
   virtual std::unique_ptr<IShaderModule> createShaderModule() = 0;
-  virtual std::unique_ptr<IResourceLayout> createResourceLayout() = 0;
   virtual std::unique_ptr<IResourceSet> createResourceSet() = 0;
   virtual std::unique_ptr<IPipelineLayout> createPipelineLayout() = 0;
   virtual std::unique_ptr<IGraphicsPipeline> createGraphicsPipeline() = 0;

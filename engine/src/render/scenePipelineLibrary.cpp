@@ -3,6 +3,7 @@
 #include <core/log.hpp>
 #include <render/shaderCompiler.hpp>
 
+#include <algorithm>
 #include <format>
 #include <limits>
 
@@ -69,21 +70,12 @@ std::array<mental::rhi::ResourceBindingDesc, 2> mental::render::buildSceneResour
   };
 }
 
-mental::rhi::PushConstantRangeDesc mental::render::buildPrimitivePushConstantRange()
-{
-  return {
-    .stageFlags = rhi::ShaderStageFlagBits::eShaderStageVertexBit,
-    .offset = 0u,
-    .size = static_cast<std::uint32_t>(sizeof(PrimitiveDrawPushConstants)),
-  };
-}
-
-mental::rhi::PushConstantRangeDesc mental::render::buildGridPushConstantRange()
+mental::rhi::PushConstantRangeDesc mental::render::buildScenePushConstantRange()
 {
   return {
     .stageFlags = rhi::ShaderStageFlagBits::eShaderStageVertexBit | rhi::ShaderStageFlagBits::eShaderStageFragmentBit,
     .offset = 0u,
-    .size = static_cast<std::uint32_t>(sizeof(GridDrawPushConstants)),
+    .size = static_cast<std::uint32_t>(std::max(sizeof(PrimitiveDrawPushConstants), sizeof(GridDrawPushConstants))),
   };
 }
 
@@ -163,14 +155,14 @@ mental::core::Result mental::render::ScenePipelineLibrary::init(const ScenePipel
     return result;
   }
 
-  result = createSceneResourceSets();
+  result = createPipelines();
   if (result != core::Result::eSuccess)
   {
     destroy();
     return result;
   }
 
-  result = createPipelines();
+  result = createSceneResourceSets();
   if (result != core::Result::eSuccess)
   {
     destroy();
@@ -193,17 +185,6 @@ void mental::render::ScenePipelineLibrary::destroy()
     mGridPipeline->destroy();
     mGridPipeline.reset();
   }
-  if (mPrimitivePipelineLayout)
-  {
-    mPrimitivePipelineLayout->destroy();
-    mPrimitivePipelineLayout.reset();
-  }
-  if (mGridPipelineLayout)
-  {
-    mGridPipelineLayout->destroy();
-    mGridPipelineLayout.reset();
-  }
-
   for (std::unique_ptr<rhi::IResourceSet>& resourceSet : mSceneResourceSets)
   {
     if (resourceSet)
@@ -214,10 +195,10 @@ void mental::render::ScenePipelineLibrary::destroy()
   }
   mSceneResourceSets.clear();
 
-  if (mSceneResourceLayout)
+  if (mScenePipelineLayout)
   {
-    mSceneResourceLayout->destroy();
-    mSceneResourceLayout.reset();
+    mScenePipelineLayout->destroy();
+    mScenePipelineLayout.reset();
   }
 
   if (mPrimitiveVertexShader)
@@ -294,11 +275,11 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordGridDraw(
 
   rhi::IResourceSet* resourceSets[] = {mSceneResourceSets[frameIndex].get()};
   const GridDrawPushConstants pushConstants {};
-  const rhi::PushConstantRangeDesc pushConstantRange = buildGridPushConstantRange();
+  const rhi::PushConstantRangeDesc pushConstantRange = buildScenePushConstantRange();
 
   cmdList->bindGraphicsPipeline(mGridPipeline.get());
-  cmdList->bindResourceSets(mGridPipelineLayout.get(), kSceneResourceSetIndex, resourceSets, 1u);
-  const core::Result pushResult = cmdList->pushConstants(mGridPipelineLayout.get(), pushConstantRange, &pushConstants);
+  cmdList->bindResourceSets(mScenePipelineLayout.get(), kSceneResourceSetIndex, resourceSets, 1u);
+  const core::Result pushResult = cmdList->pushConstants(mScenePipelineLayout.get(), pushConstantRange, &pushConstants);
   if (pushResult != core::Result::eSuccess)
   {
     return pushResult;
@@ -332,12 +313,11 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordPrimitiveDraw(r
     .vertexOffsetBytes = static_cast<std::uint32_t>(primitiveMeshView.vertexOffsetBytes),
     .indexOffsetBytes = static_cast<std::uint32_t>(primitiveMeshView.indexOffsetBytes),
   };
-  const rhi::PushConstantRangeDesc pushConstantRange = buildPrimitivePushConstantRange();
+  const rhi::PushConstantRangeDesc pushConstantRange = buildScenePushConstantRange();
 
   cmdList->bindGraphicsPipeline(mPrimitivePipeline.get());
-  cmdList->bindResourceSets(mPrimitivePipelineLayout.get(), kSceneResourceSetIndex, resourceSets, 1u);
-  const core::Result pushResult =
-    cmdList->pushConstants(mPrimitivePipelineLayout.get(), pushConstantRange, &pushConstants);
+  cmdList->bindResourceSets(mScenePipelineLayout.get(), kSceneResourceSetIndex, resourceSets, 1u);
+  const core::Result pushResult = cmdList->pushConstants(mScenePipelineLayout.get(), pushConstantRange, &pushConstants);
   if (pushResult != core::Result::eSuccess)
   {
     return pushResult;
@@ -393,21 +373,9 @@ mental::core::Result mental::render::ScenePipelineLibrary::createShaders(const s
 mental::core::Result mental::render::ScenePipelineLibrary::createSceneResourceSets()
 {
   rhi::IDevice& device = rhi::getDevice();
-  const auto sceneBindings = buildSceneResourceBindings();
-
-  mSceneResourceLayout = device.createResourceLayout();
-  if (!mSceneResourceLayout)
+  if (!mScenePipelineLayout)
   {
     return core::Result::eInitializationFailed;
-  }
-
-  core::Result result = mSceneResourceLayout->init({
-    .bindings = sceneBindings.data(),
-    .bindingCount = static_cast<std::uint32_t>(sceneBindings.size()),
-  });
-  if (result != core::Result::eSuccess)
-  {
-    return result;
   }
 
   mSceneResourceSets.reserve(mConfig.framesInFlight);
@@ -419,8 +387,9 @@ mental::core::Result mental::render::ScenePipelineLibrary::createSceneResourceSe
       return core::Result::eInitializationFailed;
     }
 
-    result = resourceSet->init({
-      .resourceLayout = mSceneResourceLayout.get(),
+    const core::Result result = resourceSet->init({
+      .pipelineLayout = mScenePipelineLayout.get(),
+      .resourceSetIndex = kSceneResourceSetIndex,
     });
     if (result != core::Result::eSuccess)
     {
@@ -436,24 +405,26 @@ mental::core::Result mental::render::ScenePipelineLibrary::createSceneResourceSe
 mental::core::Result mental::render::ScenePipelineLibrary::createPipelines()
 {
   rhi::IDevice& device = rhi::getDevice();
+  const auto sceneBindings = buildSceneResourceBindings();
+  const rhi::ResourceLayoutDesc sceneResourceLayoutDesc {
+    .bindings = sceneBindings.data(),
+    .bindingCount = static_cast<std::uint32_t>(sceneBindings.size()),
+  };
 
-  mPrimitivePipelineLayout = device.createPipelineLayout();
-  mGridPipelineLayout = device.createPipelineLayout();
+  mScenePipelineLayout = device.createPipelineLayout();
   mPrimitivePipeline = device.createGraphicsPipeline();
   mGridPipeline = device.createGraphicsPipeline();
-  if (!mPrimitivePipelineLayout || !mGridPipelineLayout || !mPrimitivePipeline || !mGridPipeline)
+  if (!mScenePipelineLayout || !mPrimitivePipeline || !mGridPipeline)
   {
     return core::Result::eInitializationFailed;
   }
 
-  rhi::IResourceLayout* resourceLayouts[] = {mSceneResourceLayout.get()};
-  const rhi::PushConstantRangeDesc primitivePushConstantRange = buildPrimitivePushConstantRange();
-  const rhi::PushConstantRangeDesc gridPushConstantRange = buildGridPushConstantRange();
+  const rhi::PushConstantRangeDesc scenePushConstantRange = buildScenePushConstantRange();
 
-  core::Result result = mPrimitivePipelineLayout->init({
-    .resourceLayouts = resourceLayouts,
-    .resourceLayoutCount = 1u,
-    .pushConstantRanges = &primitivePushConstantRange,
+  core::Result result = mScenePipelineLayout->init({
+    .resourceLayoutDescs = &sceneResourceLayoutDesc,
+    .resourceLayoutDescCount = 1u,
+    .pushConstantRanges = &scenePushConstantRange,
     .pushConstantRangeCount = 1u,
   });
   if (result != core::Result::eSuccess)
@@ -461,18 +432,7 @@ mental::core::Result mental::render::ScenePipelineLibrary::createPipelines()
     return result;
   }
 
-  result = mGridPipelineLayout->init({
-    .resourceLayouts = resourceLayouts,
-    .resourceLayoutCount = 1u,
-    .pushConstantRanges = &gridPushConstantRange,
-    .pushConstantRangeCount = 1u,
-  });
-  if (result != core::Result::eSuccess)
-  {
-    return result;
-  }
-
-  result = mPrimitivePipeline->init(buildPrimitiveGraphicsPipelineDesc(mPrimitivePipelineLayout.get(),
+  result = mPrimitivePipeline->init(buildPrimitiveGraphicsPipelineDesc(mScenePipelineLayout.get(),
     mPrimitiveVertexShader.get(),
     mPrimitiveFragmentShader.get(),
     mConfig.colorAttachmentFormat,
@@ -482,7 +442,7 @@ mental::core::Result mental::render::ScenePipelineLibrary::createPipelines()
     return result;
   }
 
-  return mGridPipeline->init(buildGridGraphicsPipelineDesc(mGridPipelineLayout.get(),
+  return mGridPipeline->init(buildGridGraphicsPipelineDesc(mScenePipelineLayout.get(),
     mGridVertexShader.get(),
     mGridFragmentShader.get(),
     mConfig.colorAttachmentFormat,

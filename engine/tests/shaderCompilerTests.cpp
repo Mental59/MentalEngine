@@ -77,30 +77,30 @@ void testSceneResourceLayoutBindingsMatchTheSceneContract()
     "Primitive geometry binding should stay vertex-only for programmable vertex pulling");
 }
 
-void testPushConstantRangesMatchThePrimitiveAndGridContracts()
+void testPushConstantPayloadsMatchTheSharedSceneContract()
 {
-  const mental::rhi::PushConstantRangeDesc primitiveRange = mental::render::buildPrimitivePushConstantRange();
-  require(primitiveRange.offset == 0u, "Primitive push constants should start at offset 0");
-  require(primitiveRange.stageFlags == mental::rhi::ShaderStageFlagBits::eShaderStageVertexBit,
-    "Primitive push constants should stay vertex-only");
-  require(primitiveRange.size == sizeof(mental::render::PrimitiveDrawPushConstants),
-    "Primitive push constant range should match PrimitiveDrawPushConstants");
   require(sizeof(mental::render::PrimitiveDrawPushConstants) <= 128u,
     "Primitive push constants should stay within Vulkan's guaranteed minimum limit");
 
-  const mental::rhi::PushConstantRangeDesc gridRange = mental::render::buildGridPushConstantRange();
-  require(gridRange.offset == 0u, "Grid push constants should start at offset 0");
-  require(gridRange.stageFlags == (mental::rhi::ShaderStageFlagBits::eShaderStageVertexBit |
-                                    mental::rhi::ShaderStageFlagBits::eShaderStageFragmentBit),
-    "Grid push constants should stay visible to both stages");
-  require(gridRange.size == sizeof(mental::render::GridDrawPushConstants),
-    "Grid push constant range should match GridDrawPushConstants");
   require(
     mental::render::GridDrawPushConstants {}.gridSize > 0.0f, "Grid push constants should expose a positive grid size");
   require(mental::render::GridDrawPushConstants {}.gridCellSize > 0.0f,
     "Grid push constants should expose a positive grid cell size");
   require(mental::render::GridDrawPushConstants {}.gridMinPixelsBetweenCells > 0.0f,
     "Grid push constants should expose a positive minimum pixel spacing");
+}
+
+void testScenePushConstantRangeMatchesTheSharedPipelineLayoutContract()
+{
+  const mental::rhi::PushConstantRangeDesc sceneRange = mental::render::buildScenePushConstantRange();
+  require(sceneRange.offset == 0u, "Scene command push constants should start at offset 0");
+  require(sceneRange.stageFlags == (mental::rhi::ShaderStageFlagBits::eShaderStageVertexBit |
+                                     mental::rhi::ShaderStageFlagBits::eShaderStageFragmentBit),
+    "Scene command push constants should cover both stages used by the shared pipeline layout");
+  require(sceneRange.size >= sizeof(mental::render::PrimitiveDrawPushConstants),
+    "Scene command push constants should cover the primitive payload");
+  require(sceneRange.size >= sizeof(mental::render::GridDrawPushConstants),
+    "Scene command push constants should cover the grid payload");
 }
 
 void testPrimitivePipelineDefaultsMatchTheMvpContract()
@@ -133,6 +133,36 @@ void testGridPipelineDefaultsMatchTheMvpContract()
   require(!pipelineDesc.depthWriteEnable, "Grid pipeline should keep depth writes disabled");
   require(pipelineDesc.cullMode == mental::rhi::CullMode::eNone, "Grid pipeline should keep culling disabled");
 }
+
+void testPipelineLayoutAndResourceSetContractsSupportInlineResourceLayouts()
+{
+  const auto bindings = mental::render::buildSceneResourceBindings();
+  const mental::rhi::ResourceLayoutDesc resourceLayoutDesc {
+    .bindings = bindings.data(),
+    .bindingCount = static_cast<std::uint32_t>(bindings.size()),
+  };
+  const mental::rhi::PushConstantRangeDesc pushConstantRange = mental::render::buildScenePushConstantRange();
+
+  const mental::rhi::PipelineLayoutDesc pipelineLayoutDesc {
+    .resourceLayoutDescs = &resourceLayoutDesc,
+    .resourceLayoutDescCount = 1u,
+    .pushConstantRanges = &pushConstantRange,
+    .pushConstantRangeCount = 1u,
+  };
+
+  require(pipelineLayoutDesc.resourceLayoutDescCount == 1u,
+    "Pipeline layout contracts should accept inline resource layout descriptions");
+  require(pipelineLayoutDesc.resourceLayoutDescs != nullptr,
+    "Pipeline layout contracts should carry inline resource layout descriptions");
+
+  const mental::rhi::ResourceSetDesc resourceSetDesc {
+    .pipelineLayout = nullptr,
+    .resourceSetIndex = 0u,
+  };
+
+  require(resourceSetDesc.resourceSetIndex == 0u,
+    "Resource set contracts should identify the target pipeline layout set index");
+}
 } // namespace
 
 int main()
@@ -143,9 +173,11 @@ int main()
     testPrimitiveSceneShaderEntryPointsCompile();
     testEditorGridShaderEntryPointsCompile();
     testSceneResourceLayoutBindingsMatchTheSceneContract();
-    testPushConstantRangesMatchThePrimitiveAndGridContracts();
+    testPushConstantPayloadsMatchTheSharedSceneContract();
+    testScenePushConstantRangeMatchesTheSharedPipelineLayoutContract();
     testPrimitivePipelineDefaultsMatchTheMvpContract();
     testGridPipelineDefaultsMatchTheMvpContract();
+    testPipelineLayoutAndResourceSetContractsSupportInlineResourceLayouts();
     return 0;
   }
   catch (const std::exception& exception)

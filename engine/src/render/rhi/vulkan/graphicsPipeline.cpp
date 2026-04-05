@@ -15,9 +15,25 @@ mental::core::Result mental::rhi::vk::PipelineLayout::init(const PipelineLayoutD
     return core::Result::eInitializationFailed;
   }
 
-  if (desc.resourceLayoutCount > 0u)
+  if (desc.resourceLayoutDescCount > 0u)
   {
-    mResourceLayouts.assign(desc.resourceLayouts, desc.resourceLayouts + desc.resourceLayoutCount);
+    mResourceLayouts.resize(desc.resourceLayoutDescCount);
+    mResourceLayoutDescs.reserve(desc.resourceLayoutDescCount);
+    for (uint32_t resourceLayoutIndex = 0u; resourceLayoutIndex < desc.resourceLayoutDescCount; ++resourceLayoutIndex)
+    {
+      core::Result result = mResourceLayouts[resourceLayoutIndex].init(desc.resourceLayoutDescs[resourceLayoutIndex]);
+      if (result != core::Result::eSuccess)
+      {
+        for (uint32_t destroyIndex = 0u; destroyIndex < resourceLayoutIndex; ++destroyIndex)
+        {
+          mResourceLayouts[destroyIndex].destroy();
+        }
+        mResourceLayouts.clear();
+        return result;
+      }
+
+      mResourceLayoutDescs.push_back(mResourceLayouts[resourceLayoutIndex].getDesc());
+    }
   }
   if (desc.pushConstantRangeCount > 0u)
   {
@@ -26,11 +42,10 @@ mental::core::Result mental::rhi::vk::PipelineLayout::init(const PipelineLayoutD
 
   std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts {};
   vkDescriptorSetLayouts.reserve(mResourceLayouts.size());
-  for (IResourceLayout* resourceLayout : mResourceLayouts)
+  for (ResourceLayout& resourceLayout : mResourceLayouts)
   {
-    MENTAL_ASSERT_DEBUG(resourceLayout != nullptr);
     vkDescriptorSetLayouts.push_back(
-      resourceLayout->getNativeObject(core::resource::ObjectType::eVkDescriptorSetLayout));
+      resourceLayout.getNativeObject(core::resource::ObjectType::eVkDescriptorSetLayout));
   }
 
   std::vector<VkPushConstantRange> vkPushConstantRanges {};
@@ -58,8 +73,8 @@ mental::core::Result mental::rhi::vk::PipelineLayout::init(const PipelineLayoutD
     return core::Result::eInitializationFailed;
   }
 
-  mDesc.resourceLayouts = mResourceLayouts.data();
-  mDesc.resourceLayoutCount = static_cast<uint32_t>(mResourceLayouts.size());
+  mDesc.resourceLayoutDescs = mResourceLayoutDescs.data();
+  mDesc.resourceLayoutDescCount = static_cast<uint32_t>(mResourceLayoutDescs.size());
   mDesc.pushConstantRanges = mPushConstantRanges.data();
   mDesc.pushConstantRangeCount = static_cast<uint32_t>(mPushConstantRanges.size());
   mIsInitialized = true;
@@ -74,7 +89,12 @@ void mental::rhi::vk::PipelineLayout::destroy()
   }
 
   vkDestroyPipelineLayout(vk::getDevice().getVirtualDevice(), mPipelineLayout, nullptr);
+  for (ResourceLayout& resourceLayout : mResourceLayouts)
+  {
+    resourceLayout.destroy();
+  }
   mResourceLayouts.clear();
+  mResourceLayoutDescs.clear();
   mPushConstantRanges.clear();
   mDesc = {};
   mPipelineLayout = VK_NULL_HANDLE;
@@ -100,6 +120,16 @@ mental::core::resource::Object mental::rhi::vk::PipelineLayout::getNativeObject(
 const mental::rhi::PipelineLayoutDesc& mental::rhi::vk::PipelineLayout::getDesc() const
 {
   return mDesc;
+}
+
+mental::rhi::IResourceLayout* mental::rhi::vk::PipelineLayout::getResourceLayout(uint32_t resourceSetIndex) const
+{
+  if (resourceSetIndex >= mResourceLayouts.size())
+  {
+    return nullptr;
+  }
+
+  return const_cast<ResourceLayout*>(&mResourceLayouts[resourceSetIndex]);
 }
 
 mental::core::Result mental::rhi::vk::GraphicsPipeline::init(const GraphicsPipelineDesc& desc)

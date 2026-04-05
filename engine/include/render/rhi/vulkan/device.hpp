@@ -84,7 +84,6 @@ class Device : public IDevice
   virtual void waitIdle() override;
   virtual GraphicsApi getGraphicsApi() override;
   virtual std::unique_ptr<IShaderModule> createShaderModule() override;
-  virtual std::unique_ptr<IResourceLayout> createResourceLayout() override;
   virtual std::unique_ptr<IResourceSet> createResourceSet() override;
   virtual std::unique_ptr<IPipelineLayout> createPipelineLayout() override;
   virtual std::unique_ptr<IGraphicsPipeline> createGraphicsPipeline() override;
