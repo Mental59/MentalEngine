@@ -11,43 +11,12 @@
 #include <slang/slang-com-ptr.h>
 #include <slang/slang.h>
 
-#if defined(MENTAL_WIN32)
-#include <Windows.h>
-#elif defined(MENTAL_LINUX)
-#include <unistd.h>
-#endif
-
 namespace
 {
 using mental::render::ShaderCompiler;
 using mental::render::ShaderCompileRequest;
 using mental::render::ShaderCompileResult;
 using mental::render::ShaderStage;
-
-[[nodiscard]] std::filesystem::path getExecutablePath()
-{
-#if defined(MENTAL_WIN32)
-  std::array<wchar_t, 32768> pathBuffer {};
-  const DWORD pathLength = GetModuleFileNameW(nullptr, pathBuffer.data(), static_cast<DWORD>(pathBuffer.size()));
-  if (pathLength == 0u || pathLength == pathBuffer.size())
-  {
-    return {};
-  }
-
-  return std::filesystem::path(std::wstring_view(pathBuffer.data(), pathLength));
-#elif defined(MENTAL_LINUX)
-  std::array<char, 4096> pathBuffer {};
-  const ssize_t pathLength = readlink("/proc/self/exe", pathBuffer.data(), pathBuffer.size());
-  if (pathLength <= 0 || static_cast<std::size_t>(pathLength) >= pathBuffer.size())
-  {
-    return {};
-  }
-
-  return std::filesystem::path(std::string_view(pathBuffer.data(), static_cast<std::size_t>(pathLength)));
-#else
-  return {};
-#endif
-}
 
 [[nodiscard]] SlangStage convertShaderStage(const ShaderStage stage)
 {
@@ -118,14 +87,19 @@ bool mental::render::ShaderCompileResult::succeeded() const noexcept
 
 std::filesystem::path mental::render::ShaderCompiler::getRuntimeShaderRoot()
 {
-  const std::filesystem::path executablePath = getExecutablePath();
-  if (executablePath.empty())
+#if !defined(MENTAL_RUNTIME_SHADER_ROOT)
+  MENTAL_ERROR("Missing configured runtime shader root path");
+  return {};
+#else
+  const std::filesystem::path shaderRoot = std::filesystem::path(MENTAL_RUNTIME_SHADER_ROOT);
+  if (shaderRoot.empty())
   {
-    MENTAL_ERROR("Failed to resolve executable path for runtime shader discovery");
+    MENTAL_ERROR("Configured runtime shader root path is empty");
     return {};
   }
 
-  return executablePath.parent_path() / "shaders";
+  return shaderRoot;
+#endif
 }
 
 ShaderCompileResult mental::render::ShaderCompiler::compileToSpirv(const ShaderCompileRequest& request) const

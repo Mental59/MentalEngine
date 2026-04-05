@@ -38,7 +38,11 @@ void requireCompiledShader(const std::filesystem::path& shaderRoot,
 void testRuntimeShaderRootContainsExpectedShaders()
 {
   const std::filesystem::path shaderRoot = mental::render::ShaderCompiler::getRuntimeShaderRoot();
+  const std::filesystem::path expectedShaderRoot =
+    std::filesystem::weakly_canonical(std::filesystem::path(__FILE__).parent_path() / ".." / "shaders");
   require(!shaderRoot.empty(), "Runtime shader root should resolve to a non-empty path");
+  require(std::filesystem::equivalent(shaderRoot, expectedShaderRoot),
+    "Runtime shader root should resolve to the engine source shader directory");
   require(std::filesystem::exists(shaderRoot / "primitiveScene.slang"),
     "Runtime shader root should contain primitiveScene.slang");
   require(
