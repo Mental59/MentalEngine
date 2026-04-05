@@ -1,6 +1,7 @@
 #pragma once
 
 #include <render/frameContext.hpp>
+#include <render/primitiveMeshLibrary.hpp>
 #include <render/rhi/rhi.hpp>
 #include <resource/resourceManager.hpp>
 #include <vector>
@@ -63,6 +64,7 @@ class RenderSystem : public IRenderSystem
   std::vector<resource::BufferHandle> mCameraBufferHandles;
   resource::TextureHandle mDepthTextureHandle = resource::TextureHandle::invalid();
   resource::TextureViewHandle mDepthTextureViewHandle = resource::TextureViewHandle::invalid();
+  PrimitiveMeshLibrary mPrimitiveMeshLibrary {};
   platform::WindowSize mDepthExtent {};
 
   uint32_t mCurrentFrame = 0;

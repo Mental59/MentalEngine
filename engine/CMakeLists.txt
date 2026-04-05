@@ -100,6 +100,14 @@ target_include_directories(MentalEngineRenderSceneDataTests PRIVATE include)
 target_link_libraries(MentalEngineRenderSceneDataTests PRIVATE glm)
 add_test(NAME MentalEngineRenderSceneDataTests COMMAND MentalEngineRenderSceneDataTests)
 
+add_executable(MentalEnginePrimitiveMeshDataTests
+  tests/primitiveMeshDataTests.cpp
+  src/render/primitiveMeshData.cpp
+)
+target_include_directories(MentalEnginePrimitiveMeshDataTests PRIVATE include)
+target_link_libraries(MentalEnginePrimitiveMeshDataTests PRIVATE glm)
+add_test(NAME MentalEnginePrimitiveMeshDataTests COMMAND MentalEnginePrimitiveMeshDataTests)
+
 add_executable(MentalEngineRenderHostAdapterTests tests/renderHostAdapterTests.cpp)
 target_link_libraries(MentalEngineRenderHostAdapterTests PRIVATE MentalEngine)
 target_compile_definitions(MentalEngineRenderHostAdapterTests PRIVATE MENTAL_WITH_VULKAN)
@@ -125,6 +133,13 @@ add_custom_command(
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineRenderSceneDataTests>/slang.dll"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineRenderSceneDataTests>/slang-rt.dll"
+  VERBATIM
+)
+add_custom_command(
+  TARGET MentalEnginePrimitiveMeshDataTests
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEnginePrimitiveMeshDataTests>/slang.dll"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEnginePrimitiveMeshDataTests>/slang-rt.dll"
   VERBATIM
 )
 add_custom_command(
