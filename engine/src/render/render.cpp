@@ -151,8 +151,88 @@ mental::core::Result mental::render::RenderSystem::init(const mental::render::Re
   }
 
   const core::Result primitiveMeshLibraryResult = mPrimitiveMeshLibrary.init();
-  MENTAL_ASSERT_MESSAGE(
-    primitiveMeshLibraryResult == core::Result::eSuccess, "Failed to initialize primitive mesh library");
+  if (primitiveMeshLibraryResult != core::Result::eSuccess)
+  {
+    MENTAL_ERROR("Failed to initialize primitive mesh library");
+    destroyCameraUploadBuffers();
+    for (const resource::FrameDataHandle createdFrameDataHandle : mFrameDataHandles)
+    {
+      if (createdFrameDataHandle.isValid())
+      {
+        createdFrameDataHandle.destroy();
+      }
+    }
+    mFrameDataHandles.clear();
+    mCameraBufferHandles.clear();
+    resource::destroyResourceManager();
+    rhi::destroyDevice();
+    return primitiveMeshLibraryResult;
+  }
+
+  const PrimitiveMeshView* cubeMeshView = mPrimitiveMeshLibrary.findMeshView(SceneGeometryKind::eCube);
+  if (cubeMeshView == nullptr)
+  {
+    MENTAL_ERROR("Failed to resolve the shared primitive geometry buffer");
+    mPrimitiveMeshLibrary.destroy();
+    destroyCameraUploadBuffers();
+    for (const resource::FrameDataHandle createdFrameDataHandle : mFrameDataHandles)
+    {
+      if (createdFrameDataHandle.isValid())
+      {
+        createdFrameDataHandle.destroy();
+      }
+    }
+    mFrameDataHandles.clear();
+    mCameraBufferHandles.clear();
+    resource::destroyResourceManager();
+    rhi::destroyDevice();
+    return core::Result::eInitializationFailed;
+  }
+
+  rhi::ITexture* firstSwapchainTexture = rhi::getDevice().getSwapchain()->getTexture(0u);
+  if (firstSwapchainTexture == nullptr)
+  {
+    MENTAL_ERROR("Failed to resolve the first swapchain texture");
+    mPrimitiveMeshLibrary.destroy();
+    destroyCameraUploadBuffers();
+    for (const resource::FrameDataHandle createdFrameDataHandle : mFrameDataHandles)
+    {
+      if (createdFrameDataHandle.isValid())
+      {
+        createdFrameDataHandle.destroy();
+      }
+    }
+    mFrameDataHandles.clear();
+    mCameraBufferHandles.clear();
+    resource::destroyResourceManager();
+    rhi::destroyDevice();
+    return core::Result::eInitializationFailed;
+  }
+
+  const core::Result scenePipelineLibraryResult = mScenePipelineLibrary.init({
+    .framesInFlight = mMaxFramesInFlight,
+    .colorAttachmentFormat = firstSwapchainTexture->getDesc().format,
+    .depthAttachmentFormat = rhi::TextureFormat::eD32_SFLOAT,
+    .geometryStorageBuffer = cubeMeshView->storageBufferHandle.get(),
+  });
+  if (scenePipelineLibraryResult != core::Result::eSuccess)
+  {
+    MENTAL_ERROR("Failed to initialize scene pipeline library");
+    mPrimitiveMeshLibrary.destroy();
+    destroyCameraUploadBuffers();
+    for (const resource::FrameDataHandle createdFrameDataHandle : mFrameDataHandles)
+    {
+      if (createdFrameDataHandle.isValid())
+      {
+        createdFrameDataHandle.destroy();
+      }
+    }
+    mFrameDataHandles.clear();
+    mCameraBufferHandles.clear();
+    resource::destroyResourceManager();
+    rhi::destroyDevice();
+    return scenePipelineLibraryResult;
+  }
 
   mCurrentFrame = 0;
   mIsInitialized = true;
@@ -173,6 +253,7 @@ void mental::render::RenderSystem::destroy()
   rhi::getDevice().waitIdle();
 
   destroyDepthTarget();
+  mScenePipelineLibrary.destroy();
   mPrimitiveMeshLibrary.destroy();
   destroyCameraUploadBuffers();
   for (const resource::FrameDataHandle frameDataHandle : mFrameDataHandles)
@@ -330,6 +411,13 @@ mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
     return {.result = core::Result::eOperationFailed};
   }
 
+  res = mScenePipelineLibrary.updateFrameDescriptorSet(mCurrentFrame, cameraBuffer);
+  if (res != core::Result::eSuccess)
+  {
+    MENTAL_ERROR("Failed to update scene descriptor set for frame {}", mCurrentFrame);
+    return {.result = core::Result::eOperationFailed};
+  }
+
   const rhi::TextureDesc& swapchainTextureDesc = swapchainTexture->getDesc();
   rhi::CommandListBeginRenderingInfo renderingInfo {};
   renderingInfo.swapchainImageView = swapchainTextureView;
@@ -338,9 +426,9 @@ mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
     .width = swapchainTextureDesc.extent.width,
     .height = swapchainTextureDesc.extent.height,
   };
-  renderingInfo.clearValue.color[0] = 0.08f;
-  renderingInfo.clearValue.color[1] = 0.09f;
-  renderingInfo.clearValue.color[2] = 0.12f;
+  renderingInfo.clearValue.color[0] = 0.6f;
+  renderingInfo.clearValue.color[1] = 0.6f;
+  renderingInfo.clearValue.color[2] = 0.6f;
   renderingInfo.clearValue.color[3] = 1.0f;
   renderingInfo.clearValue.depth = 1.0f;
   renderingInfo.clearValue.stencil = 0;
@@ -349,17 +437,33 @@ mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
   for (const SceneRenderObject& object : frameContext.sceneRenderFrame.objects)
   {
     const PrimitiveMeshView* primitiveMeshView = resolvePrimitiveMeshView(mPrimitiveMeshLibrary, object.geometryKind);
-    MENTAL_ASSERT_MESSAGE(primitiveMeshView != nullptr,
-      std::format(
-        "Failed to resolve primitive mesh view for kind={}", static_cast<std::uint32_t>(object.geometryKind)));
+    if (primitiveMeshView == nullptr)
+    {
+      MENTAL_ERROR(
+        "Failed to resolve primitive mesh view for kind={}", static_cast<std::uint32_t>(object.geometryKind));
+      return {.result = core::Result::eOperationFailed};
+    }
 
     rhi::IBuffer* primitiveStorageBuffer = primitiveMeshView->storageBufferHandle.get();
-    MENTAL_ASSERT_MESSAGE(primitiveStorageBuffer != nullptr && primitiveMeshView->indexCount != 0u,
-      std::format(
-        "Failed to resolve primitive mesh view for kind={}", static_cast<std::uint32_t>(object.geometryKind)));
+    if (primitiveStorageBuffer == nullptr || primitiveMeshView->indexCount == 0u)
+    {
+      MENTAL_ERROR("Primitive mesh view is invalid for kind={}", static_cast<std::uint32_t>(object.geometryKind));
+      return {.result = core::Result::eOperationFailed};
+    }
 
-    (void)primitiveStorageBuffer;
-    (void)primitiveMeshView;
+    res = mScenePipelineLibrary.recordPrimitiveDraw(cmdList, mCurrentFrame, *primitiveMeshView, object.worldTransform);
+    if (res != core::Result::eSuccess)
+    {
+      MENTAL_ERROR("Failed to record primitive draw for object {}", object.objectIdentifier);
+      return {.result = core::Result::eOperationFailed};
+    }
+  }
+
+  res = mScenePipelineLibrary.recordGridDraw(cmdList, mCurrentFrame);
+  if (res != core::Result::eSuccess)
+  {
+    MENTAL_ERROR("Failed to record grid draw for frame {}", mCurrentFrame);
+    return {.result = core::Result::eOperationFailed};
   }
 
   cmdList->endRendering();

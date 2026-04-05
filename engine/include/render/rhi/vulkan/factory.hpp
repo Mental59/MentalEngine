@@ -89,9 +89,10 @@ class InstanceInfo
 {
  public:
   InstanceInfo() = default;
-  InstanceInfo(VkInstance instance, const std::vector<const char*>& extensions)
+  InstanceInfo(VkInstance instance, const std::vector<const char*>& extensions, uint32_t apiVersion)
     : mInstance(instance)
     , mExtensions(extensions)
+    , mApiVersion(apiVersion)
   {
   }
 
@@ -103,10 +104,15 @@ class InstanceInfo
   {
     return mExtensions;
   };
+  uint32_t getApiVersion() const
+  {
+    return mApiVersion;
+  }
 
  private:
   VkInstance mInstance = VK_NULL_HANDLE;
   std::vector<const char*> mExtensions;
+  uint32_t mApiVersion = VK_API_VERSION_1_0;
 };
 
 class DeviceFactory

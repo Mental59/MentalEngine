@@ -28,6 +28,15 @@ class CommandList : public ICommandList
 
   virtual void beginRendering(CommandListBeginRenderingInfo& info) override;
   virtual void endRendering() override;
+  virtual void bindGraphicsPipeline(IGraphicsPipeline* pipeline) override;
+  virtual void bindDescriptorSets(IPipelineLayout* pipelineLayout,
+    uint32_t firstSet,
+    IDescriptorSet* const* descriptorSets,
+    uint32_t descriptorSetCount) override;
+  virtual core::Result pushConstants(
+    IPipelineLayout* pipelineLayout, const PushConstantRangeDesc& range, const void* data) override;
+  virtual void draw(
+    uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) override;
 
  private:
   VkCommandBuffer mCmdBuffer;

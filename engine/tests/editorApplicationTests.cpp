@@ -481,7 +481,7 @@ void testUpdateEditorMovesSceneCameraInLocalSpaceWithDeltaTimeAndBoost()
   require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for movement test");
   require(app.updateEditor() == Result::eSuccess, "Second updateEditor should succeed for movement test");
 
-  require(nearlyEqual(camera.worldPosition(), glm::vec3 {8.0f, 0.0f, -3.0f}),
+  require(nearlyEqual(camera.worldPosition(), glm::vec3 {8.0f, 1.0f, -3.0f}),
     "Fly-look movement should use local axes, delta time, and boost");
 }
 
@@ -568,7 +568,7 @@ void testUpdateEditorMovesSceneCameraVerticallyWithQAndE()
   require(app.updatePlatform() == Result::eSuccess, "Second updatePlatform should succeed for vertical movement test");
   require(app.collectInput() == Result::eSuccess, "Second collectInput should succeed for vertical movement test");
   require(app.updateEditor() == Result::eSuccess, "Second updateEditor should succeed for vertical movement test");
-  require(nearlyEqual(camera.worldPosition(), glm::vec3 {0.0f, 1.0f, 5.0f}),
+  require(nearlyEqual(camera.worldPosition(), glm::vec3 {0.0f, 2.0f, 5.0f}),
     "E should move the fly camera upward in local space");
 
   window.inputSnapshot.setKeyDown(mental::input::KeyCode::eE, false);
@@ -577,7 +577,7 @@ void testUpdateEditorMovesSceneCameraVerticallyWithQAndE()
   require(app.updatePlatform() == Result::eSuccess, "Third updatePlatform should succeed for vertical movement test");
   require(app.collectInput() == Result::eSuccess, "Third collectInput should succeed for vertical movement test");
   require(app.updateEditor() == Result::eSuccess, "Third updateEditor should succeed for vertical movement test");
-  require(nearlyEqual(camera.worldPosition(), glm::vec3 {0.0f, 0.0f, 5.0f}),
+  require(nearlyEqual(camera.worldPosition(), glm::vec3 {0.0f, 1.0f, 5.0f}),
     "Q should move the fly camera downward in local space");
 }
 

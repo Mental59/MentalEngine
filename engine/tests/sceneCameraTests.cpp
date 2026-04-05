@@ -47,13 +47,13 @@ void testSceneCameraDefaultsShowOrigin()
   const SceneCamera sceneCamera {};
   const auto& spawnTransform = sceneCamera.spawnTransform();
 
-  require(nearlyEqual(sceneCamera.worldPosition(), glm::vec3 {0.0f, 0.0f, 5.0f}),
-    "SceneCamera should start back from the origin");
+  require(nearlyEqual(sceneCamera.worldPosition(), glm::vec3 {0.0f, 1.0f, 5.0f}),
+    "SceneCamera should start above the ground plane so the default grid is visible");
   require(nearlyEqual(sceneCamera.yawDegrees(), -90.0f), "SceneCamera should look toward the origin by default");
   require(nearlyEqual(sceneCamera.pitchDegrees(), 0.0f), "SceneCamera should start level by default");
   require(nearlyEqual(sceneCamera.forward(), glm::vec3 {0.0f, 0.0f, -1.0f}),
     "SceneCamera should face the bootstrap cube at the origin");
-  require(nearlyEqual(spawnTransform.position, glm::vec3 {0.0f, 0.0f, 5.0f}),
+  require(nearlyEqual(spawnTransform.position, glm::vec3 {0.0f, 1.0f, 5.0f}),
     "SceneCamera should store the default spawn position");
   require(nearlyEqual(spawnTransform.rotation, glm::vec3 {0.0f, -90.0f, 0.0f}),
     "SceneCamera should store the default spawn rotation");
@@ -72,14 +72,13 @@ void testSceneCameraTuningStateIsSeparateFromBaseCameraMathState()
 
   require(nearlyEqual(sceneCamera.worldPosition(), initialWorldPosition),
     "Changing editor tuning values should not move the camera");
-  require(nearlyEqual(sceneCamera.yawDegrees(), initialYaw),
-    "Changing editor tuning values should not change yaw");
-  require(nearlyEqual(sceneCamera.pitchDegrees(), initialPitch),
-    "Changing editor tuning values should not change pitch");
+  require(nearlyEqual(sceneCamera.yawDegrees(), initialYaw), "Changing editor tuning values should not change yaw");
+  require(
+    nearlyEqual(sceneCamera.pitchDegrees(), initialPitch), "Changing editor tuning values should not change pitch");
   require(nearlyEqual(sceneCamera.moveSpeed(), 12.5f), "Move speed should be stored independently");
   require(nearlyEqual(sceneCamera.boostMultiplier(), 3.0f), "Boost multiplier should be stored independently");
-  require(nearlyEqual(sceneCamera.mouseLookSensitivity(), 0.25f),
-    "Mouse look sensitivity should be stored independently");
+  require(
+    nearlyEqual(sceneCamera.mouseLookSensitivity(), 0.25f), "Mouse look sensitivity should be stored independently");
 }
 } // namespace
 

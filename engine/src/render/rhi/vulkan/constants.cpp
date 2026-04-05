@@ -142,6 +142,89 @@ VkPipelineStageFlags mental::rhi::vk::convertPipelineStage(mental::rhi::Pipeline
   }
 }
 
+VkShaderStageFlags mental::rhi::vk::convertShaderStageFlags(mental::rhi::ShaderStageFlags stageFlags)
+{
+  VkShaderStageFlags vkStageFlags = 0;
+
+  if ((stageFlags & ShaderStageFlagBits::eShaderStageVertexBit) != 0u)
+  {
+    vkStageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
+  }
+
+  if ((stageFlags & ShaderStageFlagBits::eShaderStageFragmentBit) != 0u)
+  {
+    vkStageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
+  }
+
+  return vkStageFlags;
+}
+
+VkDescriptorType mental::rhi::vk::convertDescriptorType(mental::rhi::DescriptorType type)
+{
+  switch (type)
+  {
+    case DescriptorType::eUniformBuffer:
+      return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    case DescriptorType::eStorageBuffer:
+      return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+  }
+}
+
+VkPrimitiveTopology mental::rhi::vk::convertPrimitiveTopology(mental::rhi::PrimitiveTopology topology)
+{
+  switch (topology)
+  {
+    case PrimitiveTopology::eTriangleList:
+      return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+  }
+}
+
+VkPolygonMode mental::rhi::vk::convertPolygonMode(mental::rhi::PolygonMode polygonMode)
+{
+  switch (polygonMode)
+  {
+    case PolygonMode::eFill:
+      return VK_POLYGON_MODE_FILL;
+  }
+}
+
+VkCullModeFlags mental::rhi::vk::convertCullMode(mental::rhi::CullMode cullMode)
+{
+  switch (cullMode)
+  {
+    case CullMode::eNone:
+      return VK_CULL_MODE_NONE;
+    case CullMode::eBack:
+      return VK_CULL_MODE_BACK_BIT;
+  }
+}
+
+VkFrontFace mental::rhi::vk::convertFrontFace(mental::rhi::FrontFace frontFace)
+{
+  switch (frontFace)
+  {
+    case FrontFace::eCounterClockwise:
+      return VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    case FrontFace::eClockwise:
+      return VK_FRONT_FACE_CLOCKWISE;
+  }
+}
+
+VkCompareOp mental::rhi::vk::convertCompareOp(mental::rhi::CompareOp compareOp)
+{
+  switch (compareOp)
+  {
+    case CompareOp::eNever:
+      return VK_COMPARE_OP_NEVER;
+    case CompareOp::eLess:
+      return VK_COMPARE_OP_LESS;
+    case CompareOp::eLessOrEqual:
+      return VK_COMPARE_OP_LESS_OR_EQUAL;
+    case CompareOp::eAlways:
+      return VK_COMPARE_OP_ALWAYS;
+  }
+}
+
 VkImageAspectFlags mental::rhi::vk::getTextureAspectFlags(mental::rhi::TextureFormat format)
 {
   switch (format)

@@ -103,6 +103,7 @@ core::Result DeviceFactory::initDevice(
     .surface = surface,
     .physicalDevice = physicalDeviceInfo.getPhysicalDevice(),
     .device = vkDevice,
+    .apiVersion = instanceInfo.getApiVersion(),
     .enableVerticalSync = swapchainSettings.enableVerticalSync,
     .enableTripleBuffering = swapchainSettings.enableTripleBuffering,
     .formats = physicalDeviceInfo.getSwapchainSupportDetails().formats,
@@ -184,7 +185,7 @@ core::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
 
   volkLoadInstance(instance);
 
-  instanceInfo = InstanceInfo(instance, instanceExtensions);
+  instanceInfo = InstanceInfo(instance, instanceExtensions, appInfo.apiVersion);
   return core::Result::eSuccess;
 }
 
@@ -285,6 +286,10 @@ core::Result DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physic
     VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES_KHR,
   };
   dynamicRenderingFeature.dynamicRendering = VK_TRUE;
+
+  VkPhysicalDeviceVulkan11Features vulkan11Features {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
+  vulkan11Features.shaderDrawParameters = VK_TRUE;
+  dynamicRenderingFeature.pNext = &vulkan11Features;
 
   std::vector<const char*> physicalDeviceExtensions = physicalDeviceInfo.getRequiredExtensions();
   VkDeviceCreateInfo createInfo {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
@@ -417,6 +422,15 @@ int PhysicalDeviceInfo::calculateScore() const
   VkPhysicalDeviceFeatures features;
   vkGetPhysicalDeviceFeatures(mPhysicalDevice, &features);
   if (mRequiredFeatures.geometryShader && !features.geometryShader)
+  {
+    return 0;
+  }
+
+  VkPhysicalDeviceVulkan11Features vulkan11Features {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES};
+  VkPhysicalDeviceFeatures2 features2 {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+  features2.pNext = &vulkan11Features;
+  vkGetPhysicalDeviceFeatures2(mPhysicalDevice, &features2);
+  if (!vulkan11Features.shaderDrawParameters)
   {
     return 0;
   }

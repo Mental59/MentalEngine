@@ -41,6 +41,12 @@ enum class ObjectType : uint8_t
   eVkSwapchainKHR,
   eVkImage,
   eVkImageView,
+  eVkShaderModule,
+  eVkDescriptorSetLayout,
+  eVkDescriptorPool,
+  eVkDescriptorSet,
+  eVkPipelineLayout,
+  eVkPipeline,
   eGLFWwindow
 };
 
@@ -48,6 +54,7 @@ class IResource
 {
  public:
   IResource() = default;
+  virtual ~IResource() = default;
   IResource(const IResource& other) = delete;
   IResource& operator=(const IResource& other) = delete;
   IResource(IResource&& other) = default; // allow moving

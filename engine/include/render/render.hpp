@@ -2,6 +2,7 @@
 
 #include <render/frameContext.hpp>
 #include <render/primitiveMeshLibrary.hpp>
+#include <render/scenePipelineLibrary.hpp>
 #include <render/rhi/rhi.hpp>
 #include <resource/resourceManager.hpp>
 #include <vector>
@@ -65,6 +66,7 @@ class RenderSystem : public IRenderSystem
   resource::TextureHandle mDepthTextureHandle = resource::TextureHandle::invalid();
   resource::TextureViewHandle mDepthTextureViewHandle = resource::TextureViewHandle::invalid();
   PrimitiveMeshLibrary mPrimitiveMeshLibrary {};
+  ScenePipelineLibrary mScenePipelineLibrary {};
   platform::WindowSize mDepthExtent {};
 
   uint32_t mCurrentFrame = 0;

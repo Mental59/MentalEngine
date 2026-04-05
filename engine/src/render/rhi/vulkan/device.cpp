@@ -3,6 +3,8 @@
 #include <core/log.hpp>
 #include <render/rhi/vulkan/constants.hpp>
 #include <render/rhi/vulkan/allocator.hpp>
+#include <memory>
+#include <vector>
 #include "core/resource.hpp"
 #include "core/types.hpp"
 #include "render/rhi/rhi.hpp"
@@ -63,6 +65,79 @@ void Device::waitIdle()
 GraphicsApi Device::getGraphicsApi()
 {
   return GraphicsApi::Vulkan;
+}
+
+std::unique_ptr<mental::rhi::IShaderModule> mental::rhi::vk::Device::createShaderModule()
+{
+  return std::make_unique<ShaderModule>();
+}
+
+std::unique_ptr<mental::rhi::IDescriptorSetLayout> mental::rhi::vk::Device::createDescriptorSetLayout()
+{
+  return std::make_unique<DescriptorSetLayout>();
+}
+
+std::unique_ptr<mental::rhi::IDescriptorPool> mental::rhi::vk::Device::createDescriptorPool()
+{
+  return std::make_unique<DescriptorPool>();
+}
+
+std::unique_ptr<mental::rhi::IDescriptorSet> mental::rhi::vk::Device::createDescriptorSet()
+{
+  return std::make_unique<DescriptorSet>();
+}
+
+std::unique_ptr<mental::rhi::IPipelineLayout> mental::rhi::vk::Device::createPipelineLayout()
+{
+  return std::make_unique<PipelineLayout>();
+}
+
+std::unique_ptr<mental::rhi::IGraphicsPipeline> mental::rhi::vk::Device::createGraphicsPipeline()
+{
+  return std::make_unique<GraphicsPipeline>();
+}
+
+mental::core::Result mental::rhi::vk::Device::updateDescriptorSets(
+  const DescriptorWriteDesc* writes, uint32_t writeCount)
+{
+  if (writes == nullptr || writeCount == 0u)
+  {
+    return core::Result::eSuccess;
+  }
+
+  std::vector<VkDescriptorBufferInfo> bufferInfos(writeCount);
+  std::vector<VkWriteDescriptorSet> vkWrites(writeCount);
+
+  for (uint32_t writeIndex = 0; writeIndex < writeCount; ++writeIndex)
+  {
+    const DescriptorWriteDesc& write = writes[writeIndex];
+    if (write.descriptorSet == nullptr || write.buffer.buffer == nullptr)
+    {
+      MENTAL_ERROR("Descriptor write requires both a descriptor set and buffer");
+      return core::Result::eOperationFailed;
+    }
+
+    const VkDescriptorSet descriptorSet =
+      write.descriptorSet->getNativeObject(core::resource::ObjectType::eVkDescriptorSet);
+    const VkBuffer buffer = write.buffer.buffer->getNativeObject(core::resource::ObjectType::eVkBuffer);
+    MENTAL_ASSERT_DEBUG(descriptorSet != VK_NULL_HANDLE);
+    MENTAL_ASSERT_DEBUG(buffer != VK_NULL_HANDLE);
+
+    bufferInfos[writeIndex].buffer = buffer;
+    bufferInfos[writeIndex].offset = write.buffer.offset;
+    bufferInfos[writeIndex].range =
+      write.buffer.range == 0u ? write.buffer.buffer->getDesc().byteSize - write.buffer.offset : write.buffer.range;
+
+    vkWrites[writeIndex].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    vkWrites[writeIndex].dstSet = descriptorSet;
+    vkWrites[writeIndex].dstBinding = write.binding;
+    vkWrites[writeIndex].descriptorCount = 1;
+    vkWrites[writeIndex].descriptorType = convertDescriptorType(write.type);
+    vkWrites[writeIndex].pBufferInfo = &bufferInfos[writeIndex];
+  }
+
+  vkUpdateDescriptorSets(mContext.mDevice, writeCount, vkWrites.data(), 0, nullptr);
+  return core::Result::eSuccess;
 }
 
 ICommandQueue* Device::getGraphicsQueue()
