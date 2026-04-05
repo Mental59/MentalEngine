@@ -4,6 +4,7 @@
 #include <core/log.hpp>
 #include <render/rhi/vulkan/constants.hpp>
 #include <vector>
+#include <array>
 #include "core/resource.hpp"
 
 mental::core::Result mental::rhi::vk::CommandList::init(const mental::rhi::CommandListDesc& desc)
@@ -326,22 +327,23 @@ void mental::rhi::vk::CommandList::bindGraphicsPipeline(IGraphicsPipeline* pipel
 }
 
 void mental::rhi::vk::CommandList::bindResourceSets(
-  IPipelineLayout* pipelineLayout, uint32_t firstSet, IResourceSet* const* resourceSets, uint32_t resourceSetCount)
+  IGraphicsPipeline* graphicsPipeline, uint32_t firstSet, IResourceSet* const* resourceSets, uint32_t resourceSetCount)
 {
-  MENTAL_ASSERT_DEBUG(pipelineLayout != nullptr);
+  constexpr uint32_t kMaxResourceSets = 32;
+
+  MENTAL_ASSERT(resourceSetCount <= kMaxResourceSets);
+  MENTAL_ASSERT_DEBUG(graphicsPipeline != nullptr);
   MENTAL_ASSERT_DEBUG(resourceSets != nullptr);
 
-  const VkPipelineLayout vkPipelineLayout =
-    pipelineLayout->getNativeObject(core::resource::ObjectType::eVkPipelineLayout);
+  const VkPipelineLayout vkPipelineLayout = graphicsPipeline->getPipelineLayoutNativeObject();
   MENTAL_ASSERT_DEBUG(vkPipelineLayout != VK_NULL_HANDLE);
 
-  std::vector<VkDescriptorSet> vkDescriptorSets {};
-  vkDescriptorSets.reserve(resourceSetCount);
+  std::array<VkDescriptorSet, kMaxResourceSets> vkDescriptorSets;
   for (uint32_t resourceSetIndex = 0; resourceSetIndex < resourceSetCount; ++resourceSetIndex)
   {
     MENTAL_ASSERT_DEBUG(resourceSets[resourceSetIndex] != nullptr);
-    vkDescriptorSets.push_back(
-      resourceSets[resourceSetIndex]->getNativeObject(core::resource::ObjectType::eVkDescriptorSet));
+    vkDescriptorSets[resourceSetIndex] =
+      resourceSets[resourceSetIndex]->getNativeObject(core::resource::ObjectType::eVkDescriptorSet);
   }
 
   vkCmdBindDescriptorSets(mCmdBuffer,
@@ -355,16 +357,15 @@ void mental::rhi::vk::CommandList::bindResourceSets(
 }
 
 mental::core::Result mental::rhi::vk::CommandList::pushConstants(
-  IPipelineLayout* pipelineLayout, const PushConstantRangeDesc& range, const void* data)
+  IGraphicsPipeline* graphicsPipeline, const PushConstantRangeDesc& range, const void* data)
 {
-  if (pipelineLayout == nullptr || data == nullptr || range.size == 0u)
+  if (graphicsPipeline == nullptr || data == nullptr || range.size == 0u)
   {
-    MENTAL_ERROR("Push constants require a pipeline layout, payload, and non-zero size");
+    MENTAL_ERROR("Push constants require a graphics pipeline, payload, and non-zero size");
     return core::Result::eOperationFailed;
   }
 
-  const VkPipelineLayout vkPipelineLayout =
-    pipelineLayout->getNativeObject(core::resource::ObjectType::eVkPipelineLayout);
+  const VkPipelineLayout vkPipelineLayout = graphicsPipeline->getPipelineLayoutNativeObject();
   MENTAL_ASSERT_DEBUG(vkPipelineLayout != VK_NULL_HANDLE);
   vkCmdPushConstants(
     mCmdBuffer, vkPipelineLayout, convertShaderStageFlags(range.stageFlags), range.offset, range.size, data);

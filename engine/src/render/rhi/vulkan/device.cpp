@@ -78,11 +78,6 @@ std::unique_ptr<mental::rhi::IResourceSet> mental::rhi::vk::Device::createResour
   return std::make_unique<ResourceSet>();
 }
 
-std::unique_ptr<mental::rhi::IPipelineLayout> mental::rhi::vk::Device::createPipelineLayout()
-{
-  return std::make_unique<PipelineLayout>();
-}
-
 std::unique_ptr<mental::rhi::IGraphicsPipeline> mental::rhi::vk::Device::createGraphicsPipeline()
 {
   return std::make_unique<GraphicsPipeline>();

@@ -95,16 +95,16 @@ mental::core::Result mental::rhi::vk::ResourceSet::init(const ResourceSetDesc& d
     return core::Result::eInitializationFailed;
   }
 
-  if (desc.pipelineLayout == nullptr)
+  if (desc.graphicsPipeline == nullptr)
   {
-    MENTAL_ERROR("Resource set init requires a pipeline layout");
+    MENTAL_ERROR("Resource set init requires a graphics pipeline");
     return core::Result::eInitializationFailed;
   }
 
-  IResourceLayout* resourceLayout = desc.pipelineLayout->getResourceLayout(desc.resourceSetIndex);
+  IResourceLayout* resourceLayout = desc.graphicsPipeline->getResourceLayout(desc.resourceSetIndex);
   if (resourceLayout == nullptr)
   {
-    MENTAL_ERROR("Resource set init requires a valid pipeline layout resource set index");
+    MENTAL_ERROR("Resource set init requires a valid graphics pipeline resource set index");
     return core::Result::eInitializationFailed;
   }
 

@@ -79,53 +79,6 @@ mental::rhi::PushConstantRangeDesc mental::render::buildScenePushConstantRange()
   };
 }
 
-mental::rhi::GraphicsPipelineDesc mental::render::buildPrimitiveGraphicsPipelineDesc(
-  rhi::IPipelineLayout* pipelineLayout,
-  rhi::IShaderModule* vertexShaderModule,
-  rhi::IShaderModule* fragmentShaderModule,
-  rhi::TextureFormat colorAttachmentFormat,
-  rhi::TextureFormat depthAttachmentFormat)
-{
-  return {
-    .vertexShaderModule = vertexShaderModule,
-    .fragmentShaderModule = fragmentShaderModule,
-    .pipelineLayout = pipelineLayout,
-    .topology = rhi::PrimitiveTopology::eTriangleList,
-    .polygonMode = rhi::PolygonMode::eFill,
-    .cullMode = rhi::CullMode::eBack,
-    .frontFace = rhi::FrontFace::eCounterClockwise,
-    .depthTestEnable = true,
-    .depthWriteEnable = true,
-    .depthCompareOp = rhi::CompareOp::eLessOrEqual,
-    .colorAttachmentFormat = colorAttachmentFormat,
-    .depthAttachmentFormat = depthAttachmentFormat,
-    .hasDepthAttachment = true,
-  };
-}
-
-mental::rhi::GraphicsPipelineDesc mental::render::buildGridGraphicsPipelineDesc(rhi::IPipelineLayout* pipelineLayout,
-  rhi::IShaderModule* vertexShaderModule,
-  rhi::IShaderModule* fragmentShaderModule,
-  rhi::TextureFormat colorAttachmentFormat,
-  rhi::TextureFormat depthAttachmentFormat)
-{
-  return {
-    .vertexShaderModule = vertexShaderModule,
-    .fragmentShaderModule = fragmentShaderModule,
-    .pipelineLayout = pipelineLayout,
-    .topology = rhi::PrimitiveTopology::eTriangleList,
-    .polygonMode = rhi::PolygonMode::eFill,
-    .cullMode = rhi::CullMode::eNone,
-    .frontFace = rhi::FrontFace::eCounterClockwise,
-    .depthTestEnable = true,
-    .depthWriteEnable = false,
-    .depthCompareOp = rhi::CompareOp::eLessOrEqual,
-    .colorAttachmentFormat = colorAttachmentFormat,
-    .depthAttachmentFormat = depthAttachmentFormat,
-    .hasDepthAttachment = true,
-  };
-}
-
 mental::core::Result mental::render::ScenePipelineLibrary::init(const ScenePipelineLibraryConfig& config)
 {
   if (mIsInitialized)
@@ -194,13 +147,6 @@ void mental::render::ScenePipelineLibrary::destroy()
     }
   }
   mSceneResourceSets.clear();
-
-  if (mScenePipelineLayout)
-  {
-    mScenePipelineLayout->destroy();
-    mScenePipelineLayout.reset();
-  }
-
   if (mPrimitiveVertexShader)
   {
     mPrimitiveVertexShader->destroy();
@@ -278,8 +224,8 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordGridDraw(
   const rhi::PushConstantRangeDesc pushConstantRange = buildScenePushConstantRange();
 
   cmdList->bindGraphicsPipeline(mGridPipeline.get());
-  cmdList->bindResourceSets(mScenePipelineLayout.get(), kSceneResourceSetIndex, resourceSets, 1u);
-  const core::Result pushResult = cmdList->pushConstants(mScenePipelineLayout.get(), pushConstantRange, &pushConstants);
+  cmdList->bindResourceSets(mGridPipeline.get(), kSceneResourceSetIndex, resourceSets, 1u);
+  const core::Result pushResult = cmdList->pushConstants(mGridPipeline.get(), pushConstantRange, &pushConstants);
   if (pushResult != core::Result::eSuccess)
   {
     return pushResult;
@@ -316,8 +262,8 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordPrimitiveDraw(r
   const rhi::PushConstantRangeDesc pushConstantRange = buildScenePushConstantRange();
 
   cmdList->bindGraphicsPipeline(mPrimitivePipeline.get());
-  cmdList->bindResourceSets(mScenePipelineLayout.get(), kSceneResourceSetIndex, resourceSets, 1u);
-  const core::Result pushResult = cmdList->pushConstants(mScenePipelineLayout.get(), pushConstantRange, &pushConstants);
+  cmdList->bindResourceSets(mPrimitivePipeline.get(), kSceneResourceSetIndex, resourceSets, 1u);
+  const core::Result pushResult = cmdList->pushConstants(mPrimitivePipeline.get(), pushConstantRange, &pushConstants);
   if (pushResult != core::Result::eSuccess)
   {
     return pushResult;
@@ -373,11 +319,6 @@ mental::core::Result mental::render::ScenePipelineLibrary::createShaders(const s
 mental::core::Result mental::render::ScenePipelineLibrary::createSceneResourceSets()
 {
   rhi::IDevice& device = rhi::getDevice();
-  if (!mScenePipelineLayout)
-  {
-    return core::Result::eInitializationFailed;
-  }
-
   mSceneResourceSets.reserve(mConfig.framesInFlight);
   for (std::uint32_t frameIndex = 0u; frameIndex < mConfig.framesInFlight; ++frameIndex)
   {
@@ -388,7 +329,7 @@ mental::core::Result mental::render::ScenePipelineLibrary::createSceneResourceSe
     }
 
     const core::Result result = resourceSet->init({
-      .pipelineLayout = mScenePipelineLayout.get(),
+      .graphicsPipeline = mPrimitivePipeline.get(),
       .resourceSetIndex = kSceneResourceSetIndex,
     });
     if (result != core::Result::eSuccess)
@@ -411,42 +352,56 @@ mental::core::Result mental::render::ScenePipelineLibrary::createPipelines()
     .bindingCount = static_cast<std::uint32_t>(sceneBindings.size()),
   };
 
-  mScenePipelineLayout = device.createPipelineLayout();
   mPrimitivePipeline = device.createGraphicsPipeline();
   mGridPipeline = device.createGraphicsPipeline();
-  if (!mScenePipelineLayout || !mPrimitivePipeline || !mGridPipeline)
+  if (!mPrimitivePipeline || !mGridPipeline)
   {
     return core::Result::eInitializationFailed;
   }
 
   const rhi::PushConstantRangeDesc scenePushConstantRange = buildScenePushConstantRange();
 
-  core::Result result = mScenePipelineLayout->init({
+  core::Result result = mPrimitivePipeline->init({
+    .vertexShaderModule = mPrimitiveVertexShader.get(),
+    .fragmentShaderModule = mPrimitiveFragmentShader.get(),
     .resourceLayoutDescs = &sceneResourceLayoutDesc,
     .resourceLayoutDescCount = 1u,
     .pushConstantRanges = &scenePushConstantRange,
     .pushConstantRangeCount = 1u,
+    .topology = rhi::PrimitiveTopology::eTriangleList,
+    .polygonMode = rhi::PolygonMode::eFill,
+    .cullMode = rhi::CullMode::eBack,
+    .frontFace = rhi::FrontFace::eCounterClockwise,
+    .depthTestEnable = true,
+    .depthWriteEnable = true,
+    .depthCompareOp = rhi::CompareOp::eLessOrEqual,
+    .colorAttachmentFormat = mConfig.colorAttachmentFormat,
+    .depthAttachmentFormat = mConfig.depthAttachmentFormat,
+    .hasDepthAttachment = true,
   });
   if (result != core::Result::eSuccess)
   {
     return result;
   }
 
-  result = mPrimitivePipeline->init(buildPrimitiveGraphicsPipelineDesc(mScenePipelineLayout.get(),
-    mPrimitiveVertexShader.get(),
-    mPrimitiveFragmentShader.get(),
-    mConfig.colorAttachmentFormat,
-    mConfig.depthAttachmentFormat));
-  if (result != core::Result::eSuccess)
-  {
-    return result;
-  }
-
-  return mGridPipeline->init(buildGridGraphicsPipelineDesc(mScenePipelineLayout.get(),
-    mGridVertexShader.get(),
-    mGridFragmentShader.get(),
-    mConfig.colorAttachmentFormat,
-    mConfig.depthAttachmentFormat));
+  return mGridPipeline->init({
+    .vertexShaderModule = mGridVertexShader.get(),
+    .fragmentShaderModule = mGridFragmentShader.get(),
+    .resourceLayoutDescs = &sceneResourceLayoutDesc,
+    .resourceLayoutDescCount = 1u,
+    .pushConstantRanges = &scenePushConstantRange,
+    .pushConstantRangeCount = 1u,
+    .topology = rhi::PrimitiveTopology::eTriangleList,
+    .polygonMode = rhi::PolygonMode::eFill,
+    .cullMode = rhi::CullMode::eNone,
+    .frontFace = rhi::FrontFace::eCounterClockwise,
+    .depthTestEnable = true,
+    .depthWriteEnable = false,
+    .depthCompareOp = rhi::CompareOp::eLessOrEqual,
+    .colorAttachmentFormat = mConfig.colorAttachmentFormat,
+    .depthAttachmentFormat = mConfig.depthAttachmentFormat,
+    .hasDepthAttachment = true,
+  });
 }
 
 bool mental::render::ScenePipelineLibrary::isFrameIndexValid(const std::uint32_t frameIndex) const noexcept

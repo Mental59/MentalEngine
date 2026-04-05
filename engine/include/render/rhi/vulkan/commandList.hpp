@@ -29,12 +29,12 @@ class CommandList : public ICommandList
   virtual void beginRendering(CommandListBeginRenderingInfo& info) override;
   virtual void endRendering() override;
   virtual void bindGraphicsPipeline(IGraphicsPipeline* pipeline) override;
-  virtual void bindResourceSets(IPipelineLayout* pipelineLayout,
+  virtual void bindResourceSets(IGraphicsPipeline* graphicsPipeline,
     uint32_t firstSet,
     IResourceSet* const* resourceSets,
     uint32_t resourceSetCount) override;
   virtual core::Result pushConstants(
-    IPipelineLayout* pipelineLayout, const PushConstantRangeDesc& range, const void* data) override;
+    IGraphicsPipeline* graphicsPipeline, const PushConstantRangeDesc& range, const void* data) override;
   virtual void draw(
     uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) override;
 

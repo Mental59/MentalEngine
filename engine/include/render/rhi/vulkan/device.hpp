@@ -85,7 +85,6 @@ class Device : public IDevice
   virtual GraphicsApi getGraphicsApi() override;
   virtual std::unique_ptr<IShaderModule> createShaderModule() override;
   virtual std::unique_ptr<IResourceSet> createResourceSet() override;
-  virtual std::unique_ptr<IPipelineLayout> createPipelineLayout() override;
   virtual std::unique_ptr<IGraphicsPipeline> createGraphicsPipeline() override;
   virtual core::Result updateResourceSets(const ResourceWriteDesc* writes, uint32_t writeCount) override;
   virtual ICommandQueue* getGraphicsQueue() override;

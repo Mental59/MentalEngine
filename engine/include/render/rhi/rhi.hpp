@@ -23,7 +23,6 @@ class IDevice;
 class IResourceSet;
 class IResourceLayout;
 class IShaderModule;
-class IPipelineLayout;
 class IGraphicsPipeline;
 class ISwapchain;
 class ITexture;
@@ -206,7 +205,7 @@ class IResourceLayout : public core::resource::IResource
 
 struct ResourceSetDesc
 {
-  IPipelineLayout* pipelineLayout = nullptr;
+  IGraphicsPipeline* graphicsPipeline = nullptr;
   uint32_t resourceSetIndex = 0;
 };
 
@@ -237,22 +236,6 @@ struct PushConstantRangeDesc
   ShaderStageFlags stageFlags = 0;
   uint32_t offset = 0;
   uint32_t size = 0;
-};
-
-struct PipelineLayoutDesc
-{
-  const ResourceLayoutDesc* resourceLayoutDescs = nullptr;
-  uint32_t resourceLayoutDescCount = 0;
-  const PushConstantRangeDesc* pushConstantRanges = nullptr;
-  uint32_t pushConstantRangeCount = 0;
-};
-
-class IPipelineLayout : public core::resource::IResource
-{
- public:
-  virtual core::Result init(const PipelineLayoutDesc& desc) = 0;
-  virtual const PipelineLayoutDesc& getDesc() const = 0;
-  virtual IResourceLayout* getResourceLayout(uint32_t resourceSetIndex) const = 0;
 };
 
 enum class PrimitiveTopology : uint8_t
@@ -289,7 +272,10 @@ struct GraphicsPipelineDesc
 {
   IShaderModule* vertexShaderModule = nullptr;
   IShaderModule* fragmentShaderModule = nullptr;
-  IPipelineLayout* pipelineLayout = nullptr;
+  const ResourceLayoutDesc* resourceLayoutDescs = nullptr;
+  uint32_t resourceLayoutDescCount = 0;
+  const PushConstantRangeDesc* pushConstantRanges = nullptr;
+  uint32_t pushConstantRangeCount = 0;
   PrimitiveTopology topology = PrimitiveTopology::eTriangleList;
   PolygonMode polygonMode = PolygonMode::eFill;
   CullMode cullMode = CullMode::eBack;
@@ -307,6 +293,8 @@ class IGraphicsPipeline : public core::resource::IResource
  public:
   virtual core::Result init(const GraphicsPipelineDesc& desc) = 0;
   virtual const GraphicsPipelineDesc& getDesc() const = 0;
+  virtual core::resource::Object getPipelineLayoutNativeObject() = 0;
+  virtual IResourceLayout* getResourceLayout(uint32_t resourceSetIndex) const = 0;
 };
 
 struct CommandListDesc
@@ -370,12 +358,12 @@ class ICommandList : public core::resource::IResource
   virtual void endRendering() = 0;
 
   virtual void bindGraphicsPipeline(IGraphicsPipeline* pipeline) = 0;
-  virtual void bindResourceSets(IPipelineLayout* pipelineLayout,
+  virtual void bindResourceSets(IGraphicsPipeline* graphicsPipeline,
     uint32_t firstSet,
     IResourceSet* const* resourceSets,
     uint32_t resourceSetCount) = 0;
   virtual core::Result pushConstants(
-    IPipelineLayout* pipelineLayout, const PushConstantRangeDesc& range, const void* data) = 0;
+    IGraphicsPipeline* graphicsPipeline, const PushConstantRangeDesc& range, const void* data) = 0;
   virtual void draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) = 0;
 };
 
@@ -452,7 +440,6 @@ class IDevice : public core::resource::IResource
 
   virtual std::unique_ptr<IShaderModule> createShaderModule() = 0;
   virtual std::unique_ptr<IResourceSet> createResourceSet() = 0;
-  virtual std::unique_ptr<IPipelineLayout> createPipelineLayout() = 0;
   virtual std::unique_ptr<IGraphicsPipeline> createGraphicsPipeline() = 0;
   virtual core::Result updateResourceSets(const ResourceWriteDesc* writes, uint32_t writeCount) = 0;
 

@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
+#include <type_traits>
 
 namespace
 {
@@ -105,8 +106,30 @@ void testScenePushConstantRangeMatchesTheSharedPipelineLayoutContract()
 
 void testPrimitivePipelineDefaultsMatchTheMvpContract()
 {
-  const mental::rhi::GraphicsPipelineDesc pipelineDesc = mental::render::buildPrimitiveGraphicsPipelineDesc(
-    nullptr, nullptr, nullptr, mental::rhi::TextureFormat::eBGRA32_SRGB, mental::rhi::TextureFormat::eD32_SFLOAT);
+  const auto bindings = mental::render::buildSceneResourceBindings();
+  const mental::rhi::ResourceLayoutDesc resourceLayoutDesc {
+    .bindings = bindings.data(),
+    .bindingCount = static_cast<std::uint32_t>(bindings.size()),
+  };
+  const mental::rhi::PushConstantRangeDesc pushConstantRange = mental::render::buildScenePushConstantRange();
+  const mental::rhi::GraphicsPipelineDesc pipelineDesc {
+    .vertexShaderModule = nullptr,
+    .fragmentShaderModule = nullptr,
+    .resourceLayoutDescs = &resourceLayoutDesc,
+    .resourceLayoutDescCount = 1u,
+    .pushConstantRanges = &pushConstantRange,
+    .pushConstantRangeCount = 1u,
+    .topology = mental::rhi::PrimitiveTopology::eTriangleList,
+    .polygonMode = mental::rhi::PolygonMode::eFill,
+    .cullMode = mental::rhi::CullMode::eBack,
+    .frontFace = mental::rhi::FrontFace::eCounterClockwise,
+    .depthTestEnable = true,
+    .depthWriteEnable = true,
+    .depthCompareOp = mental::rhi::CompareOp::eLessOrEqual,
+    .colorAttachmentFormat = mental::rhi::TextureFormat::eBGRA32_SRGB,
+    .depthAttachmentFormat = mental::rhi::TextureFormat::eD32_SFLOAT,
+    .hasDepthAttachment = true,
+  };
 
   require(pipelineDesc.topology == mental::rhi::PrimitiveTopology::eTriangleList,
     "Primitive pipeline should stay triangle-list");
@@ -120,21 +143,51 @@ void testPrimitivePipelineDefaultsMatchTheMvpContract()
     "Primitive pipeline should preserve the requested color format");
   require(pipelineDesc.depthAttachmentFormat == mental::rhi::TextureFormat::eD32_SFLOAT,
     "Primitive pipeline should preserve the requested depth format");
+  require(pipelineDesc.resourceLayoutDescCount == 1u,
+    "Primitive pipeline should keep the shared scene resource layout inline");
+  require(
+    pipelineDesc.pushConstantRangeCount == 1u, "Primitive pipeline should keep the shared scene push constants inline");
 }
 
 void testGridPipelineDefaultsMatchTheMvpContract()
 {
-  const mental::rhi::GraphicsPipelineDesc pipelineDesc = mental::render::buildGridGraphicsPipelineDesc(
-    nullptr, nullptr, nullptr, mental::rhi::TextureFormat::eBGRA32_SRGB, mental::rhi::TextureFormat::eD32_SFLOAT);
+  const auto bindings = mental::render::buildSceneResourceBindings();
+  const mental::rhi::ResourceLayoutDesc resourceLayoutDesc {
+    .bindings = bindings.data(),
+    .bindingCount = static_cast<std::uint32_t>(bindings.size()),
+  };
+  const mental::rhi::PushConstantRangeDesc pushConstantRange = mental::render::buildScenePushConstantRange();
+  const mental::rhi::GraphicsPipelineDesc pipelineDesc {
+    .vertexShaderModule = nullptr,
+    .fragmentShaderModule = nullptr,
+    .resourceLayoutDescs = &resourceLayoutDesc,
+    .resourceLayoutDescCount = 1u,
+    .pushConstantRanges = &pushConstantRange,
+    .pushConstantRangeCount = 1u,
+    .topology = mental::rhi::PrimitiveTopology::eTriangleList,
+    .polygonMode = mental::rhi::PolygonMode::eFill,
+    .cullMode = mental::rhi::CullMode::eNone,
+    .frontFace = mental::rhi::FrontFace::eCounterClockwise,
+    .depthTestEnable = true,
+    .depthWriteEnable = false,
+    .depthCompareOp = mental::rhi::CompareOp::eLessOrEqual,
+    .colorAttachmentFormat = mental::rhi::TextureFormat::eBGRA32_SRGB,
+    .depthAttachmentFormat = mental::rhi::TextureFormat::eD32_SFLOAT,
+    .hasDepthAttachment = true,
+  };
 
   require(
     pipelineDesc.topology == mental::rhi::PrimitiveTopology::eTriangleList, "Grid pipeline should stay triangle-list");
   require(pipelineDesc.depthTestEnable, "Grid pipeline should keep depth testing enabled");
   require(!pipelineDesc.depthWriteEnable, "Grid pipeline should keep depth writes disabled");
   require(pipelineDesc.cullMode == mental::rhi::CullMode::eNone, "Grid pipeline should keep culling disabled");
+  require(
+    pipelineDesc.resourceLayoutDescCount == 1u, "Grid pipeline should keep the shared scene resource layout inline");
+  require(
+    pipelineDesc.pushConstantRangeCount == 1u, "Grid pipeline should keep the shared scene push constants inline");
 }
 
-void testPipelineLayoutAndResourceSetContractsSupportInlineResourceLayouts()
+void testGraphicsPipelineContractsOwnInlineLayoutsAndPushConstants()
 {
   const auto bindings = mental::render::buildSceneResourceBindings();
   const mental::rhi::ResourceLayoutDesc resourceLayoutDesc {
@@ -143,25 +196,79 @@ void testPipelineLayoutAndResourceSetContractsSupportInlineResourceLayouts()
   };
   const mental::rhi::PushConstantRangeDesc pushConstantRange = mental::render::buildScenePushConstantRange();
 
-  const mental::rhi::PipelineLayoutDesc pipelineLayoutDesc {
+  const mental::rhi::GraphicsPipelineDesc pipelineDesc {
+    .vertexShaderModule = nullptr,
+    .fragmentShaderModule = nullptr,
     .resourceLayoutDescs = &resourceLayoutDesc,
     .resourceLayoutDescCount = 1u,
     .pushConstantRanges = &pushConstantRange,
     .pushConstantRangeCount = 1u,
   };
 
-  require(pipelineLayoutDesc.resourceLayoutDescCount == 1u,
-    "Pipeline layout contracts should accept inline resource layout descriptions");
-  require(pipelineLayoutDesc.resourceLayoutDescs != nullptr,
-    "Pipeline layout contracts should carry inline resource layout descriptions");
+  require(pipelineDesc.resourceLayoutDescCount == 1u,
+    "Graphics pipeline contracts should accept inline resource layout descriptions");
+  require(
+    pipelineDesc.pushConstantRangeCount == 1u, "Graphics pipeline contracts should carry inline push constant ranges");
+}
 
+void testResourceSetContractsUseGraphicsPipelinesAndSetIndices()
+{
   const mental::rhi::ResourceSetDesc resourceSetDesc {
-    .pipelineLayout = nullptr,
+    .graphicsPipeline = nullptr,
     .resourceSetIndex = 0u,
   };
 
-  require(resourceSetDesc.resourceSetIndex == 0u,
-    "Resource set contracts should identify the target pipeline layout set index");
+  require(
+    resourceSetDesc.resourceSetIndex == 0u, "Resource sets should still identify which pipeline set they belong to");
+}
+
+void testScenePipelinesCanBeDescribedWithoutPublicPipelineLayouts()
+{
+  const auto bindings = mental::render::buildSceneResourceBindings();
+  const mental::rhi::ResourceLayoutDesc resourceLayoutDesc {
+    .bindings = bindings.data(),
+    .bindingCount = static_cast<std::uint32_t>(bindings.size()),
+  };
+  const mental::rhi::PushConstantRangeDesc pushConstantRange = mental::render::buildScenePushConstantRange();
+
+  const mental::rhi::GraphicsPipelineDesc pipelineDesc {
+    .vertexShaderModule = nullptr,
+    .fragmentShaderModule = nullptr,
+    .resourceLayoutDescs = &resourceLayoutDesc,
+    .resourceLayoutDescCount = 1u,
+    .pushConstantRanges = &pushConstantRange,
+    .pushConstantRangeCount = 1u,
+  };
+
+  require(pipelineDesc.resourceLayoutDescCount == 1u,
+    "Scene pipelines should be fully described without a separate public pipeline-layout object");
+}
+
+void testSharedScenePushConstantContractIsTheOnlyPublicPushConstantHelper()
+{
+  const mental::rhi::PushConstantRangeDesc sceneRange = mental::render::buildScenePushConstantRange();
+  require(sceneRange.size >= sizeof(mental::render::PrimitiveDrawPushConstants),
+    "Shared scene push constants should cover primitive payloads");
+  require(sceneRange.size >= sizeof(mental::render::GridDrawPushConstants),
+    "Shared scene push constants should cover grid payloads");
+}
+
+void testCommandListBindsResourceSetsFromGraphicsPipelines()
+{
+  using BindResourceSetsSignature = void (mental::rhi::ICommandList::*)(
+    mental::rhi::IGraphicsPipeline*, std::uint32_t, mental::rhi::IResourceSet* const*, std::uint32_t);
+
+  require(std::is_same_v<decltype(&mental::rhi::ICommandList::bindResourceSets), BindResourceSetsSignature>,
+    "Command lists should bind resource sets from a graphics pipeline contract");
+}
+
+void testCommandListPushConstantsUseGraphicsPipelines()
+{
+  using PushConstantsSignature = mental::core::Result (mental::rhi::ICommandList::*)(
+    mental::rhi::IGraphicsPipeline*, const mental::rhi::PushConstantRangeDesc&, const void*);
+
+  require(std::is_same_v<decltype(&mental::rhi::ICommandList::pushConstants), PushConstantsSignature>,
+    "Command lists should push constants from a graphics pipeline contract");
 }
 } // namespace
 
@@ -177,7 +284,12 @@ int main()
     testScenePushConstantRangeMatchesTheSharedPipelineLayoutContract();
     testPrimitivePipelineDefaultsMatchTheMvpContract();
     testGridPipelineDefaultsMatchTheMvpContract();
-    testPipelineLayoutAndResourceSetContractsSupportInlineResourceLayouts();
+    testGraphicsPipelineContractsOwnInlineLayoutsAndPushConstants();
+    testResourceSetContractsUseGraphicsPipelinesAndSetIndices();
+    testScenePipelinesCanBeDescribedWithoutPublicPipelineLayouts();
+    testSharedScenePushConstantContractIsTheOnlyPublicPushConstantHelper();
+    testCommandListBindsResourceSetsFromGraphicsPipelines();
+    testCommandListPushConstantsUseGraphicsPipelines();
     return 0;
   }
   catch (const std::exception& exception)

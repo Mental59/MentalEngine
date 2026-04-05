@@ -9,6 +9,8 @@
 
 namespace
 {
+constexpr float kClearColor[4] {0.5f, 0.5f, 0.5f, 1.0f};
+
 struct CameraUploadData
 {
   glm::vec4 worldPosition {0.0f, 0.0f, 0.0f, 1.0f};
@@ -426,10 +428,10 @@ mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
     .width = swapchainTextureDesc.extent.width,
     .height = swapchainTextureDesc.extent.height,
   };
-  renderingInfo.clearValue.color[0] = 0.6f;
-  renderingInfo.clearValue.color[1] = 0.6f;
-  renderingInfo.clearValue.color[2] = 0.6f;
-  renderingInfo.clearValue.color[3] = 1.0f;
+  renderingInfo.clearValue.color[0] = kClearColor[0];
+  renderingInfo.clearValue.color[1] = kClearColor[1];
+  renderingInfo.clearValue.color[2] = kClearColor[2];
+  renderingInfo.clearValue.color[3] = kClearColor[3];
   renderingInfo.clearValue.depth = 1.0f;
   renderingInfo.clearValue.stencil = 0;
   cmdList->beginRendering(renderingInfo);

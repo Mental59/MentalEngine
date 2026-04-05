@@ -7,130 +7,58 @@
 #include <array>
 #include <vector>
 
-mental::core::Result mental::rhi::vk::PipelineLayout::init(const PipelineLayoutDesc& desc)
+namespace
 {
-  if (mIsInitialized)
-  {
-    MENTAL_WARN("Trying to initialize an already initialized vk::PipelineLayout");
-    return core::Result::eInitializationFailed;
-  }
-
-  if (desc.resourceLayoutDescCount > 0u)
-  {
-    mResourceLayouts.resize(desc.resourceLayoutDescCount);
-    mResourceLayoutDescs.reserve(desc.resourceLayoutDescCount);
-    for (uint32_t resourceLayoutIndex = 0u; resourceLayoutIndex < desc.resourceLayoutDescCount; ++resourceLayoutIndex)
-    {
-      core::Result result = mResourceLayouts[resourceLayoutIndex].init(desc.resourceLayoutDescs[resourceLayoutIndex]);
-      if (result != core::Result::eSuccess)
-      {
-        for (uint32_t destroyIndex = 0u; destroyIndex < resourceLayoutIndex; ++destroyIndex)
-        {
-          mResourceLayouts[destroyIndex].destroy();
-        }
-        mResourceLayouts.clear();
-        return result;
-      }
-
-      mResourceLayoutDescs.push_back(mResourceLayouts[resourceLayoutIndex].getDesc());
-    }
-  }
-  if (desc.pushConstantRangeCount > 0u)
-  {
-    mPushConstantRanges.assign(desc.pushConstantRanges, desc.pushConstantRanges + desc.pushConstantRangeCount);
-  }
-
+std::vector<VkDescriptorSetLayout> collectDescriptorSetLayouts(
+  std::vector<mental::rhi::vk::ResourceLayout>& resourceLayouts)
+{
   std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts {};
-  vkDescriptorSetLayouts.reserve(mResourceLayouts.size());
-  for (ResourceLayout& resourceLayout : mResourceLayouts)
+  vkDescriptorSetLayouts.reserve(resourceLayouts.size());
+  for (mental::rhi::vk::ResourceLayout& resourceLayout : resourceLayouts)
   {
     vkDescriptorSetLayouts.push_back(
-      resourceLayout.getNativeObject(core::resource::ObjectType::eVkDescriptorSetLayout));
+      resourceLayout.getNativeObject(mental::core::resource::ObjectType::eVkDescriptorSetLayout));
   }
+  return vkDescriptorSetLayouts;
+}
 
+std::vector<VkPushConstantRange> collectPushConstantRanges(
+  const std::vector<mental::rhi::PushConstantRangeDesc>& pushConstantRanges)
+{
   std::vector<VkPushConstantRange> vkPushConstantRanges {};
-  vkPushConstantRanges.reserve(mPushConstantRanges.size());
-  for (const PushConstantRangeDesc& pushConstantRange : mPushConstantRanges)
+  vkPushConstantRanges.reserve(pushConstantRanges.size());
+  for (const mental::rhi::PushConstantRangeDesc& pushConstantRange : pushConstantRanges)
   {
     VkPushConstantRange vkPushConstantRange {};
-    vkPushConstantRange.stageFlags = convertShaderStageFlags(pushConstantRange.stageFlags);
+    vkPushConstantRange.stageFlags = mental::rhi::vk::convertShaderStageFlags(pushConstantRange.stageFlags);
     vkPushConstantRange.offset = pushConstantRange.offset;
     vkPushConstantRange.size = pushConstantRange.size;
     vkPushConstantRanges.push_back(vkPushConstantRange);
   }
+  return vkPushConstantRanges;
+}
 
+mental::core::Result createPipelineLayout(std::vector<mental::rhi::vk::ResourceLayout>& resourceLayouts,
+  const std::vector<mental::rhi::PushConstantRangeDesc>& pushConstantRanges,
+  VkPipelineLayout& pipelineLayout)
+{
+  const std::vector<VkDescriptorSetLayout> vkDescriptorSetLayouts = collectDescriptorSetLayouts(resourceLayouts);
+  const std::vector<VkPushConstantRange> vkPushConstantRanges = collectPushConstantRanges(pushConstantRanges);
   VkPipelineLayoutCreateInfo createInfo {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
   createInfo.setLayoutCount = static_cast<uint32_t>(vkDescriptorSetLayouts.size());
   createInfo.pSetLayouts = vkDescriptorSetLayouts.data();
   createInfo.pushConstantRangeCount = static_cast<uint32_t>(vkPushConstantRanges.size());
   createInfo.pPushConstantRanges = vkPushConstantRanges.data();
-
   const VkResult result =
-    vkCreatePipelineLayout(vk::getDevice().getVirtualDevice(), &createInfo, nullptr, &mPipelineLayout);
+    vkCreatePipelineLayout(mental::rhi::vk::getDevice().getVirtualDevice(), &createInfo, nullptr, &pipelineLayout);
   if (result != VK_SUCCESS)
   {
-    MENTAL_ERROR("Failed to create Vulkan pipeline layout, error: {}", vkResultToString(result));
-    return core::Result::eInitializationFailed;
+    MENTAL_ERROR("Failed to create Vulkan pipeline layout, error: {}", mental::rhi::vk::vkResultToString(result));
+    return mental::core::Result::eInitializationFailed;
   }
-
-  mDesc.resourceLayoutDescs = mResourceLayoutDescs.data();
-  mDesc.resourceLayoutDescCount = static_cast<uint32_t>(mResourceLayoutDescs.size());
-  mDesc.pushConstantRanges = mPushConstantRanges.data();
-  mDesc.pushConstantRangeCount = static_cast<uint32_t>(mPushConstantRanges.size());
-  mIsInitialized = true;
-  return core::Result::eSuccess;
+  return mental::core::Result::eSuccess;
 }
-
-void mental::rhi::vk::PipelineLayout::destroy()
-{
-  if (!mIsInitialized)
-  {
-    return;
-  }
-
-  vkDestroyPipelineLayout(vk::getDevice().getVirtualDevice(), mPipelineLayout, nullptr);
-  for (ResourceLayout& resourceLayout : mResourceLayouts)
-  {
-    resourceLayout.destroy();
-  }
-  mResourceLayouts.clear();
-  mResourceLayoutDescs.clear();
-  mPushConstantRanges.clear();
-  mDesc = {};
-  mPipelineLayout = VK_NULL_HANDLE;
-  mIsInitialized = false;
-}
-
-bool mental::rhi::vk::PipelineLayout::isValid() const
-{
-  return mIsInitialized;
-}
-
-mental::core::resource::Object mental::rhi::vk::PipelineLayout::getNativeObject(core::resource::ObjectType objectType)
-{
-  switch (objectType)
-  {
-    case core::resource::ObjectType::eVkPipelineLayout:
-      return mPipelineLayout;
-    default:
-      return nullptr;
-  }
-}
-
-const mental::rhi::PipelineLayoutDesc& mental::rhi::vk::PipelineLayout::getDesc() const
-{
-  return mDesc;
-}
-
-mental::rhi::IResourceLayout* mental::rhi::vk::PipelineLayout::getResourceLayout(uint32_t resourceSetIndex) const
-{
-  if (resourceSetIndex >= mResourceLayouts.size())
-  {
-    return nullptr;
-  }
-
-  return const_cast<ResourceLayout*>(&mResourceLayouts[resourceSetIndex]);
-}
+} // namespace
 
 mental::core::Result mental::rhi::vk::GraphicsPipeline::init(const GraphicsPipelineDesc& desc)
 {
@@ -140,21 +68,60 @@ mental::core::Result mental::rhi::vk::GraphicsPipeline::init(const GraphicsPipel
     return core::Result::eInitializationFailed;
   }
 
-  if (desc.vertexShaderModule == nullptr || desc.fragmentShaderModule == nullptr || desc.pipelineLayout == nullptr)
+  if (desc.vertexShaderModule == nullptr || desc.fragmentShaderModule == nullptr)
   {
-    MENTAL_ERROR("Graphics pipeline init requires shaders and a pipeline layout");
+    MENTAL_ERROR("Graphics pipeline init requires vertex and fragment shaders");
     return core::Result::eInitializationFailed;
+  }
+  if ((desc.resourceLayoutDescCount > 0u && desc.resourceLayoutDescs == nullptr) ||
+      (desc.pushConstantRangeCount > 0u && desc.pushConstantRanges == nullptr))
+  {
+    MENTAL_ERROR("Graphics pipeline init requires valid inline layout and push-constant ranges");
+    return core::Result::eInitializationFailed;
+  }
+
+  mResourceLayouts.resize(desc.resourceLayoutDescCount);
+  mResourceLayoutDescs.reserve(desc.resourceLayoutDescCount);
+  for (uint32_t resourceLayoutIndex = 0u; resourceLayoutIndex < desc.resourceLayoutDescCount; ++resourceLayoutIndex)
+  {
+    core::Result result = mResourceLayouts[resourceLayoutIndex].init(desc.resourceLayoutDescs[resourceLayoutIndex]);
+    if (result != core::Result::eSuccess)
+    {
+      for (uint32_t destroyIndex = 0u; destroyIndex < resourceLayoutIndex; ++destroyIndex)
+      {
+        mResourceLayouts[destroyIndex].destroy();
+      }
+      mResourceLayouts.clear();
+      return result;
+    }
+
+    mResourceLayoutDescs.push_back(mResourceLayouts[resourceLayoutIndex].getDesc());
+  }
+  if (desc.pushConstantRangeCount > 0u)
+  {
+    mPushConstantRanges.assign(desc.pushConstantRanges, desc.pushConstantRanges + desc.pushConstantRangeCount);
+  }
+
+  core::Result result = createPipelineLayout(mResourceLayouts, mPushConstantRanges, mPipelineLayout);
+  if (result != core::Result::eSuccess)
+  {
+    for (ResourceLayout& resourceLayout : mResourceLayouts)
+    {
+      resourceLayout.destroy();
+    }
+    mResourceLayouts.clear();
+    mResourceLayoutDescs.clear();
+    mPushConstantRanges.clear();
+    return result;
   }
 
   const VkShaderModule vertexShaderModule =
     desc.vertexShaderModule->getNativeObject(core::resource::ObjectType::eVkShaderModule);
   const VkShaderModule fragmentShaderModule =
     desc.fragmentShaderModule->getNativeObject(core::resource::ObjectType::eVkShaderModule);
-  const VkPipelineLayout pipelineLayout =
-    desc.pipelineLayout->getNativeObject(core::resource::ObjectType::eVkPipelineLayout);
   MENTAL_ASSERT_DEBUG(vertexShaderModule != VK_NULL_HANDLE);
   MENTAL_ASSERT_DEBUG(fragmentShaderModule != VK_NULL_HANDLE);
-  MENTAL_ASSERT_DEBUG(pipelineLayout != VK_NULL_HANDLE);
+  MENTAL_ASSERT_DEBUG(mPipelineLayout != VK_NULL_HANDLE);
 
   std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages {};
   shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -204,7 +171,11 @@ mental::core::Result mental::rhi::vk::GraphicsPipeline::init(const GraphicsPipel
 
   VkPipelineColorBlendStateCreateInfo colorBlendState {VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO};
   colorBlendState.attachmentCount = 1;
+  colorBlendState.logicOpEnable = VK_FALSE;
+  colorBlendState.logicOp = VK_LOGIC_OP_COPY;
+  colorBlendState.attachmentCount = 1;
   colorBlendState.pAttachments = &colorBlendAttachment;
+  colorBlendState.blendConstants = {0.0f, 0.0f, 0.0f, 0.0f};
 
   std::array<VkDynamicState, 2> dynamicStates {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
   VkPipelineDynamicStateCreateInfo dynamicState {VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO};
@@ -232,19 +203,32 @@ mental::core::Result mental::rhi::vk::GraphicsPipeline::init(const GraphicsPipel
   createInfo.pDepthStencilState = desc.hasDepthAttachment ? &depthStencilState : nullptr;
   createInfo.pColorBlendState = &colorBlendState;
   createInfo.pDynamicState = &dynamicState;
-  createInfo.layout = pipelineLayout;
+  createInfo.layout = mPipelineLayout;
   createInfo.renderPass = VK_NULL_HANDLE;
   createInfo.subpass = 0;
 
-  const VkResult result =
+  const VkResult vkResult =
     vkCreateGraphicsPipelines(vk::getDevice().getVirtualDevice(), VK_NULL_HANDLE, 1, &createInfo, nullptr, &mPipeline);
-  if (result != VK_SUCCESS)
+  if (vkResult != VK_SUCCESS)
   {
-    MENTAL_ERROR("Failed to create Vulkan graphics pipeline, error: {}", vkResultToString(result));
+    MENTAL_ERROR("Failed to create Vulkan graphics pipeline, error: {}", vkResultToString(vkResult));
+    vkDestroyPipelineLayout(vk::getDevice().getVirtualDevice(), mPipelineLayout, nullptr);
+    for (ResourceLayout& resourceLayout : mResourceLayouts)
+    {
+      resourceLayout.destroy();
+    }
+    mResourceLayouts.clear();
+    mResourceLayoutDescs.clear();
+    mPushConstantRanges.clear();
+    mPipelineLayout = VK_NULL_HANDLE;
     return core::Result::eInitializationFailed;
   }
 
   mDesc = desc;
+  mDesc.resourceLayoutDescs = mResourceLayoutDescs.data();
+  mDesc.resourceLayoutDescCount = static_cast<uint32_t>(mResourceLayoutDescs.size());
+  mDesc.pushConstantRanges = mPushConstantRanges.data();
+  mDesc.pushConstantRangeCount = static_cast<uint32_t>(mPushConstantRanges.size());
   mIsInitialized = true;
   return core::Result::eSuccess;
 }
@@ -256,8 +240,17 @@ void mental::rhi::vk::GraphicsPipeline::destroy()
     return;
   }
 
+  vkDestroyPipelineLayout(vk::getDevice().getVirtualDevice(), mPipelineLayout, nullptr);
   vkDestroyPipeline(vk::getDevice().getVirtualDevice(), mPipeline, nullptr);
+  for (ResourceLayout& resourceLayout : mResourceLayouts)
+  {
+    resourceLayout.destroy();
+  }
+  mResourceLayouts.clear();
+  mResourceLayoutDescs.clear();
+  mPushConstantRanges.clear();
   mDesc = {};
+  mPipelineLayout = VK_NULL_HANDLE;
   mPipeline = VK_NULL_HANDLE;
   mIsInitialized = false;
 }
@@ -281,4 +274,19 @@ mental::core::resource::Object mental::rhi::vk::GraphicsPipeline::getNativeObjec
 const mental::rhi::GraphicsPipelineDesc& mental::rhi::vk::GraphicsPipeline::getDesc() const
 {
   return mDesc;
+}
+
+mental::core::resource::Object mental::rhi::vk::GraphicsPipeline::getPipelineLayoutNativeObject()
+{
+  return mPipelineLayout;
+}
+
+mental::rhi::IResourceLayout* mental::rhi::vk::GraphicsPipeline::getResourceLayout(uint32_t resourceSetIndex) const
+{
+  if (resourceSetIndex >= mResourceLayouts.size())
+  {
+    return nullptr;
+  }
+
+  return const_cast<ResourceLayout*>(&mResourceLayouts[resourceSetIndex]);
 }
