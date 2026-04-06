@@ -4,6 +4,14 @@
 
 - These instructions apply to the entire repository unless a deeper `AGENTS.md` overrides them.
 
+## Shadow Learning
+
+- This repo uses Codex shadow learning.
+- Before work that involves judgment such as review, architecture, planning, or writing, read the active Codex memory root's `patterns\*.md` and `entities\*.md` files when they exist.
+- Read `docs\playbooks\*.md` in this repo for repeatable project procedures when they exist.
+- When the user corrects you or states a durable preference, acknowledge it explicitly in the conversation so `session-knowledge-extract` can capture it later.
+- Keep memory concise and project-specific. Do not store generic software advice that the model already knows.
+
 ## C++ Naming
 
 - Types: `PascalCase`
