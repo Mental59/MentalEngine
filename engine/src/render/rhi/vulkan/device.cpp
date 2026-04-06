@@ -85,13 +85,21 @@ std::unique_ptr<mental::rhi::IGraphicsPipeline> mental::rhi::vk::Device::createG
 
 mental::core::Result mental::rhi::vk::Device::updateResourceSets(const ResourceWriteDesc* writes, uint32_t writeCount)
 {
+  constexpr uint32_t kMaxWrites = 32;
+
   if (writes == nullptr || writeCount == 0u)
   {
     return core::Result::eSuccess;
   }
 
-  std::vector<VkDescriptorBufferInfo> bufferInfos(writeCount);
-  std::vector<VkWriteDescriptorSet> vkWrites(writeCount);
+  if (writeCount > kMaxWrites)
+  {
+    MENTAL_ERROR("Resource write count {} exceeds max supported {}", writeCount, kMaxWrites);
+    return core::Result::eOperationFailed;
+  }
+
+  std::array<VkDescriptorBufferInfo, kMaxWrites> bufferInfos {};
+  std::array<VkWriteDescriptorSet, kMaxWrites> vkWrites {};
 
   for (uint32_t writeIndex = 0; writeIndex < writeCount; ++writeIndex)
   {

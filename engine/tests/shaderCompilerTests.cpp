@@ -259,7 +259,7 @@ void testSharedScenePushConstantContractIsTheOnlyPublicPushConstantHelper()
 
 void testCommandListBindsResourceSetsFromGraphicsPipelines()
 {
-  using BindResourceSetsSignature = void (mental::rhi::ICommandList::*)(
+  using BindResourceSetsSignature = mental::core::Result (mental::rhi::ICommandList::*)(
     mental::rhi::IGraphicsPipeline*, std::uint32_t, mental::rhi::IResourceSet* const*, std::uint32_t);
 
   require(std::is_same_v<decltype(&mental::rhi::ICommandList::bindResourceSets), BindResourceSetsSignature>,

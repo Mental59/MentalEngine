@@ -29,7 +29,7 @@ class CommandList : public ICommandList
   virtual void beginRendering(CommandListBeginRenderingInfo& info) override;
   virtual void endRendering() override;
   virtual void bindGraphicsPipeline(IGraphicsPipeline* pipeline) override;
-  virtual void bindResourceSets(IGraphicsPipeline* graphicsPipeline,
+  virtual core::Result bindResourceSets(IGraphicsPipeline* graphicsPipeline,
     uint32_t firstSet,
     IResourceSet* const* resourceSets,
     uint32_t resourceSetCount) override;

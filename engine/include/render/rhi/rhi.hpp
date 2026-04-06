@@ -358,7 +358,7 @@ class ICommandList : public core::resource::IResource
   virtual void endRendering() = 0;
 
   virtual void bindGraphicsPipeline(IGraphicsPipeline* pipeline) = 0;
-  virtual void bindResourceSets(IGraphicsPipeline* graphicsPipeline,
+  virtual core::Result bindResourceSets(IGraphicsPipeline* graphicsPipeline,
     uint32_t firstSet,
     IResourceSet* const* resourceSets,
     uint32_t resourceSetCount) = 0;

@@ -326,19 +326,24 @@ void mental::rhi::vk::CommandList::bindGraphicsPipeline(IGraphicsPipeline* pipel
   vkCmdBindPipeline(mCmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vkPipeline);
 }
 
-void mental::rhi::vk::CommandList::bindResourceSets(
+mental::core::Result mental::rhi::vk::CommandList::bindResourceSets(
   IGraphicsPipeline* graphicsPipeline, uint32_t firstSet, IResourceSet* const* resourceSets, uint32_t resourceSetCount)
 {
   constexpr uint32_t kMaxResourceSets = 32;
 
-  MENTAL_ASSERT(resourceSetCount <= kMaxResourceSets);
+  if (resourceSetCount > kMaxResourceSets)
+  {
+    MENTAL_ERROR("Resource set count {} exceeds max supported {}", resourceSetCount, kMaxResourceSets);
+    return core::Result::eOperationFailed;
+  }
+
   MENTAL_ASSERT_DEBUG(graphicsPipeline != nullptr);
   MENTAL_ASSERT_DEBUG(resourceSets != nullptr);
 
   const VkPipelineLayout vkPipelineLayout = graphicsPipeline->getPipelineLayoutNativeObject();
   MENTAL_ASSERT_DEBUG(vkPipelineLayout != VK_NULL_HANDLE);
 
-  std::array<VkDescriptorSet, kMaxResourceSets> vkDescriptorSets;
+  std::array<VkDescriptorSet, kMaxResourceSets> vkDescriptorSets {};
   for (uint32_t resourceSetIndex = 0; resourceSetIndex < resourceSetCount; ++resourceSetIndex)
   {
     MENTAL_ASSERT_DEBUG(resourceSets[resourceSetIndex] != nullptr);
@@ -354,6 +359,8 @@ void mental::rhi::vk::CommandList::bindResourceSets(
     vkDescriptorSets.data(),
     0,
     nullptr);
+
+  return core::Result::eSuccess;
 }
 
 mental::core::Result mental::rhi::vk::CommandList::pushConstants(

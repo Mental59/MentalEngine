@@ -224,7 +224,12 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordGridDraw(
   const rhi::PushConstantRangeDesc pushConstantRange = buildScenePushConstantRange();
 
   cmdList->bindGraphicsPipeline(mGridPipeline.get());
-  cmdList->bindResourceSets(mGridPipeline.get(), kSceneResourceSetIndex, resourceSets, 1u);
+  const core::Result bindResult =
+    cmdList->bindResourceSets(mGridPipeline.get(), kSceneResourceSetIndex, resourceSets, 1u);
+  if (bindResult != core::Result::eSuccess)
+  {
+    return bindResult;
+  }
   const core::Result pushResult = cmdList->pushConstants(mGridPipeline.get(), pushConstantRange, &pushConstants);
   if (pushResult != core::Result::eSuccess)
   {
@@ -262,7 +267,12 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordPrimitiveDraw(r
   const rhi::PushConstantRangeDesc pushConstantRange = buildScenePushConstantRange();
 
   cmdList->bindGraphicsPipeline(mPrimitivePipeline.get());
-  cmdList->bindResourceSets(mPrimitivePipeline.get(), kSceneResourceSetIndex, resourceSets, 1u);
+  const core::Result bindResult =
+    cmdList->bindResourceSets(mPrimitivePipeline.get(), kSceneResourceSetIndex, resourceSets, 1u);
+  if (bindResult != core::Result::eSuccess)
+  {
+    return bindResult;
+  }
   const core::Result pushResult = cmdList->pushConstants(mPrimitivePipeline.get(), pushConstantRange, &pushConstants);
   if (pushResult != core::Result::eSuccess)
   {
