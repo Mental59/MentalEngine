@@ -30,6 +30,7 @@ struct SceneRenderObject
   SceneObjectIdentifier objectIdentifier {0u};
   SceneGeometryKind geometryKind {SceneGeometryKind::eCube};
   glm::mat4 worldTransform {1.0f};
+  glm::mat4 normalMatrix {1.0f};
 };
 
 struct SceneRenderFrame

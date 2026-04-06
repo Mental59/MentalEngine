@@ -243,8 +243,8 @@ core::Result EditorApplication::renderFrame()
 
 core::Result EditorApplication::bootstrapScene()
 {
-  entt::entity cube = entt::null;
-  return mScene.createPrimitive(PrimitiveType::eCube, cube);
+  entt::entity entity = entt::null;
+  return mScene.createPrimitive(PrimitiveType::eSphere, entity);
 }
 
 core::Result EditorApplication::updateSceneCameraControl()
@@ -284,11 +284,14 @@ void EditorApplication::buildSceneRenderFrame(render::SceneRenderFrame& sceneRen
     const TransformComponent& transform = mScene.registry().get<TransformComponent>(entity);
     const PrimitiveComponent& primitive = mScene.registry().get<PrimitiveComponent>(entity);
 
+    const glm::mat4 worldTransform = buildWorldTransform(transform);
+    const glm::mat4 normalMatrix = glm::transpose(glm::inverse(worldTransform));
+
     sceneRenderFrame.objects.push_back(render::SceneRenderObject {
       .objectIdentifier = static_cast<render::SceneObjectIdentifier>(entt::to_integral(entity)),
       .geometryKind = toSceneGeometryKind(primitive.type),
-      .worldTransform = buildWorldTransform(transform),
-    });
+      .worldTransform = worldTransform,
+      .normalMatrix = normalMatrix});
   }
 
   std::sort(sceneRenderFrame.objects.begin(),

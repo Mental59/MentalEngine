@@ -453,7 +453,7 @@ mental::render::RenderFrameOutcome mental::render::RenderSystem::render(
       return {.result = core::Result::eOperationFailed};
     }
 
-    res = mScenePipelineLibrary.recordPrimitiveDraw(cmdList, mCurrentFrame, *primitiveMeshView, object.worldTransform);
+    res = mScenePipelineLibrary.recordPrimitiveDraw(cmdList, mCurrentFrame, *primitiveMeshView, object);
     if (res != core::Result::eSuccess)
     {
       MENTAL_ERROR("Failed to record primitive draw for object {}", object.objectIdentifier);

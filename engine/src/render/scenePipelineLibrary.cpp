@@ -243,7 +243,7 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordGridDraw(
 mental::core::Result mental::render::ScenePipelineLibrary::recordPrimitiveDraw(rhi::ICommandList* cmdList,
   const std::uint32_t frameIndex,
   const PrimitiveMeshView& primitiveMeshView,
-  const glm::mat4& worldTransform) const
+  const SceneRenderObject& renderObject) const
 {
   if (cmdList == nullptr || !isFrameIndexValid(frameIndex) || !primitiveMeshView.isValid())
   {
@@ -260,7 +260,8 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordPrimitiveDraw(r
 
   rhi::IResourceSet* resourceSets[] = {mSceneResourceSets[frameIndex].get()};
   const PrimitiveDrawPushConstants pushConstants {
-    .worldTransform = worldTransform,
+    .worldTransform = renderObject.worldTransform,
+    .normalMatrix = renderObject.normalMatrix,
     .vertexOffsetBytes = static_cast<std::uint32_t>(primitiveMeshView.vertexOffsetBytes),
     .indexOffsetBytes = static_cast<std::uint32_t>(primitiveMeshView.indexOffsetBytes),
   };

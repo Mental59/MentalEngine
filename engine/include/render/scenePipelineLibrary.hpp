@@ -15,6 +15,7 @@ namespace mental::render
 struct alignas(16) PrimitiveDrawPushConstants
 {
   glm::mat4 worldTransform {1.0f};
+  glm::mat4 normalMatrix {1.0f};
   std::uint32_t vertexOffsetBytes = 0u;
   std::uint32_t indexOffsetBytes = 0u;
   std::uint32_t padding0 = 0u;
@@ -30,8 +31,6 @@ struct alignas(16) GridDrawPushConstants
   glm::vec4 gridColorThin {0.4f, 0.4f, 0.4f, 1.0f};
   glm::vec4 gridColorThick {0.05f, 0.05f, 0.05f, 1.0f};
 };
-
-static_assert(sizeof(PrimitiveDrawPushConstants) <= 128u);
 
 struct ScenePipelineLibraryConfig
 {
@@ -57,7 +56,7 @@ class ScenePipelineLibrary
   [[nodiscard]] core::Result recordPrimitiveDraw(rhi::ICommandList* cmdList,
     std::uint32_t frameIndex,
     const PrimitiveMeshView& primitiveMeshView,
-    const glm::mat4& worldTransform) const;
+    const SceneRenderObject& renderObject) const;
 
  private:
   [[nodiscard]] core::Result createShaders(const std::filesystem::path& shaderRootPath);

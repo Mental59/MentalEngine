@@ -14,12 +14,12 @@ using mental::render::PrimitiveMeshData;
 using mental::render::PrimitiveVertex;
 using mental::render::SceneGeometryKind;
 
-constexpr glm::vec4 kDefaultColor {1.0f, 0.0f, 0.0f, 1.0f};
-constexpr float kCubeHalfExtent = 0.5f;
-constexpr float kPlaneHalfExtent = 0.5f;
-constexpr float kSphereRadius = 0.5f;
-constexpr std::uint32_t kSphereRingCount = 8u;
-constexpr std::uint32_t kSphereSegmentCount = 16u;
+constexpr glm::vec4 kDefaultColor {1.0f, 0.5f, 0.31f, 1.0f};
+constexpr float kCubeHalfExtent = 2.0f;
+constexpr float kPlaneHalfExtent = 2.0f;
+constexpr float kSphereRadius = 2.0f;
+constexpr std::uint32_t kSphereRingCount = 32u;
+constexpr std::uint32_t kSphereSegmentCount = 32u;
 constexpr std::size_t kBlobAlignment = alignof(PackedPrimitiveVertex);
 constexpr std::array<SceneGeometryKind, 3> kBuiltInPrimitiveOrder {
   SceneGeometryKind::eCube,
@@ -234,11 +234,11 @@ void appendQuad(PrimitiveMeshData& mesh,
       const std::uint32_t topRight = topLeft + 1u;
 
       mesh.indices.push_back(topLeft);
+      mesh.indices.push_back(bottomRight);
       mesh.indices.push_back(bottomLeft);
-      mesh.indices.push_back(bottomRight);
       mesh.indices.push_back(topLeft);
-      mesh.indices.push_back(bottomRight);
       mesh.indices.push_back(topRight);
+      mesh.indices.push_back(bottomRight);
     }
   }
 
