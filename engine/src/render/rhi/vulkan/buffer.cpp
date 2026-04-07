@@ -129,7 +129,7 @@ mental::core::Result mental::rhi::vk::Buffer::copy(void* data, uint64_t size, ui
 
   VmaAllocationInfo allocationInfo;
   vmaGetAllocationInfo(vk::getAllocator(), mAllocation, &allocationInfo);
-  memcpy((uint8_t*)allocationInfo.pMappedData + offset, data, size);
+  std::memcpy((uint8_t*)allocationInfo.pMappedData + offset, data, size);
 
   return core::Result::eSuccess;
 }
