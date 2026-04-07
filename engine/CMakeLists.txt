@@ -46,7 +46,7 @@ else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
 
-target_compile_definitions(MentalEngine PRIVATE MENTAL_RUNTIME_SHADER_ROOT="${MENTAL_SHADER_SOURCE_DIR}")
+target_compile_definitions(MentalEngine PRIVATE MENTAL_RUNTIME_SHADER_ROOT="./shaders")
 
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "")
