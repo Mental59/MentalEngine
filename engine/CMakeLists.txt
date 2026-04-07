@@ -9,7 +9,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
 
 add_library(MentalEngine STATIC ${SOURCES} ${HEADERS})
 
-find_package(Vulkan REQUIRED COMPONENTS volk)
+find_package(Vulkan REQUIRED)
 
 set(MENTAL_SHADER_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
 set(MENTAL_SHADER_SOURCE_DIR "${MENTAL_SHADER_SOURCE_DIR}" CACHE INTERNAL "Path to MentalEngine runtime shader assets")
@@ -41,6 +41,7 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "")
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/entt)
 add_subdirectory(deps/glm)
+add_subdirectory(deps/volk)
 
 add_library(slang STATIC IMPORTED)
 if(WIN32)
@@ -64,15 +65,15 @@ add_library(imgui STATIC
   deps/imgui/backends/imgui_impl_vulkan.cpp
 )
 target_include_directories(imgui PUBLIC deps/imgui deps/imgui/backends)
-target_link_libraries(imgui PRIVATE glfw Vulkan::Vulkan Vulkan::volk)
+target_link_libraries(imgui PRIVATE glfw Vulkan::Vulkan)
 target_compile_definitions(imgui PRIVATE IMGUI_IMPL_VULKAN_NO_PROTOTYPES NOMINMAX)
 
-target_include_directories(MentalEngine PUBLIC include ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(MentalEngine
-  PUBLIC glm EnTT::EnTT
-  PRIVATE Vulkan::Vulkan Vulkan::volk glfw slang imgui
+  PUBLIC glm EnTT::EnTT volk_headers
+  PRIVATE Vulkan::Vulkan glfw slang imgui
 )
 target_compile_definitions(MentalEngine PRIVATE MENTAL_WITH_VULKAN VK_NO_PROTOTYPES VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0 NOMINMAX)
+target_include_directories(MentalEngine PUBLIC include)
 
 add_executable(MentalEngineSceneTests tests/editorSceneTests.cpp)
 target_link_libraries(MentalEngineSceneTests PRIVATE MentalEngine)

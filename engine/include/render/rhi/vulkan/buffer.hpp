@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vma/vk_mem_alloc.h>
-#include <volk/volk.h>
+#include <volk.h>
 
 #include <core/resource.hpp>
 #include <render/rhi/rhi.hpp>

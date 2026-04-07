@@ -9,7 +9,7 @@
 #include <vector>
 
 #if defined MENTAL_WITH_VULKAN
-#include <Volk/volk.h>
+#include <volk.h>
 #endif
 
 namespace mental::rhi

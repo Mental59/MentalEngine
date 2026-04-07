@@ -1,5 +1,5 @@
 #define VMA_IMPLEMENTATION
-#include <Volk/volk.h>
+#include <volk.h>
 #include <vma/vk_mem_alloc.h>
 #include "core/log.hpp"
 #include "core/types.hpp"

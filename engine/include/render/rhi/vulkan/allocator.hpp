@@ -1,5 +1,5 @@
 #pragma once
-#include <Volk/volk.h>
+#include <volk.h>
 #include <vma/vk_mem_alloc.h>
 #include "core/types.hpp"
 

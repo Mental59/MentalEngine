@@ -10,3 +10,6 @@
 [submodule "engine/deps/glm"]
 	path = engine/deps/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "engine/deps/volk"]
+	path = engine/deps/volk
+	url = https://github.com/zeux/volk.git

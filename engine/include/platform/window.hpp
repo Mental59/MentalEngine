@@ -1,6 +1,6 @@
 #pragma once
 #ifdef MENTAL_WITH_VULKAN
-#include <Volk/volk.h>
+#include <volk.h>
 #endif
 
 #include "core/resource.hpp"
