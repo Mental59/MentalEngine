@@ -23,7 +23,7 @@ using mental::render::PrimitiveVertex;
 using mental::render::SceneGeometryKind;
 
 constexpr float kEpsilon = 1.0e-4f;
-constexpr float kSphereRadius = 0.5f;
+constexpr float kSphereRadius = 2.0f;
 
 void require(bool condition, const char* message)
 {
@@ -130,8 +130,8 @@ void testPlaneMeshInvariants()
   {
     require(nearlyEqual(vertex.normal, glm::vec3 {0.0f, 1.0f, 0.0f}), "Plane normal should point along +Y");
     require(nearlyEqual(vertex.position.y, 0.0f), "Plane vertices should lie on the XZ plane");
-    require(std::fabs(vertex.position.x) <= 0.5f + kEpsilon, "Plane width should stay centered in [-0.5, 0.5]");
-    require(std::fabs(vertex.position.z) <= 0.5f + kEpsilon, "Plane depth should stay centered in [-0.5, 0.5]");
+    require(std::fabs(vertex.position.x) <= 2.0f + kEpsilon, "Plane width should stay centered in [-2.0, 2.0]");
+    require(std::fabs(vertex.position.z) <= 2.0f + kEpsilon, "Plane depth should stay centered in [-2.0, 2.0]");
   }
 }
 

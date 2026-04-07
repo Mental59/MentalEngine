@@ -698,8 +698,8 @@ void testBootstrapOccursInApplicationInit()
 
   require(bootstrapEntity != entt::null, "Bootstrap primitive should exist");
   require(app.scene().registry().get<mental::editor::PrimitiveComponent>(bootstrapEntity).type ==
-            mental::editor::PrimitiveType::eCube,
-    "Bootstrap primitive should be a cube");
+            mental::editor::PrimitiveType::eSphere,
+    "Bootstrap primitive should be a sphere");
 }
 
 void testRunCallsPhasesInOrder()
@@ -880,11 +880,11 @@ void testRenderFramePopulatesSceneRenderPayload()
   require(nearlyEqual(
             sceneRenderFrame.camera.viewProjection, sceneRenderFrame.camera.projection * sceneRenderFrame.camera.view),
     "Scene camera payload should precompute viewProjection as projection * view");
-  require(sceneRenderFrame.objects.size() == 1u, "Bootstrap cube should be submitted as one render object");
-  require(sceneRenderFrame.objects[0].geometryKind == mental::render::SceneGeometryKind::eCube,
-    "Bootstrap cube should package as cube geometry");
+  require(sceneRenderFrame.objects.size() == 1u, "Bootstrap entity should be submitted as one render object");
+  require(sceneRenderFrame.objects[0].geometryKind == mental::render::SceneGeometryKind::eSphere,
+    "Bootstrap entity should package as sphere geometry");
   require(nearlyEqual(sceneRenderFrame.objects[0].worldTransform, glm::mat4 {1.0f}),
-    "Bootstrap cube should use an identity world transform");
+    "Bootstrap entity should use an identity world transform");
 }
 
 void testRenderFrameIncludesNewPrimitiveInScenePayload()
@@ -935,7 +935,7 @@ void testRenderFramePreservesScenePayloadAcrossResize()
   require(resizedFrame.framebufferSize.width == 1920u, "Resize frame should update the framebuffer width");
   require(resizedFrame.framebufferSize.height == 1080u, "Resize frame should update the framebuffer height");
   require(resizedFrame.framebufferResized, "Resize frame should report the framebuffer resize");
-  require(sceneRenderFrame.objects.size() == 1u, "Resize should preserve the bootstrap cube render payload");
+  require(sceneRenderFrame.objects.size() == 1u, "Resize should preserve the bootstrap entity render payload");
   require(nearlyEqual(sceneRenderFrame.camera.aspectRatio, aspectRatio),
     "Resize should update the scene camera aspect ratio");
   require(nearlyEqual(
