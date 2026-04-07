@@ -38,7 +38,8 @@ jobs:
             libxcb-xinput0 \
             libxcb-xinerama0 \
             libxcb-cursor-dev \
-            libwayland-dev
+            libwayland-dev \
+            libxkbcommon-dev
 
       - name: Resolve Vulkan SDK version
         id: vulkan-sdk-version
