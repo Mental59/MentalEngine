@@ -17,15 +17,14 @@ target_link_libraries(MentalEditor PRIVATE MentalEngine)
 
 if(WIN32)
 target_compile_definitions(MentalEditor PRIVATE NOMINMAX)
+endif()
+
 add_custom_command(
   TARGET MentalEditor
   POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEditor>/slang.dll"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEditor>/slang-rt.dll"
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${MENTAL_SHADER_SOURCE_DIR}" "$<TARGET_FILE_DIR:MentalEditor>/shaders"
   VERBATIM
 )
-endif()
 
 if(LOG_WARNINGS)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_LOG_WARNINGS)

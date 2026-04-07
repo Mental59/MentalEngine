@@ -9,42 +9,37 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
 
 add_library(MentalEngine STATIC ${SOURCES} ${HEADERS})
 
-find_package(Vulkan REQUIRED)
+find_package(Vulkan REQUIRED COMPONENTS volk)
+
+set(MENTAL_SHADER_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
+set(MENTAL_SHADER_SOURCE_DIR "${MENTAL_SHADER_SOURCE_DIR}" CACHE INTERNAL "Path to MentalEngine runtime shader assets")
 
 set(MENTAL_VULKAN_SDK "$ENV{VULKAN_SDK}")
 if(NOT MENTAL_VULKAN_SDK)
   message(FATAL_ERROR "VULKAN_SDK environment variable is not set")
 endif()
 
-set(MENTAL_GLM_INCLUDE_DIR "${MENTAL_VULKAN_SDK}/Include")
-set(MENTAL_SLANG_INCLUDE_DIR "${MENTAL_VULKAN_SDK}/Include")
-set(MENTAL_SLANG_IMPORT_LIB "${MENTAL_VULKAN_SDK}/Lib/slang.lib")
-set(MENTAL_SLANG_DLL "${MENTAL_VULKAN_SDK}/Bin/slang.dll")
-set(MENTAL_SLANG_RT_DLL "${MENTAL_VULKAN_SDK}/Bin/slang-rt.dll")
-set(MENTAL_SHADER_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders")
-
-foreach(MENTAL_REQUIRED_PATH
-    "${MENTAL_GLM_INCLUDE_DIR}/glm"
-    "${MENTAL_SLANG_INCLUDE_DIR}/slang"
-    "${MENTAL_SLANG_IMPORT_LIB}"
-    "${MENTAL_SLANG_DLL}"
-    "${MENTAL_SLANG_RT_DLL}")
-  if(NOT EXISTS "${MENTAL_REQUIRED_PATH}")
-    message(FATAL_ERROR "Required Vulkan SDK dependency path is missing: ${MENTAL_REQUIRED_PATH}")
-  endif()
-endforeach()
-
-set(MENTAL_SLANG_DLL "${MENTAL_SLANG_DLL}" CACHE INTERNAL "Path to the Slang runtime DLL")
-set(MENTAL_SLANG_RT_DLL "${MENTAL_SLANG_RT_DLL}" CACHE INTERNAL "Path to the Slang runtime support DLL")
-set(MENTAL_SHADER_SOURCE_DIR "${MENTAL_SHADER_SOURCE_DIR}" CACHE INTERNAL "Path to MentalEngine runtime shader assets")
-
 if(WIN32)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_WIN32 VK_USE_PLATFORM_WIN32_KHR)
+set(MENTAL_SLANG_STATIC_LIB "${MENTAL_VULKAN_SDK}/Lib/slang.lib")
 elseif(LINUX)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_LINUX VK_USE_PLATFORM_XCB_KHR)
+set(MENTAL_SLANG_STATIC_LIB "${MENTAL_VULKAN_SDK}/x86_64/lib/libslang.a")
 else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
+
+set(MENTAL_GLM_INCLUDE_DIR "${Vulkan_INCLUDE_DIR}")
+set(MENTAL_SLANG_INCLUDE_DIR "${Vulkan_INCLUDE_DIR}")
+
+foreach(MENTAL_REQUIRED_PATH
+"${MENTAL_GLM_INCLUDE_DIR}/glm"
+"${MENTAL_SLANG_INCLUDE_DIR}/slang"
+"${MENTAL_SLANG_STATIC_LIB}")
+if(NOT EXISTS "${MENTAL_REQUIRED_PATH}")
+message(FATAL_ERROR "Required Vulkan SDK dependency path is missing: ${MENTAL_REQUIRED_PATH}")
+endif()
+endforeach()
 
 target_compile_definitions(MentalEngine PRIVATE MENTAL_RUNTIME_SHADER_ROOT="./shaders")
 
@@ -59,10 +54,9 @@ add_subdirectory(deps/entt)
 add_library(glm INTERFACE)
 target_include_directories(glm INTERFACE "${MENTAL_GLM_INCLUDE_DIR}")
 
-add_library(slang SHARED IMPORTED GLOBAL)
+add_library(slang STATIC IMPORTED)
 set_target_properties(slang PROPERTIES
-  IMPORTED_IMPLIB "${MENTAL_SLANG_IMPORT_LIB}"
-  IMPORTED_LOCATION "${MENTAL_SLANG_DLL}"
+  IMPORTED_LOCATION "${MENTAL_SLANG_STATIC_LIB}"
   INTERFACE_INCLUDE_DIRECTORIES "${MENTAL_SLANG_INCLUDE_DIR}"
 )
 
@@ -75,13 +69,13 @@ add_library(imgui STATIC
   deps/imgui/backends/imgui_impl_vulkan.cpp
 )
 target_include_directories(imgui PUBLIC deps/imgui deps/imgui/backends)
-target_link_libraries(imgui PRIVATE glfw Vulkan::Vulkan)
+target_link_libraries(imgui PRIVATE glfw Vulkan::Vulkan Vulkan::volk)
 target_compile_definitions(imgui PRIVATE IMGUI_IMPL_VULKAN_NO_PROTOTYPES NOMINMAX)
 
 target_include_directories(MentalEngine PUBLIC include ${Vulkan_INCLUDE_DIRS})
 target_link_libraries(MentalEngine
   PUBLIC glm EnTT::EnTT
-  PRIVATE Vulkan::Vulkan glfw slang imgui
+  PRIVATE Vulkan::Vulkan Vulkan::volk glfw slang imgui
 )
 target_compile_definitions(MentalEngine PRIVATE MENTAL_WITH_VULKAN VK_NO_PROTOTYPES VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0 NOMINMAX)
 
@@ -124,48 +118,9 @@ add_executable(MentalEngineShaderCompilerTests tests/shaderCompilerTests.cpp)
 target_link_libraries(MentalEngineShaderCompilerTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineShaderCompilerTests COMMAND MentalEngineShaderCompilerTests)
 
-if(WIN32)
-add_custom_command(
-  TARGET MentalEngineSceneTests
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineSceneTests>/slang.dll"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineSceneTests>/slang-rt.dll"
-  VERBATIM
-)
-add_custom_command(
-  TARGET MentalEngineEditorApplicationTests
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineEditorApplicationTests>/slang.dll"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineEditorApplicationTests>/slang-rt.dll"
-  VERBATIM
-)
-add_custom_command(
-  TARGET MentalEngineRenderSceneDataTests
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineRenderSceneDataTests>/slang.dll"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineRenderSceneDataTests>/slang-rt.dll"
-  VERBATIM
-)
-add_custom_command(
-  TARGET MentalEnginePrimitiveMeshDataTests
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEnginePrimitiveMeshDataTests>/slang.dll"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEnginePrimitiveMeshDataTests>/slang-rt.dll"
-  VERBATIM
-)
-add_custom_command(
-  TARGET MentalEngineRenderHostAdapterTests
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineRenderHostAdapterTests>/slang.dll"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineRenderHostAdapterTests>/slang-rt.dll"
-  VERBATIM
-)
 add_custom_command(
   TARGET MentalEngineShaderCompilerTests
   POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_DLL}" "$<TARGET_FILE_DIR:MentalEngineShaderCompilerTests>/slang.dll"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "${MENTAL_SLANG_RT_DLL}" "$<TARGET_FILE_DIR:MentalEngineShaderCompilerTests>/slang-rt.dll"
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${MENTAL_SHADER_SOURCE_DIR}" "$<TARGET_FILE_DIR:MentalEngineShaderCompilerTests>/shaders"
   VERBATIM
 )
-endif()
