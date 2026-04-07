@@ -31,6 +31,11 @@ class EditorScene
     return mRegistry;
   }
 
+  [[nodiscard]] entt::registry& registry() noexcept
+  {
+    return mRegistry;
+  }
+
   [[nodiscard]] const EditorState& editorState() const noexcept
   {
     return mEditorState;

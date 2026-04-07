@@ -25,7 +25,7 @@ struct alignas(16) PrimitiveDrawPushConstants
 struct alignas(16) GridDrawPushConstants
 {
   float gridSize = 100.0f;
-  float gridCellSize = 0.5f;
+  float gridCellSize = 0.025f;
   float gridMinPixelsBetweenCells = 2.0f;
   float padding0 = 0.0f;
   glm::vec4 gridColorThin {0.4f, 0.4f, 0.4f, 1.0f};
