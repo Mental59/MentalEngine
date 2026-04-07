@@ -1,4 +1,5 @@
 #include <render/rhi/vulkan/buffer.hpp>
+#include <cstring>
 #include <core/log.hpp>
 #include <render/rhi/vulkan/constants.hpp>
 #include <render/rhi/rhi.hpp>
