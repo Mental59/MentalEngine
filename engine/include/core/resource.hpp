@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 namespace mental::core::resource
 {
@@ -93,6 +94,6 @@ class ResourceHandle
     return id > 0;
   }
 
-  size_t id;
+  std::size_t id;
 };
 } // namespace mental::core::resource

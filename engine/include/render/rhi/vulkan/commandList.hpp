@@ -18,9 +18,9 @@ class CommandList : public ICommandList
   virtual core::Result begin(const CommandListBegindDesc& desc) override;
   virtual core::Result end() override;
   virtual core::Result copyBuffer(
-    IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size) override;
+    IBuffer* srcBuffer, std::size_t srcOffset, IBuffer* dstBuffer, std::size_t dstOffset, std::size_t size) override;
   virtual core::Result copyBufferToImage(IBuffer* buffer,
-    size_t bufferOffset,
+    std::size_t bufferOffset,
     ITexture* texture,
     uint32_t mipLevel,
     const TextureOffset3D& textureOffset) override;

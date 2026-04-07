@@ -19,7 +19,7 @@ mental::core::Result mental::rhi::vk::ShaderModule::init(const ShaderModuleDesc&
   }
 
   VkShaderModuleCreateInfo createInfo {VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO};
-  createInfo.codeSize = static_cast<size_t>(desc.wordCount * sizeof(uint32_t));
+  createInfo.codeSize = static_cast<std::size_t>(desc.wordCount * sizeof(uint32_t));
   createInfo.pCode = desc.spirvCode;
 
   const VkResult result =

@@ -345,10 +345,10 @@ class ICommandList : public core::resource::IResource
   virtual core::Result end() = 0;
 
   virtual core::Result copyBuffer(
-    IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size) = 0;
+    IBuffer* srcBuffer, std::size_t srcOffset, IBuffer* dstBuffer, std::size_t dstOffset, std::size_t size) = 0;
 
   virtual core::Result copyBufferToImage(IBuffer* buffer,
-    size_t bufferOffset,
+    std::size_t bufferOffset,
     ITexture* texture,
     uint32_t mipLevel,
     const TextureOffset3D& textureOffset) = 0;
