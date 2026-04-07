@@ -113,3 +113,8 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${MENTAL_SHADER_SOURCE_DIR}" "$<TARGET_FILE_DIR:MentalEngineShaderCompilerTests>/shaders"
   VERBATIM
 )
+
+add_executable(MentalEngineCoreTests tests/coreTests.cpp src/core/log.cpp src/core/types.cpp)
+target_include_directories(MentalEngineCoreTests PRIVATE include)
+target_compile_definitions(MentalEngineCoreTests PRIVATE MENTAL_LOG_INFO MENTAL_LOG_WARNINGS MENTAL_LOG_TRACES)
+add_test(NAME MentalEngineCoreTests COMMAND MentalEngineCoreTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
