@@ -8,8 +8,8 @@
 #include <span>
 #include <string_view>
 
-#include <slang/slang-com-ptr.h>
-#include <slang/slang.h>
+#include <slang-com-ptr.h>
+#include <slang.h>
 
 namespace
 {

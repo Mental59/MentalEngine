@@ -7,23 +7,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-function(mental_copy_linux_runtime_libraries targetName)
-  if(NOT LINUX)
-    return()
-  endif()
-
-  foreach(runtimeLibrary IN LISTS ARGN)
-    add_custom_command(
-      TARGET ${targetName}
-      POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${runtimeLibrary}" "$<TARGET_FILE_DIR:${targetName}>"
-      VERBATIM
-    )
-  endforeach()
-
-  set_property(TARGET ${targetName} APPEND PROPERTY BUILD_RPATH "$ORIGIN")
-endfunction()
-
 enable_testing()
 
 if(MSVC)

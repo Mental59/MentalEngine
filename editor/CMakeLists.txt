@@ -25,7 +25,6 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${MENTAL_SHADER_SOURCE_DIR}" "$<TARGET_FILE_DIR:MentalEditor>/shaders"
   VERBATIM
 )
-mental_copy_linux_runtime_libraries(MentalEditor "${MENTAL_LINUX_RUNTIME_LIBS}")
 
 if(LOG_WARNINGS)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_LOG_WARNINGS)
