@@ -21,10 +21,11 @@ endif()
 
 if(WIN32)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_WIN32 VK_USE_PLATFORM_WIN32_KHR)
-set(MENTAL_SLANG_STATIC_LIB "${MENTAL_VULKAN_SDK}/Lib/slang.lib")
+set(MENTAL_SLANG_LINK_LIB "${MENTAL_VULKAN_SDK}/Lib/slang.lib")
 elseif(LINUX)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_LINUX VK_USE_PLATFORM_XCB_KHR)
-set(MENTAL_SLANG_STATIC_LIB "${MENTAL_VULKAN_SDK}/x86_64/lib/libslang.a")
+set(MENTAL_SLANG_LINK_LIB "${MENTAL_VULKAN_SDK}/lib/libslang.so")
+set(MENTAL_SLANG_RUNTIME_LIBS "${MENTAL_SLANG_LINK_LIB}")
 else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
@@ -35,9 +36,15 @@ set(MENTAL_SLANG_INCLUDE_DIR "${Vulkan_INCLUDE_DIR}")
 foreach(MENTAL_REQUIRED_PATH
 "${MENTAL_GLM_INCLUDE_DIR}/glm"
 "${MENTAL_SLANG_INCLUDE_DIR}/slang"
-"${MENTAL_SLANG_STATIC_LIB}")
+"${MENTAL_SLANG_LINK_LIB}")
 if(NOT EXISTS "${MENTAL_REQUIRED_PATH}")
 message(FATAL_ERROR "Required Vulkan SDK dependency path is missing: ${MENTAL_REQUIRED_PATH}")
+endif()
+endforeach()
+
+foreach(MENTAL_SLANG_RUNTIME_LIB ${MENTAL_SLANG_RUNTIME_LIBS})
+if(NOT EXISTS "${MENTAL_SLANG_RUNTIME_LIB}")
+message(FATAL_ERROR "Required Vulkan SDK runtime path is missing: ${MENTAL_SLANG_RUNTIME_LIB}")
 endif()
 endforeach()
 
@@ -54,11 +61,32 @@ add_subdirectory(deps/entt)
 add_library(glm INTERFACE)
 target_include_directories(glm INTERFACE "${MENTAL_GLM_INCLUDE_DIR}")
 
+if(WIN32)
 add_library(slang STATIC IMPORTED)
+else()
+add_library(slang SHARED IMPORTED)
+endif()
 set_target_properties(slang PROPERTIES
-  IMPORTED_LOCATION "${MENTAL_SLANG_STATIC_LIB}"
+  IMPORTED_LOCATION "${MENTAL_SLANG_LINK_LIB}"
   INTERFACE_INCLUDE_DIRECTORIES "${MENTAL_SLANG_INCLUDE_DIR}"
 )
+
+function(mental_copy_slang_runtime_libraries targetName)
+  if(NOT LINUX)
+    return()
+  endif()
+
+  foreach(runtimeLibrary ${MENTAL_SLANG_RUNTIME_LIBS})
+    add_custom_command(
+      TARGET ${targetName}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${runtimeLibrary}" "$<TARGET_FILE_DIR:${targetName}>"
+      VERBATIM
+    )
+  endforeach()
+
+  set_property(TARGET ${targetName} APPEND PROPERTY BUILD_RPATH "$ORIGIN")
+endfunction()
 
 add_library(imgui STATIC
   deps/imgui/imgui.cpp
@@ -82,24 +110,29 @@ target_compile_definitions(MentalEngine PRIVATE MENTAL_WITH_VULKAN VK_NO_PROTOTY
 add_executable(MentalEngineSceneTests tests/editorSceneTests.cpp)
 target_link_libraries(MentalEngineSceneTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineSceneTests COMMAND MentalEngineSceneTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+mental_copy_slang_runtime_libraries(MentalEngineSceneTests)
 
 add_executable(MentalEngineCameraTests tests/cameraTests.cpp src/camera/camera.cpp)
 target_include_directories(MentalEngineCameraTests PRIVATE include)
 target_link_libraries(MentalEngineCameraTests PRIVATE glm)
 add_test(NAME MentalEngineCameraTests COMMAND MentalEngineCameraTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+mental_copy_slang_runtime_libraries(MentalEngineCameraTests)
 
 add_executable(MentalEngineSceneCameraTests tests/sceneCameraTests.cpp)
 target_link_libraries(MentalEngineSceneCameraTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineSceneCameraTests COMMAND MentalEngineSceneCameraTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+mental_copy_slang_runtime_libraries(MentalEngineSceneCameraTests)
 
 add_executable(MentalEngineEditorApplicationTests tests/editorApplicationTests.cpp)
 target_link_libraries(MentalEngineEditorApplicationTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineEditorApplicationTests COMMAND MentalEngineEditorApplicationTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+mental_copy_slang_runtime_libraries(MentalEngineEditorApplicationTests)
 
 add_executable(MentalEngineRenderSceneDataTests tests/renderSceneDataTests.cpp)
 target_include_directories(MentalEngineRenderSceneDataTests PRIVATE include)
 target_link_libraries(MentalEngineRenderSceneDataTests PRIVATE glm)
 add_test(NAME MentalEngineRenderSceneDataTests COMMAND MentalEngineRenderSceneDataTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+mental_copy_slang_runtime_libraries(MentalEngineRenderSceneDataTests)
 
 add_executable(MentalEnginePrimitiveMeshDataTests
   tests/primitiveMeshDataTests.cpp
@@ -108,15 +141,18 @@ add_executable(MentalEnginePrimitiveMeshDataTests
 target_include_directories(MentalEnginePrimitiveMeshDataTests PRIVATE include)
 target_link_libraries(MentalEnginePrimitiveMeshDataTests PRIVATE glm)
 add_test(NAME MentalEnginePrimitiveMeshDataTests COMMAND MentalEnginePrimitiveMeshDataTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+mental_copy_slang_runtime_libraries(MentalEnginePrimitiveMeshDataTests)
 
 add_executable(MentalEngineRenderHostAdapterTests tests/renderHostAdapterTests.cpp)
 target_link_libraries(MentalEngineRenderHostAdapterTests PRIVATE MentalEngine)
 target_compile_definitions(MentalEngineRenderHostAdapterTests PRIVATE MENTAL_WITH_VULKAN)
 add_test(NAME MentalEngineRenderHostAdapterTests COMMAND MentalEngineRenderHostAdapterTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+mental_copy_slang_runtime_libraries(MentalEngineRenderHostAdapterTests)
 
 add_executable(MentalEngineShaderCompilerTests tests/shaderCompilerTests.cpp)
 target_link_libraries(MentalEngineShaderCompilerTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineShaderCompilerTests COMMAND MentalEngineShaderCompilerTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+mental_copy_slang_runtime_libraries(MentalEngineShaderCompilerTests)
 add_custom_command(
   TARGET MentalEngineShaderCompilerTests
   POST_BUILD
