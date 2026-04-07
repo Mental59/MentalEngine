@@ -22,12 +22,6 @@ else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
 
-foreach(MENTAL_LINUX_RUNTIME_LIB ${MENTAL_LINUX_RUNTIME_LIBS})
-if(NOT EXISTS "${MENTAL_LINUX_RUNTIME_LIB}")
-message(FATAL_ERROR "Required Vulkan SDK runtime path is missing: ${MENTAL_LINUX_RUNTIME_LIB}")
-endif()
-endforeach()
-
 target_compile_definitions(MentalEngine PRIVATE MENTAL_RUNTIME_SHADER_ROOT="./shaders")
 
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "")
