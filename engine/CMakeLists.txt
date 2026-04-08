@@ -46,7 +46,7 @@ set_target_properties(slang::compiler PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/deps/slang
 )
 elseif(LINUX)
-set(MENTAL_SLANG_SHARED_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/slang/linux/x86_64/libslang-compiler.so" CACHE INTERNAL "")
+set(MENTAL_SLANG_SHARED_LIB_PATH "${CMAKE_CURRENT_SOURCE_DIR}/libs/slang/linux/x86_64/libslang-compiler.so.0.2026.5.2" CACHE INTERNAL "")
 set_target_properties(slang::compiler PROPERTIES
   IMPORTED_LOCATION ${MENTAL_SLANG_SHARED_LIB_PATH}
   INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/deps/slang
