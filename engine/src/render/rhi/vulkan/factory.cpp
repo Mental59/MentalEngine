@@ -298,7 +298,7 @@ core::Result DeviceFactory::choosePhysicalDevice(
   PhysicalDeviceInfo bestPhysicalDeviceInfo;
   std::vector<const char*> requiredExtensions = ExtensionManager::getRequiredDeviceExtensions();
   VkPhysicalDeviceFeatures requiredFeatures {};
-  requiredFeatures.geometryShader = VK_TRUE;
+  requiredFeatures.geometryShader = VK_TRUE; // TODO: hardcoded required feature
 
   for (const VkPhysicalDevice& physicalDevice : physicalDevices)
   {
