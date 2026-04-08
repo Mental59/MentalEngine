@@ -88,7 +88,8 @@ jobs:
           rm -rf "${PACKAGE_STAGING_DIR}"
           mkdir -p "${PACKAGE_STAGING_DIR}/MentalEditor"
 
-          cp -R "${RUNTIME_DIR}/" "${PACKAGE_STAGING_DIR}/"
+          cp -a "${RUNTIME_DIR}/." "${PACKAGE_STAGING_DIR}/MentalEditor/"
+          find "${PACKAGE_STAGING_DIR}" -maxdepth 2 -type f | sort
 
           tar -C "${PACKAGE_STAGING_DIR}" -czf "${asset_name}" MentalEditor
           echo "asset_path=${GITHUB_WORKSPACE}/${asset_name}" >> "$GITHUB_OUTPUT"
