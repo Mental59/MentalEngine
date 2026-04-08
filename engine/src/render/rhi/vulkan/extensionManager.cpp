@@ -2,24 +2,16 @@
 #include <volk.h>
 #include <core/log.hpp>
 
-std::vector<const char*> mental::rhi::vk::ExtensionManager::getRequiredInstanceExtensions()
+std::vector<const char*> mental::rhi::vk::ExtensionManager::getRequiredInstanceExtensions(
+  const std::vector<const char*>& platformExtensions)
 {
-  std::vector<const char*> extensions;
-
-#if defined(MENTAL_WIN32)
-  extensions.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-#elif defined(MENTAL_LINUX)
-  extensions.push_back(VK_KHR_XCB_SURFACE_EXTENSION_NAME);
-#else
-  MENTAL_ASSERT_MESSAGE(false, "Unsupported platform");
-#endif
+  std::vector<const char*> extensions(platformExtensions.begin(), platformExtensions.end());
 
 #if defined(_DEBUG)
   extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
   extensions.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 #endif
 
-  extensions.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
   extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
 
   return extensions;

@@ -69,7 +69,10 @@ target_link_libraries(MentalEngine
   PUBLIC glm EnTT::EnTT volk_headers
   PRIVATE Vulkan::Vulkan glfw slang::compiler imgui
 )
-target_compile_definitions(MentalEngine PRIVATE MENTAL_WITH_VULKAN VK_NO_PROTOTYPES VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0 NOMINMAX)
+target_compile_definitions(MentalEngine
+  PUBLIC MENTAL_WITH_VULKAN VK_NO_PROTOTYPES
+  PRIVATE VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0 NOMINMAX
+)
 target_include_directories(MentalEngine PUBLIC include)
 
 add_executable(MentalEngineSceneTests tests/editorSceneTests.cpp)

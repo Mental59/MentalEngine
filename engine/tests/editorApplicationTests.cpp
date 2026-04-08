@@ -67,6 +67,7 @@ struct FakeWindow final : mental::platform::IWindow
   bool rawMouseMotionEnabled = false;
   mental::input::InputSnapshot inputSnapshot {};
   double timeSeconds = 0.0;
+  static constexpr const char* kPlatformVulkanExtension = "VK_KHR_surface";
 
   Result init(const mental::platform::WindowDesc&) override
   {
@@ -113,6 +114,11 @@ struct FakeWindow final : mental::platform::IWindow
   {
     ++rawMouseMotionSetCount;
     rawMouseMotionEnabled = enabled;
+  }
+
+  std::vector<const char*> getPlatformVulkanExtensions() const override
+  {
+    return {kPlatformVulkanExtension};
   }
 
   bool isValid() const override

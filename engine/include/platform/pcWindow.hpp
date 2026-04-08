@@ -18,6 +18,9 @@ class PCWindow : public IWindow
   [[nodiscard]] virtual input::InputSnapshot sampleInput() const override;
   virtual void setCursorMode(CursorMode mode) override;
   virtual void setRawMouseMotionEnabled(bool enabled) override;
+#ifdef MENTAL_WITH_VULKAN
+  [[nodiscard]] virtual std::vector<const char*> getPlatformVulkanExtensions() const override;
+#endif
 
   virtual bool isValid() const override;
 

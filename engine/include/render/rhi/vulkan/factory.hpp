@@ -126,7 +126,7 @@ class DeviceFactory
 
   core::Result initDevice(
     const InstanceInfo& instanceInfo, VkSurfaceKHR surface, SwapchainSettings swapchainSettings) const;
-  core::Result createInstance(InstanceInfo& info) const;
+  core::Result createInstance(const std::vector<const char*>& platformExtensions, InstanceInfo& info) const;
 
  private:
   bool checkInstanceExtensionSupport(const std::vector<const char*>& extensions) const;

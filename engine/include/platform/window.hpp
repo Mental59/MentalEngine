@@ -6,6 +6,7 @@
 #include "core/resource.hpp"
 #include "core/types.hpp"
 #include <input/inputSnapshot.hpp>
+#include <vector>
 
 namespace mental::platform
 {
@@ -38,6 +39,9 @@ class IWindow : public core::resource::IResource
   [[nodiscard]] virtual input::InputSnapshot sampleInput() const = 0;
   virtual void setCursorMode(CursorMode mode) = 0;
   virtual void setRawMouseMotionEnabled(bool enabled) = 0;
+#ifdef MENTAL_WITH_VULKAN
+  [[nodiscard]] virtual std::vector<const char*> getPlatformVulkanExtensions() const = 0;
+#endif
 
   virtual bool shouldClose() const = 0;
   virtual WindowSize getWindowSize() const = 0;

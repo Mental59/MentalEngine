@@ -461,6 +461,7 @@ struct DeviceInitInput
 {
 #if defined MENTAL_WITH_VULKAN
   VulkanSurfaceCreateInput vulkanSurface {};
+  std::vector<const char*> platformExtensions {};
 #endif
 };
 

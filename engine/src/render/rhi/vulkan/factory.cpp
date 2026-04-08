@@ -119,7 +119,8 @@ core::Result DeviceFactory::initDevice(
   return getDevice().init(desc);
 }
 
-core::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
+core::Result DeviceFactory::createInstance(
+  const std::vector<const char*>& platformExtensions, InstanceInfo& instanceInfo) const
 {
   VkResult vkRes;
 
@@ -151,7 +152,7 @@ core::Result DeviceFactory::createInstance(InstanceInfo& instanceInfo) const
     return core::Result::eInitializationFailed;
   }
 
-  std::vector<const char*> instanceExtensions = ExtensionManager::getRequiredInstanceExtensions();
+  std::vector<const char*> instanceExtensions = ExtensionManager::getRequiredInstanceExtensions(platformExtensions);
   std::vector<const char*> validationLayers = ExtensionManager::getValidationLayers();
 
   if (!checkInstanceExtensionSupport(instanceExtensions))

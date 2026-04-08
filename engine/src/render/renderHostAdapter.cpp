@@ -33,6 +33,7 @@ mental::rhi::DeviceInitInput mental::render::WindowRenderHostAdapter::createDevi
         .createSurface = &createWindowSurface,
         .userData = mWindow,
       };
+      initInput.platformExtensions = mWindow->getPlatformVulkanExtensions();
       break;
     }
 #endif
