@@ -17,7 +17,7 @@ set(MENTAL_SHADER_SOURCE_DIR "${MENTAL_SHADER_SOURCE_DIR}" CACHE INTERNAL "Path 
 if(WIN32)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_WIN32 VK_USE_PLATFORM_WIN32_KHR)
 elseif(LINUX)
-target_compile_definitions(MentalEngine PRIVATE MENTAL_LINUX VK_USE_PLATFORM_XCB_KHR)
+target_compile_definitions(MentalEngine PRIVATE MENTAL_LINUX)
 else()
 message(FATAL_ERROR "Unsupported platform")
 endif()
