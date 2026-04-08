@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
 
@@ -88,9 +88,7 @@ jobs:
           rm -rf "${PACKAGE_STAGING_DIR}"
           mkdir -p "${PACKAGE_STAGING_DIR}/MentalEditor"
 
-          cp "${RUNTIME_DIR}/MentalEditor" "${PACKAGE_STAGING_DIR}/MentalEditor/"
-          cp -R "${RUNTIME_DIR}/shaders" "${PACKAGE_STAGING_DIR}/MentalEditor/"
-          cp "${RUNTIME_DIR}/libslang.so" "${PACKAGE_STAGING_DIR}/MentalEditor/"
+          cp -R "${RUNTIME_DIR}/" "${PACKAGE_STAGING_DIR}/"
 
           tar -C "${PACKAGE_STAGING_DIR}" -czf "${asset_name}" MentalEditor
           echo "asset_path=${GITHUB_WORKSPACE}/${asset_name}" >> "$GITHUB_OUTPUT"

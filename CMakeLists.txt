@@ -7,6 +7,17 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+function(mental_copy_to_target targetName)
+  foreach(_path IN LISTS ARGN)
+    add_custom_command(
+      TARGET ${targetName}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_path}" "$<TARGET_FILE_DIR:${targetName}>"
+      VERBATIM
+    )
+  endforeach()
+endfunction()
+
 enable_testing()
 
 if(MSVC)
