@@ -75,29 +75,29 @@ target_include_directories(MentalEngine PUBLIC include)
 add_executable(MentalEngineSceneTests tests/editorSceneTests.cpp)
 target_link_libraries(MentalEngineSceneTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineSceneTests COMMAND MentalEngineSceneTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-mental_copy_to_target(MentalEngineSceneTests ${MENTAL_SLANG_SHARED_LIB_PATH})
+mental_copy_shared_libs(MentalEngineSceneTests ${MENTAL_SLANG_SHARED_LIB_PATH})
 
 add_executable(MentalEngineCameraTests tests/cameraTests.cpp src/camera/camera.cpp)
 target_include_directories(MentalEngineCameraTests PRIVATE include)
 target_link_libraries(MentalEngineCameraTests PRIVATE glm)
 add_test(NAME MentalEngineCameraTests COMMAND MentalEngineCameraTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-mental_copy_to_target(MentalEngineCameraTests ${MENTAL_SLANG_SHARED_LIB_PATH})
+mental_copy_shared_libs(MentalEngineCameraTests ${MENTAL_SLANG_SHARED_LIB_PATH})
 
 add_executable(MentalEngineSceneCameraTests tests/sceneCameraTests.cpp)
 target_link_libraries(MentalEngineSceneCameraTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineSceneCameraTests COMMAND MentalEngineSceneCameraTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-mental_copy_to_target(MentalEngineSceneTests ${MENTAL_SLANG_SHARED_LIB_PATH})
+mental_copy_shared_libs(MentalEngineSceneTests ${MENTAL_SLANG_SHARED_LIB_PATH})
 
 add_executable(MentalEngineEditorApplicationTests tests/editorApplicationTests.cpp)
 target_link_libraries(MentalEngineEditorApplicationTests PRIVATE MentalEngine)
 add_test(NAME MentalEngineEditorApplicationTests COMMAND MentalEngineEditorApplicationTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-mental_copy_to_target(MentalEngineEditorApplicationTests ${MENTAL_SLANG_SHARED_LIB_PATH})
+mental_copy_shared_libs(MentalEngineEditorApplicationTests ${MENTAL_SLANG_SHARED_LIB_PATH})
 
 add_executable(MentalEngineRenderSceneDataTests tests/renderSceneDataTests.cpp)
 target_include_directories(MentalEngineRenderSceneDataTests PRIVATE include)
 target_link_libraries(MentalEngineRenderSceneDataTests PRIVATE glm)
 add_test(NAME MentalEngineRenderSceneDataTests COMMAND MentalEngineRenderSceneDataTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-mental_copy_to_target(MentalEngineRenderSceneDataTests ${MENTAL_SLANG_SHARED_LIB_PATH})
+mental_copy_shared_libs(MentalEngineRenderSceneDataTests ${MENTAL_SLANG_SHARED_LIB_PATH})
 
 add_executable(MentalEnginePrimitiveMeshDataTests
   tests/primitiveMeshDataTests.cpp
@@ -106,13 +106,13 @@ add_executable(MentalEnginePrimitiveMeshDataTests
 target_include_directories(MentalEnginePrimitiveMeshDataTests PRIVATE include)
 target_link_libraries(MentalEnginePrimitiveMeshDataTests PRIVATE glm)
 add_test(NAME MentalEnginePrimitiveMeshDataTests COMMAND MentalEnginePrimitiveMeshDataTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-mental_copy_to_target(MentalEnginePrimitiveMeshDataTests ${MENTAL_SLANG_SHARED_LIB_PATH})
+mental_copy_shared_libs(MentalEnginePrimitiveMeshDataTests ${MENTAL_SLANG_SHARED_LIB_PATH})
 
 add_executable(MentalEngineRenderHostAdapterTests tests/renderHostAdapterTests.cpp)
 target_link_libraries(MentalEngineRenderHostAdapterTests PRIVATE MentalEngine)
 target_compile_definitions(MentalEngineRenderHostAdapterTests PRIVATE MENTAL_WITH_VULKAN)
 add_test(NAME MentalEngineRenderHostAdapterTests COMMAND MentalEngineRenderHostAdapterTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-mental_copy_to_target(MentalEngineRenderHostAdapterTests ${MENTAL_SLANG_SHARED_LIB_PATH})
+mental_copy_shared_libs(MentalEngineRenderHostAdapterTests ${MENTAL_SLANG_SHARED_LIB_PATH})
 
 add_executable(MentalEngineShaderCompilerTests tests/shaderCompilerTests.cpp)
 target_link_libraries(MentalEngineShaderCompilerTests PRIVATE MentalEngine)
@@ -123,10 +123,10 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy_directory "${MENTAL_SHADER_SOURCE_DIR}" "$<TARGET_FILE_DIR:MentalEngineShaderCompilerTests>/shaders"
   VERBATIM
 )
-mental_copy_to_target(MentalEngineShaderCompilerTests ${MENTAL_SLANG_SHARED_LIB_PATH})
+mental_copy_shared_libs(MentalEngineShaderCompilerTests ${MENTAL_SLANG_SHARED_LIB_PATH})
 
 add_executable(MentalEngineCoreTests tests/coreTests.cpp src/core/log.cpp src/core/types.cpp)
 target_include_directories(MentalEngineCoreTests PRIVATE include)
 target_compile_definitions(MentalEngineCoreTests PRIVATE MENTAL_LOG_INFO MENTAL_LOG_WARNINGS MENTAL_LOG_TRACES)
 add_test(NAME MentalEngineCoreTests COMMAND MentalEngineCoreTests WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-mental_copy_to_target(MentalEngineCoreTests ${MENTAL_SLANG_SHARED_LIB_PATH})
+mental_copy_shared_libs(MentalEngineCoreTests ${MENTAL_SLANG_SHARED_LIB_PATH})
