@@ -128,6 +128,12 @@ mental::core::Result mental::render::ScenePipelineLibrary::init(const ScenePipel
 
 void mental::render::ScenePipelineLibrary::destroy()
 {
+  if (!mIsInitialized)
+  {
+    MENTAL_WARN("Trying to destroy an uninitialized ScenePipelineLibrary");
+    return;
+  }
+
   if (mPrimitivePipeline)
   {
     mPrimitivePipeline->destroy();

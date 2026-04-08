@@ -42,6 +42,7 @@ void mental::rhi::vk::ShaderModule::destroy()
 {
   if (!mIsInitialized)
   {
+    MENTAL_WARN("Trying to destroy an uninitialized vk::ShaderModule");
     return;
   }
 

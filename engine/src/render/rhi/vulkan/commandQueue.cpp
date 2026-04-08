@@ -81,7 +81,10 @@ mental::core::Result mental::rhi::vk::CommandQueue::submit(const SubmitInfo& sub
 
   VkResult res = vkQueueSubmit(mQueue, 1, &vkSubmitInfo, fence);
   if (res != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkQueueSubmit, error: {}", vkResultToString(res));
     return core::Result::eOperationFailed;
+  }
 
   return core::Result::eSuccess;
 }

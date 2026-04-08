@@ -63,13 +63,17 @@ DebugMessenger DeviceFactory::createDebugMessenger(VkInstance instance) const
   VkDebugUtilsMessengerEXT debugMessenger;
   vkRes = vkCreateDebugUtilsMessengerEXT(instance, &createDebugMessengerInfo, VK_NULL_HANDLE, &debugMessenger);
   if (vkRes != VK_SUCCESS)
-    MENTAL_ERROR("Failed to call createDebugUtilsMessengerEXT");
+  {
+    MENTAL_ERROR("Failed to call createDebugUtilsMessengerEXT, error: {}", vkResultToString(vkRes));
+  }
 
   VkDebugReportCallbackCreateInfoEXT createReportCallbackInfo = getReportCallbackCreateInfo();
   VkDebugReportCallbackEXT reportCallback;
   vkRes = vkCreateDebugReportCallbackEXT(instance, &createReportCallbackInfo, VK_NULL_HANDLE, &reportCallback);
   if (vkRes != VK_SUCCESS)
-    MENTAL_ERROR("Failed to call createDebugReportCallbackEXT");
+  {
+    MENTAL_ERROR("Failed to call createDebugReportCallbackEXT, error: {}", vkResultToString(vkRes));
+  }
 
   return {debugMessenger, reportCallback};
 }
@@ -88,12 +92,18 @@ core::Result DeviceFactory::initDevice(
   PhysicalDeviceInfo physicalDeviceInfo;
   res = choosePhysicalDevice(instanceInfo.getInstance(), surface, physicalDeviceInfo);
   if (res != core::Result::eSuccess)
+  {
+    MENTAL_ERROR("Failed to choose physical device");
     return res;
+  }
 
   VkDevice vkDevice;
   res = createLogicalDevice(physicalDeviceInfo, vkDevice);
   if (res != core::Result::eSuccess)
+  {
+    MENTAL_ERROR("Failed to create logical device");
     return res;
+  }
 
   VkQueue graphicsQueue;
   vkGetDeviceQueue(vkDevice, physicalDeviceInfo.getGraphicsQueueFamily(), 0, &graphicsQueue);
@@ -126,7 +136,10 @@ core::Result DeviceFactory::createInstance(
 
   vkRes = volkInitialize();
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to initialize volk, error: {}", vkResultToString(vkRes));
     return core::Result::eInitializationFailed;
+  }
 
   VkApplicationInfo appInfo {VK_STRUCTURE_TYPE_APPLICATION_INFO};
   appInfo.pApplicationName = "Mental App";
@@ -136,7 +149,10 @@ core::Result DeviceFactory::createInstance(
 
   vkRes = vkEnumerateInstanceVersion(&appInfo.apiVersion);
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkEnumerateInstanceVersion, error: {}", vkResultToString(vkRes));
     return core::Result::eInitializationFailed;
+  }
 
   const uint32_t minimumVulkanVersion = VK_MAKE_API_VERSION(0, 1, 3, 0);
 
@@ -182,7 +198,10 @@ core::Result DeviceFactory::createInstance(
   VkInstance instance;
   vkRes = vkCreateInstance(&instanceCreateInfo, VK_NULL_HANDLE, &instance);
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkCreateInstance, error: {}", vkResultToString(vkRes));
     return core::Result::eInitializationFailed;
+  }
 
   volkLoadInstance(instance);
 
@@ -197,12 +216,18 @@ bool DeviceFactory::checkInstanceExtensionSupport(const std::vector<const char*>
   uint32_t availableExtensionCount = 0;
   vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, nullptr);
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkEnumerateInstanceExtensionProperties, error: {}", vkResultToString(vkRes));
     return false;
+  }
 
   std::vector<VkExtensionProperties> availableExtensions(availableExtensionCount);
   vkRes = vkEnumerateInstanceExtensionProperties(nullptr, &availableExtensionCount, availableExtensions.data());
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkEnumerateInstanceExtensionProperties, error: {}", vkResultToString(vkRes));
     return false;
+  }
 
   std::set<std::string> requiredSet(extensions.begin(), extensions.end());
   for (const VkExtensionProperties& extension : availableExtensions)
@@ -220,12 +245,18 @@ bool DeviceFactory::checkInstanceLayerSupport(const std::vector<const char*>& la
   uint32_t layersCount;
   vkRes = vkEnumerateInstanceLayerProperties(&layersCount, nullptr);
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkEnumerateInstanceLayerProperties, error: {}", vkResultToString(vkRes));
     return false;
+  }
 
   std::vector<VkLayerProperties> availableLayers(layersCount);
   vkRes = vkEnumerateInstanceLayerProperties(&layersCount, availableLayers.data());
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkEnumerateInstanceLayerProperties, error: {}", vkResultToString(vkRes));
     return false;
+  }
 
   std::set<std::string> requiredSet(layers.begin(), layers.end());
   for (const VkLayerProperties& layer : availableLayers)
@@ -245,13 +276,24 @@ core::Result DeviceFactory::choosePhysicalDevice(
 
   uint32_t physicalDeviceCount = 0;
   vkRes = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
-  if (!physicalDeviceCount || vkRes != VK_SUCCESS)
+  if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkEnumeratePhysicalDevices, error: {}", vkResultToString(vkRes));
     return core::Result::eInitializationFailed;
+  }
+  if (!physicalDeviceCount)
+  {
+    MENTAL_ERROR("Failed to call vkEnumeratePhysicalDevices, device count is zero");
+    return core::Result::eInitializationFailed;
+  }
 
   std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
   vkRes = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkEnumeratePhysicalDevices, error: {}", vkResultToString(vkRes));
     return core::Result::eInitializationFailed;
+  }
 
   PhysicalDeviceInfo bestPhysicalDeviceInfo;
   std::vector<const char*> requiredExtensions = ExtensionManager::getRequiredDeviceExtensions();
@@ -269,7 +311,10 @@ core::Result DeviceFactory::choosePhysicalDevice(
   }
 
   if (!bestPhysicalDeviceInfo.isSuitable())
+  {
+    MENTAL_ERROR("Failed to find the best physical device");
     return core::Result::eInitializationFailed;
+  }
 
   physicalDeviceInfo = bestPhysicalDeviceInfo;
   return core::Result::eSuccess;
@@ -303,7 +348,10 @@ core::Result DeviceFactory::createLogicalDevice(const PhysicalDeviceInfo& physic
 
   VkResult res = vkCreateDevice(physicalDeviceInfo.getPhysicalDevice(), &createInfo, VK_NULL_HANDLE, &device);
   if (res != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkCreateDevice, error: {}", vkResultToString(res));
     return core::Result::eInitializationFailed;
+  }
 
   volkLoadDevice(device);
 
@@ -346,12 +394,18 @@ bool PhysicalDeviceInfo::checkDeviceExtensionSupport(const std::vector<const cha
   uint32_t extensionCount;
   vkRes = vkEnumerateDeviceExtensionProperties(mPhysicalDevice, nullptr, &extensionCount, nullptr);
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkEnumerateDeviceExtensionProperties, error: {}", vkResultToString(vkRes));
     return false;
+  }
 
   std::vector<VkExtensionProperties> extensionProperties(extensionCount);
   vkRes = vkEnumerateDeviceExtensionProperties(mPhysicalDevice, nullptr, &extensionCount, extensionProperties.data());
   if (vkRes != VK_SUCCESS)
+  {
+    MENTAL_ERROR("Failed to call vkEnumerateDeviceExtensionProperties, error: {}", vkResultToString(vkRes));
     return false;
+  }
 
   std::set<std::string> requiredSet(extensions.begin(), extensions.end());
   for (const VkExtensionProperties& property : extensionProperties)

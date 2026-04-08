@@ -240,6 +240,7 @@ void mental::rhi::vk::GraphicsPipeline::destroy()
 {
   if (!mIsInitialized)
   {
+    MENTAL_WARN("Trying to destroy an uninitialized vk::GraphicsPipeline");
     return;
   }
 
