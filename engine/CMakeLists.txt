@@ -70,7 +70,7 @@ target_link_libraries(MentalEngine
   PRIVATE Vulkan::Vulkan glfw slang::compiler imgui
 )
 target_compile_definitions(MentalEngine
-  PUBLIC MENTAL_WITH_VULKAN VK_NO_PROTOTYPES
+  PUBLIC MENTAL_WITH_VULKAN VK_NO_PROTOTYPES GLM_FORCE_DEPTH_ZERO_TO_ONE
   PRIVATE VMA_STATIC_VULKAN_FUNCTIONS=0 VMA_DYNAMIC_VULKAN_FUNCTIONS=0 NOMINMAX
 )
 target_include_directories(MentalEngine PUBLIC include)

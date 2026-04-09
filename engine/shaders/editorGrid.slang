@@ -56,10 +56,10 @@ float log10f(float value)
 }
 
 static const float3 kGridPositions[4] = {
-    float3(-1.0, 0.0, -1.0),
+    float3(-1.0, 0.0, 1.0),
+    float3( 1.0, 0.0, 1.0),
     float3( 1.0, 0.0, -1.0),
-    float3( 1.0, 0.0,  1.0),
-    float3(-1.0, 0.0,  1.0),
+    float3(-1.0, 0.0, -1.0),
 };
 
 static const uint kGridIndices[6] = {

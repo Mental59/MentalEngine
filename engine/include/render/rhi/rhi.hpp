@@ -252,6 +252,7 @@ enum class CullMode : uint8_t
 {
   eNone = 0,
   eBack,
+  eFront
 };
 
 enum class FrontFace : uint8_t
