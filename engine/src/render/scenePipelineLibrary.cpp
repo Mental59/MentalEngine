@@ -1,7 +1,7 @@
 #include <render/scenePipelineLibrary.hpp>
 
 #include <core/log.hpp>
-#include <render/shaderCompiler.hpp>
+#include <render/spirvLoader.hpp>
 
 #include <algorithm>
 #include <format>
@@ -18,34 +18,26 @@ constexpr std::uint32_t kSceneResourceSetIndex = 0u;
     return config.shaderRootPath;
   }
 
-  return mental::render::ShaderCompiler::getRuntimeShaderRoot();
+  return mental::render::getRuntimeShaderRoot();
 }
 
-[[nodiscard]] mental::core::Result compileShaderModule(mental::rhi::IShaderModule& shaderModule,
-  mental::render::ShaderCompiler& compiler,
+[[nodiscard]] mental::core::Result loadShaderModule(mental::rhi::IShaderModule& shaderModule,
   const std::filesystem::path& shaderRootPath,
   const std::filesystem::path& shaderFilePath,
   const char* entryPointName,
-  mental::render::ShaderStage stage)
+  mental::rhi::ShaderStage stage)
 {
-  const mental::render::ShaderCompileResult compileResult = compiler.compileToSpirv({
-    .shaderRootPath = shaderRootPath,
-    .shaderFilePath = shaderFilePath,
-    .entryPointName = entryPointName,
-    .stage = stage,
-  });
-  if (!compileResult.succeeded())
+  const mental::render::SpirvLoadResult loadResult = mental::render::loadSpirvFile(shaderRootPath / shaderFilePath);
+  if (!loadResult.succeeded())
   {
-    MENTAL_ERROR(
-      "Failed to compile shader {}:{}\n{}", shaderFilePath.string(), entryPointName, compileResult.diagnostics);
+    MENTAL_ERROR("Failed to load shader {}:{}\n{}", shaderFilePath.string(), entryPointName, loadResult.diagnostics);
     return mental::core::Result::eInitializationFailed;
   }
 
   return shaderModule.init({
-    .stage = stage == mental::render::ShaderStage::eVertex ? mental::rhi::ShaderStage::eVertex
-                                                           : mental::rhi::ShaderStage::eFragment,
-    .spirvCode = compileResult.spirvWords.data(),
-    .wordCount = static_cast<std::uint64_t>(compileResult.spirvWords.size()),
+    .stage = stage,
+    .spirvCode = loadResult.spirvWords.data(),
+    .wordCount = static_cast<std::uint64_t>(loadResult.spirvWords.size()),
     .entryPointName = entryPointName,
     .debugName = shaderFilePath.string(),
   });
@@ -292,7 +284,6 @@ mental::core::Result mental::render::ScenePipelineLibrary::recordPrimitiveDraw(r
 
 mental::core::Result mental::render::ScenePipelineLibrary::createShaders(const std::filesystem::path& shaderRootPath)
 {
-  ShaderCompiler compiler {};
   rhi::IDevice& device = rhi::getDevice();
 
   mPrimitiveVertexShader = device.createShaderModule();
@@ -304,33 +295,32 @@ mental::core::Result mental::render::ScenePipelineLibrary::createShaders(const s
     return core::Result::eInitializationFailed;
   }
 
-  core::Result result = compileShaderModule(
-    *mPrimitiveVertexShader, compiler, shaderRootPath, "primitiveScene.slang", "vertexMain", ShaderStage::eVertex);
+  core::Result result = loadShaderModule(
+    *mPrimitiveVertexShader, shaderRootPath, "primitiveScene.vertex.spv", "vertexMain", rhi::ShaderStage::eVertex);
   if (result != core::Result::eSuccess)
   {
     return result;
   }
 
-  result = compileShaderModule(*mPrimitiveFragmentShader,
-    compiler,
+  result = loadShaderModule(*mPrimitiveFragmentShader,
     shaderRootPath,
-    "primitiveScene.slang",
+    "primitiveScene.fragment.spv",
     "fragmentMain",
-    ShaderStage::eFragment);
+    rhi::ShaderStage::eFragment);
   if (result != core::Result::eSuccess)
   {
     return result;
   }
 
-  result = compileShaderModule(
-    *mGridVertexShader, compiler, shaderRootPath, "editorGrid.slang", "vertexMain", ShaderStage::eVertex);
+  result = loadShaderModule(
+    *mGridVertexShader, shaderRootPath, "editorGrid.vertex.spv", "vertexMain", rhi::ShaderStage::eVertex);
   if (result != core::Result::eSuccess)
   {
     return result;
   }
 
-  return compileShaderModule(
-    *mGridFragmentShader, compiler, shaderRootPath, "editorGrid.slang", "fragmentMain", ShaderStage::eFragment);
+  return loadShaderModule(
+    *mGridFragmentShader, shaderRootPath, "editorGrid.fragment.spv", "fragmentMain", rhi::ShaderStage::eFragment);
 }
 
 mental::core::Result mental::render::ScenePipelineLibrary::createSceneResourceSets()

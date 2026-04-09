@@ -2,3 +2,4 @@
 /.vs
 /.cache
 /docs/superpowers/
+/engine/slangCompiler/windows/slang-glsl-module.bin

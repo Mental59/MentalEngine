@@ -1,11 +1,13 @@
 #include <render/rhi/rhi.hpp>
 #include <render/scenePipelineLibrary.hpp>
-#include <render/shaderCompiler.hpp>
+#include <render/spirvLoader.hpp>
 
 #include <exception>
 #include <filesystem>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
+#include <string_view>
 #include <type_traits>
 
 namespace
@@ -18,49 +20,62 @@ void require(bool condition, const char* message)
   }
 }
 
-void requireCompiledShader(const std::filesystem::path& shaderRoot,
-  const std::filesystem::path& shaderFilePath,
-  const char* entryPointName,
-  mental::render::ShaderStage stage)
+void requireLoadedShader(const std::filesystem::path& shaderRoot, const std::filesystem::path& shaderFilePath)
 {
-  mental::render::ShaderCompiler compiler {};
-  const mental::render::ShaderCompileResult compileResult = compiler.compileToSpirv({
-    .shaderRootPath = shaderRoot,
-    .shaderFilePath = shaderFilePath,
-    .entryPointName = entryPointName,
-    .stage = stage,
-  });
+  const mental::render::SpirvLoadResult loadResult = mental::render::loadSpirvFile(shaderRoot / shaderFilePath);
+  require(loadResult.result == mental::core::Result::eSuccess, loadResult.diagnostics.c_str());
+  require(!loadResult.spirvWords.empty(), "Loaded shader should produce a non-empty SPIR-V blob");
+}
 
-  require(compileResult.result == mental::core::Result::eSuccess, compileResult.diagnostics.c_str());
-  require(!compileResult.spirvWords.empty(), "Compiled shader should produce a non-empty SPIR-V blob");
+void testLoadedShaderEmitsInfoLog()
+{
+  const std::filesystem::path shaderRoot = mental::render::getRuntimeShaderRoot();
+  std::ostringstream capturedOutput {};
+  std::streambuf* originalBuffer = std::cout.rdbuf(capturedOutput.rdbuf());
+
+  try
+  {
+    requireLoadedShader(shaderRoot, "primitiveScene.vertex.spv");
+    std::cout.rdbuf(originalBuffer);
+  }
+  catch (...)
+  {
+    std::cout.rdbuf(originalBuffer);
+    throw;
+  }
+
+  const std::string output = capturedOutput.str();
+  require(output.find("[INFO]") != std::string::npos, "Successful shader load should emit an info log");
+  require(output.find("primitiveScene.vertex.spv") != std::string::npos,
+    "Successful shader load info log should mention the loaded shader path");
 }
 
 void testRuntimeShaderRootContainsExpectedShaders()
 {
-  const std::filesystem::path shaderRoot = mental::render::ShaderCompiler::getRuntimeShaderRoot();
-  // const std::filesystem::path expectedShaderRoot =
-  //   std::filesystem::weakly_canonical(std::filesystem::path(__FILE__).parent_path() / ".." / "shaders");
+  const std::filesystem::path shaderRoot = mental::render::getRuntimeShaderRoot();
   require(!shaderRoot.empty(), "Runtime shader root should resolve to a non-empty path");
-  // require(std::filesystem::equivalent(shaderRoot, expectedShaderRoot),
-  //   "Runtime shader root should resolve to the engine source shader directory");
-  require(std::filesystem::exists(shaderRoot / "primitiveScene.slang"),
-    "Runtime shader root should contain primitiveScene.slang");
-  require(
-    std::filesystem::exists(shaderRoot / "editorGrid.slang"), "Runtime shader root should contain editorGrid.slang");
+  require(std::filesystem::exists(shaderRoot / "primitiveScene.vertex.spv"),
+    "Runtime shader root should contain vertex SPIR-V");
+  require(std::filesystem::exists(shaderRoot / "primitiveScene.fragment.spv"),
+    "Runtime shader root should contain fragment SPIR-V");
+  require(std::filesystem::exists(shaderRoot / "editorGrid.vertex.spv"),
+    "Runtime shader root should contain grid vertex SPIR-V");
+  require(std::filesystem::exists(shaderRoot / "editorGrid.fragment.spv"),
+    "Runtime shader root should contain grid fragment SPIR-V");
 }
 
-void testPrimitiveSceneShaderEntryPointsCompile()
+void testPrimitiveSceneShaderAssetsLoad()
 {
-  const std::filesystem::path shaderRoot = mental::render::ShaderCompiler::getRuntimeShaderRoot();
-  requireCompiledShader(shaderRoot, "primitiveScene.slang", "vertexMain", mental::render::ShaderStage::eVertex);
-  requireCompiledShader(shaderRoot, "primitiveScene.slang", "fragmentMain", mental::render::ShaderStage::eFragment);
+  const std::filesystem::path shaderRoot = mental::render::getRuntimeShaderRoot();
+  requireLoadedShader(shaderRoot, "primitiveScene.vertex.spv");
+  requireLoadedShader(shaderRoot, "primitiveScene.fragment.spv");
 }
 
-void testEditorGridShaderEntryPointsCompile()
+void testEditorGridShaderAssetsLoad()
 {
-  const std::filesystem::path shaderRoot = mental::render::ShaderCompiler::getRuntimeShaderRoot();
-  requireCompiledShader(shaderRoot, "editorGrid.slang", "vertexMain", mental::render::ShaderStage::eVertex);
-  requireCompiledShader(shaderRoot, "editorGrid.slang", "fragmentMain", mental::render::ShaderStage::eFragment);
+  const std::filesystem::path shaderRoot = mental::render::getRuntimeShaderRoot();
+  requireLoadedShader(shaderRoot, "editorGrid.vertex.spv");
+  requireLoadedShader(shaderRoot, "editorGrid.fragment.spv");
 }
 
 void testSceneResourceLayoutBindingsMatchTheSceneContract()
@@ -278,8 +293,9 @@ int main()
   try
   {
     testRuntimeShaderRootContainsExpectedShaders();
-    testPrimitiveSceneShaderEntryPointsCompile();
-    testEditorGridShaderEntryPointsCompile();
+    testPrimitiveSceneShaderAssetsLoad();
+    testEditorGridShaderAssetsLoad();
+    testLoadedShaderEmitsInfoLog();
     testSceneResourceLayoutBindingsMatchTheSceneContract();
     testPushConstantPayloadsMatchTheSharedSceneContract();
     testScenePushConstantRangeMatchesTheSharedPipelineLayoutContract();

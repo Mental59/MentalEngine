@@ -123,15 +123,33 @@ mental::core::Result mental::rhi::vk::GraphicsPipeline::init(const GraphicsPipel
   MENTAL_ASSERT_DEBUG(fragmentShaderModule != VK_NULL_HANDLE);
   MENTAL_ASSERT_DEBUG(mPipelineLayout != VK_NULL_HANDLE);
 
+  const char* vertexEntryPointName = desc.vertexShaderModule->getDesc().entryPointName.c_str();
+  const char* fragmentEntryPointName = desc.fragmentShaderModule->getDesc().entryPointName.c_str();
+  if (vertexEntryPointName == nullptr || vertexEntryPointName[0] == '\0' || fragmentEntryPointName == nullptr ||
+      fragmentEntryPointName[0] == '\0')
+  {
+    MENTAL_ERROR("Graphics pipeline init requires non-empty shader entry point names");
+    vkDestroyPipelineLayout(vk::getDevice().getVirtualDevice(), mPipelineLayout, nullptr);
+    for (ResourceLayout& resourceLayout : mResourceLayouts)
+    {
+      resourceLayout.destroy();
+    }
+    mResourceLayouts.clear();
+    mResourceLayoutDescs.clear();
+    mPushConstantRanges.clear();
+    mPipelineLayout = VK_NULL_HANDLE;
+    return core::Result::eInitializationFailed;
+  }
+
   std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages {};
   shaderStages[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   shaderStages[0].stage = VK_SHADER_STAGE_VERTEX_BIT;
   shaderStages[0].module = vertexShaderModule;
-  shaderStages[0].pName = "main";
+  shaderStages[0].pName = vertexEntryPointName;
   shaderStages[1].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   shaderStages[1].stage = VK_SHADER_STAGE_FRAGMENT_BIT;
   shaderStages[1].module = fragmentShaderModule;
-  shaderStages[1].pName = "main";
+  shaderStages[1].pName = fragmentEntryPointName;
 
   VkPipelineVertexInputStateCreateInfo vertexInputState {VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
 
