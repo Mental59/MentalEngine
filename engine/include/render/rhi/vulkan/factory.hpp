@@ -30,7 +30,6 @@ class PhysicalDeviceInfo
 
   bool isDiscreteGPU() const;
   bool isIntegratedGPU() const;
-  bool isCPU() const;
   bool isGPU() const
   {
     return isDiscreteGPU() || isIntegratedGPU();
