@@ -387,7 +387,7 @@ mental::core::Result mental::render::ScenePipelineLibrary::createPipelines()
     .pushConstantRangeCount = 1u,
     .topology = rhi::PrimitiveTopology::eTriangleList,
     .polygonMode = rhi::PolygonMode::eFill,
-    .cullMode = rhi::CullMode::eNone,
+    .cullMode = rhi::CullMode::eBack,
     .frontFace = rhi::FrontFace::eCounterClockwise,
     .depthTestEnable = true,
     .depthWriteEnable = true,
