@@ -6,7 +6,7 @@ namespace mental::rhi::vk
 class ExtensionManager
 {
  public:
-  static std::vector<const char*> getRequiredInstanceExtensions();
+  static std::vector<const char*> getRequiredInstanceExtensions(const std::vector<const char*>& platformExtensions);
   static std::vector<const char*> getValidationLayers();
 
   static std::vector<const char*> getRequiredDeviceExtensions();

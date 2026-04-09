@@ -1,9 +1,10 @@
 #define VMA_IMPLEMENTATION
-#include <Volk/volk.h>
+#include <volk.h>
 #include <vma/vk_mem_alloc.h>
 #include "core/log.hpp"
 #include "core/types.hpp"
 #include <render/rhi/vulkan/allocator.hpp>
+#include <render/rhi/vulkan/constants.hpp>
 
 static VmaAllocator gAllocator;
 
@@ -19,7 +20,7 @@ mental::core::Result mental::rhi::vk::initAllocator(const mental::rhi::vk::Alloc
   VkResult importRes = vmaImportVulkanFunctionsFromVolk(&allocatorCreateInfo, &vulkanFunctions);
   if (importRes != VK_SUCCESS)
   {
-    MENTAL_ERROR("Failed to import vulkan functions");
+    MENTAL_ERROR("Failed to import vulkan functions, error: {}", vkResultToString(importRes));
     return core::Result::eInitializationFailed;
   }
 

@@ -230,6 +230,21 @@ void mental::platform::PCWindow::setRawMouseMotionEnabled(bool enabled)
   glfwSetInputMode(mWindow, GLFW_RAW_MOUSE_MOTION, mRawMouseMotionEnabled ? GLFW_TRUE : GLFW_FALSE);
 }
 
+#ifdef MENTAL_WITH_VULKAN
+std::vector<const char*> mental::platform::PCWindow::getPlatformVulkanExtensions() const
+{
+  uint32_t extensionCount = 0;
+  const char** extensions = glfwGetRequiredInstanceExtensions(&extensionCount);
+  if (extensions == nullptr || extensionCount == 0u)
+  {
+    MENTAL_ERROR("GLFW did not report required Vulkan instance extensions");
+    return {};
+  }
+
+  return {extensions, extensions + extensionCount};
+}
+#endif
+
 bool mental::platform::PCWindow::isValid() const
 {
   return mIsInitialized;

@@ -32,6 +32,12 @@ core::Result validateDeviceInitInput(GraphicsApi api, const DeviceInitInput& ini
 #if defined MENTAL_WITH_VULKAN
     case GraphicsApi::Vulkan:
     {
+      if (initInput.platformExtensions.empty())
+      {
+        MENTAL_ERROR("Missing platform specific required extensions");
+        return core::Result::eInitializationFailed;
+      }
+
       if (initInput.vulkanSurface.createSurface == nullptr || initInput.vulkanSurface.userData == nullptr)
       {
         MENTAL_ERROR("Missing Vulkan surface creation input");
@@ -66,7 +72,7 @@ core::Result initDevice(GraphicsApi api, const DeviceInitInput& initInput)
       rhi::vk::DeviceFactory factory;
 
       rhi::vk::InstanceInfo instanceInfo;
-      res = factory.createInstance(instanceInfo);
+      res = factory.createInstance(initInput.platformExtensions, instanceInfo);
       if (res != core::Result::eSuccess)
       {
         MENTAL_ERROR("Failed to create vulkan instance. Error: {}", core::resultToString(res));

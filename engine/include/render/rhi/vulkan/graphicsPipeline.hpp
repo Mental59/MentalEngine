@@ -5,7 +5,7 @@
 
 #include <vector>
 
-#include <volk/volk.h>
+#include <volk.h>
 
 namespace mental::rhi::vk
 {

@@ -9,7 +9,7 @@
 #include <vector>
 
 #if defined MENTAL_WITH_VULKAN
-#include <Volk/volk.h>
+#include <volk.h>
 #endif
 
 namespace mental::rhi
@@ -252,6 +252,7 @@ enum class CullMode : uint8_t
 {
   eNone = 0,
   eBack,
+  eFront
 };
 
 enum class FrontFace : uint8_t
@@ -345,10 +346,10 @@ class ICommandList : public core::resource::IResource
   virtual core::Result end() = 0;
 
   virtual core::Result copyBuffer(
-    IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size) = 0;
+    IBuffer* srcBuffer, std::size_t srcOffset, IBuffer* dstBuffer, std::size_t dstOffset, std::size_t size) = 0;
 
   virtual core::Result copyBufferToImage(IBuffer* buffer,
-    size_t bufferOffset,
+    std::size_t bufferOffset,
     ITexture* texture,
     uint32_t mipLevel,
     const TextureOffset3D& textureOffset) = 0;
@@ -461,6 +462,7 @@ struct DeviceInitInput
 {
 #if defined MENTAL_WITH_VULKAN
   VulkanSurfaceCreateInput vulkanSurface {};
+  std::vector<const char*> platformExtensions {};
 #endif
 };
 

@@ -15,10 +15,10 @@
 
 namespace mental::resource
 {
-constexpr size_t kInitialBuffersVectorSize = 16384;
-constexpr size_t kInitialTexturesVectorSize = 16384;
-constexpr size_t kInitialTextureViewsVectorSize = 16384;
-constexpr size_t kMaxCommandLists = 16;
+constexpr std::size_t kInitialBuffersVectorSize = 16384;
+constexpr std::size_t kInitialTexturesVectorSize = 16384;
+constexpr std::size_t kInitialTextureViewsVectorSize = 16384;
+constexpr std::size_t kMaxCommandLists = 16;
 
 struct VulkanFrameData
 {
@@ -50,30 +50,30 @@ class ResourceManagerImpl : public IResourceManager
     mFreeFrameDataIndices = {};
 
     mBuffers.resize(kInitialBuffersVectorSize);
-    for (size_t i = 0; i < kInitialBuffersVectorSize; i++)
+    for (std::size_t i = 0; i < kInitialBuffersVectorSize; i++)
     {
       mFreeBuffersIndices.push(i);
     }
 
     mTextures.resize(kInitialTexturesVectorSize);
-    for (size_t i = 0; i < kInitialTexturesVectorSize; i++)
+    for (std::size_t i = 0; i < kInitialTexturesVectorSize; i++)
     {
       mFreeTextureIndices.push(i);
     }
 
     mTextureViews.resize(kInitialTextureViewsVectorSize);
-    for (size_t i = 0; i < kInitialTextureViewsVectorSize; i++)
+    for (std::size_t i = 0; i < kInitialTextureViewsVectorSize; i++)
     {
       mFreeTextureViewIndices.push(i);
     }
 
-    for (size_t i = 0; i < kMaxCommandLists; i++)
+    for (std::size_t i = 0; i < kMaxCommandLists; i++)
     {
       mFreeCmdListsIndices.push(i);
     }
 
     mFrameDataArray.resize(maxFramesInFlight);
-    for (size_t i = 0; i < maxFramesInFlight; i++)
+    for (std::size_t i = 0; i < maxFramesInFlight; i++)
     {
       mFreeFrameDataIndices.push(i);
     }
@@ -155,7 +155,7 @@ class ResourceManagerImpl : public IResourceManager
       resizeBuffersArray();
     }
 
-    size_t bufferIndex = mFreeBuffersIndices.front();
+    std::size_t bufferIndex = mFreeBuffersIndices.front();
     core::Result res = mBuffers[bufferIndex].init(desc);
     if (res != core::Result::eSuccess)
     {
@@ -176,7 +176,7 @@ class ResourceManagerImpl : public IResourceManager
       return nullptr;
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index >= mBuffers.size() || !mBuffers[index].isValid())
     {
       return nullptr;
@@ -192,7 +192,7 @@ class ResourceManagerImpl : public IResourceManager
       return;
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index < mBuffers.size() && mBuffers[index].isValid())
     {
       mBuffers[index].destroy();
@@ -207,7 +207,7 @@ class ResourceManagerImpl : public IResourceManager
       resizeTexturesArray();
     }
 
-    size_t textureIndex = mFreeTextureIndices.front();
+    std::size_t textureIndex = mFreeTextureIndices.front();
     core::Result res = mTextures[textureIndex].init(desc);
     if (res != core::Result::eSuccess)
     {
@@ -228,7 +228,7 @@ class ResourceManagerImpl : public IResourceManager
       return nullptr;
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index >= mTextures.size() || !mTextures[index].isValid())
     {
       return nullptr;
@@ -244,7 +244,7 @@ class ResourceManagerImpl : public IResourceManager
       return;
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index < mTextures.size() && mTextures[index].isValid())
     {
       mTextures[index].destroy();
@@ -265,7 +265,7 @@ class ResourceManagerImpl : public IResourceManager
       resizeTextureViewsArray();
     }
 
-    size_t textureViewIndex = mFreeTextureViewIndices.front();
+    std::size_t textureViewIndex = mFreeTextureViewIndices.front();
     core::Result res = mTextureViews[textureViewIndex].init(desc);
     if (res != core::Result::eSuccess)
     {
@@ -286,7 +286,7 @@ class ResourceManagerImpl : public IResourceManager
       return nullptr;
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index >= mTextureViews.size() || !mTextureViews[index].isValid())
     {
       return nullptr;
@@ -302,7 +302,7 @@ class ResourceManagerImpl : public IResourceManager
       return;
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index < mTextureViews.size() && mTextureViews[index].isValid())
     {
       mTextureViews[index].destroy();
@@ -312,7 +312,7 @@ class ResourceManagerImpl : public IResourceManager
 
   virtual CommandListHandle createCommandList(const rhi::CommandListDesc& desc) override
   {
-    size_t cmdListIndex = mFreeCmdListsIndices.front();
+    std::size_t cmdListIndex = mFreeCmdListsIndices.front();
     core::Result res = mCmdLists[cmdListIndex].init(desc);
     if (res != core::Result::eSuccess)
     {
@@ -333,7 +333,7 @@ class ResourceManagerImpl : public IResourceManager
       return nullptr;
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index >= mCmdLists.size() || !mCmdLists[index].isValid())
     {
       return nullptr;
@@ -349,7 +349,7 @@ class ResourceManagerImpl : public IResourceManager
       return;
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index < mCmdLists.size() && mCmdLists[index].isValid())
     {
       mCmdLists[index].destroy();
@@ -361,7 +361,7 @@ class ResourceManagerImpl : public IResourceManager
   {
     MENTAL_ASSERT_MESSAGE(!mFreeFrameDataIndices.empty(), "Frame data array is full");
 
-    size_t frameDataIndex = mFreeFrameDataIndices.front();
+    std::size_t frameDataIndex = mFreeFrameDataIndices.front();
     FrameDataHandle handle {frameDataIndex + 1};
 
     core::Result res = mFrameDataArray[frameDataIndex].cmdList.init(desc.cmdListDesc);
@@ -407,7 +407,7 @@ class ResourceManagerImpl : public IResourceManager
       return {};
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index >= mFrameDataArray.size())
     {
       return {};
@@ -434,7 +434,7 @@ class ResourceManagerImpl : public IResourceManager
       return;
     }
 
-    size_t index = handle.id - 1;
+    std::size_t index = handle.id - 1;
     if (index >= mFrameDataArray.size())
     {
       return;
@@ -469,10 +469,10 @@ class ResourceManagerImpl : public IResourceManager
  private:
   void resizeBuffersArray()
   {
-    size_t curSize = mBuffers.size();
-    size_t newSize = curSize == 0 ? kInitialBuffersVectorSize : curSize * 2;
+    std::size_t curSize = mBuffers.size();
+    std::size_t newSize = curSize == 0 ? kInitialBuffersVectorSize : curSize * 2;
     mBuffers.resize(newSize);
-    for (size_t i = curSize; i < newSize; i++)
+    for (std::size_t i = curSize; i < newSize; i++)
     {
       mFreeBuffersIndices.push(i);
     }
@@ -480,10 +480,10 @@ class ResourceManagerImpl : public IResourceManager
 
   void resizeTexturesArray()
   {
-    size_t curSize = mTextures.size();
-    size_t newSize = curSize == 0 ? kInitialTexturesVectorSize : curSize * 2;
+    std::size_t curSize = mTextures.size();
+    std::size_t newSize = curSize == 0 ? kInitialTexturesVectorSize : curSize * 2;
     mTextures.resize(newSize);
-    for (size_t i = curSize; i < newSize; i++)
+    for (std::size_t i = curSize; i < newSize; i++)
     {
       mFreeTextureIndices.push(i);
     }
@@ -491,29 +491,29 @@ class ResourceManagerImpl : public IResourceManager
 
   void resizeTextureViewsArray()
   {
-    size_t curSize = mTextureViews.size();
-    size_t newSize = curSize == 0 ? kInitialTextureViewsVectorSize : curSize * 2;
+    std::size_t curSize = mTextureViews.size();
+    std::size_t newSize = curSize == 0 ? kInitialTextureViewsVectorSize : curSize * 2;
     mTextureViews.resize(newSize);
-    for (size_t i = curSize; i < newSize; i++)
+    for (std::size_t i = curSize; i < newSize; i++)
     {
       mFreeTextureViewIndices.push(i);
     }
   }
 
   std::vector<rhi::vk::Buffer> mBuffers;
-  std::queue<size_t> mFreeBuffersIndices;
+  std::queue<std::size_t> mFreeBuffersIndices;
 
   std::vector<rhi::vk::Texture> mTextures;
-  std::queue<size_t> mFreeTextureIndices;
+  std::queue<std::size_t> mFreeTextureIndices;
 
   std::vector<rhi::vk::TextureView> mTextureViews;
-  std::queue<size_t> mFreeTextureViewIndices;
+  std::queue<std::size_t> mFreeTextureViewIndices;
 
   std::array<rhi::vk::CommandList, kMaxCommandLists> mCmdLists;
-  std::queue<size_t> mFreeCmdListsIndices;
+  std::queue<std::size_t> mFreeCmdListsIndices;
 
   std::vector<VulkanFrameData> mFrameDataArray;
-  std::queue<size_t> mFreeFrameDataIndices;
+  std::queue<std::size_t> mFreeFrameDataIndices;
 
   bool mIsInit = false;
 };

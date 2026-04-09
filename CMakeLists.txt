@@ -7,6 +7,21 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+function(mental_copy_shared_libs targetName)
+  foreach(sharedLib IN LISTS ARGN)
+    add_custom_command(
+      TARGET ${targetName}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different "${sharedLib}" "$<TARGET_FILE_DIR:${targetName}>"
+      VERBATIM
+    )
+  endforeach()
+
+  if(LINUX)
+    set_property(TARGET ${targetName} APPEND PROPERTY BUILD_RPATH "\$ORIGIN")
+  endif()
+endfunction()
+
 enable_testing()
 
 if(MSVC)

@@ -23,7 +23,7 @@ const char* mental::core::resultToString(mental::core::Result res)
     default:
     {
       static char buf[24];
-      snprintf(buf, sizeof(buf), "Unknown (%d)", res);
+      snprintf(buf, sizeof(buf), "Unknown (%d)", static_cast<int>(res));
       return buf;
     }
   }

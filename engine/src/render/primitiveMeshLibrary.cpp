@@ -62,6 +62,12 @@ mental::core::Result mental::render::PrimitiveMeshLibrary::init()
 
 void mental::render::PrimitiveMeshLibrary::destroy()
 {
+  if (!mIsInitialized)
+  {
+    MENTAL_WARN("Trying to destroy an uninitialized PrimitiveMeshLibrary");
+    return;
+  }
+
   clearViews();
 
   if (mStorageBufferHandle.isValid())

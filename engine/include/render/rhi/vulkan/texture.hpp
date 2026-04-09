@@ -1,6 +1,6 @@
 #pragma once
 #include <vma/vk_mem_alloc.h>
-#include <Volk/volk.h>
+#include <volk.h>
 #include <render/rhi/rhi.hpp>
 
 namespace mental::rhi::vk

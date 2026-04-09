@@ -196,6 +196,8 @@ VkCullModeFlags mental::rhi::vk::convertCullMode(mental::rhi::CullMode cullMode)
       return VK_CULL_MODE_NONE;
     case CullMode::eBack:
       return VK_CULL_MODE_BACK_BIT;
+    case CullMode::eFront:
+      return VK_CULL_MODE_FRONT_BIT;
   }
 }
 

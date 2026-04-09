@@ -107,7 +107,7 @@ mental::core::Result mental::rhi::vk::CommandList::end()
 }
 
 mental::core::Result mental::rhi::vk::CommandList::copyBuffer(
-  IBuffer* srcBuffer, size_t srcOffset, IBuffer* dstBuffer, size_t dstOffset, size_t size)
+  IBuffer* srcBuffer, std::size_t srcOffset, IBuffer* dstBuffer, std::size_t dstOffset, std::size_t size)
 {
   MENTAL_ASSERT_DEBUG(srcBuffer != nullptr);
   MENTAL_ASSERT_DEBUG(dstBuffer != nullptr);
@@ -125,7 +125,7 @@ mental::core::Result mental::rhi::vk::CommandList::copyBuffer(
 }
 
 mental::core::Result mental::rhi::vk::CommandList::copyBufferToImage(
-  IBuffer* buffer, size_t bufferOffset, ITexture* texture, uint32_t mipLevel, const TextureOffset3D& textureOffset)
+  IBuffer* buffer, std::size_t bufferOffset, ITexture* texture, uint32_t mipLevel, const TextureOffset3D& textureOffset)
 {
   MENTAL_ASSERT_DEBUG(buffer != nullptr);
   MENTAL_ASSERT_DEBUG(texture != nullptr);

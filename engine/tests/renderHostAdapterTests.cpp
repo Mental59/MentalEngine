@@ -6,6 +6,7 @@
 
 #include <exception>
 #include <iostream>
+#include <string_view>
 #include <stdexcept>
 
 namespace
@@ -19,9 +20,7 @@ struct FakeWindow final : mental::platform::IWindow
     return Result::eSuccess;
   }
 
-  void pollEvents() const override
-  {
-  }
+  void pollEvents() const override {}
 
   void waitEvents() const override
   {
@@ -52,12 +51,18 @@ struct FakeWindow final : mental::platform::IWindow
     return currentSize;
   }
 
-  void setCursorMode(mental::platform::CursorMode) override
-  {
-  }
+  void setCursorMode(mental::platform::CursorMode) override {}
 
-  void setRawMouseMotionEnabled(bool) override
+  void setRawMouseMotionEnabled(bool) override {}
+
+  std::vector<const char*> getPlatformVulkanExtensions() const override
   {
+    if (!provideRequiredVulkanExtensions)
+    {
+      return {};
+    }
+
+    return {kRequiredVulkanExtension};
   }
 
   bool isValid() const override
@@ -76,6 +81,9 @@ struct FakeWindow final : mental::platform::IWindow
   mutable mental::platform::WindowSize currentSize {1280u, 720u};
   bool closeRequested = false;
   bool valid = true;
+  bool provideRequiredVulkanExtensions = true;
+
+  static constexpr const char* kRequiredVulkanExtension = "VK_KHR_surface";
 };
 
 void require(bool condition, const char* message)
@@ -107,7 +115,12 @@ void testCreateDeviceInitInputProvidesSurfaceFactory()
   const mental::rhi::DeviceInitInput initInput = adapter.createDeviceInitInput(mental::rhi::GraphicsApi::Vulkan);
 
   require(initInput.vulkanSurface.createSurface != nullptr, "Vulkan init input should provide a surface callback");
-  require(initInput.vulkanSurface.userData == &window, "Vulkan init input should retain the window as callback context");
+  require(
+    initInput.vulkanSurface.userData == &window, "Vulkan init input should retain the window as callback context");
+  require(initInput.platformExtensions.size() == 1u,
+    "Vulkan init input should provide required platform instance extensions");
+  require(std::string_view(initInput.platformExtensions[0]) == FakeWindow::kRequiredVulkanExtension,
+    "Vulkan init input should preserve the required platform instance extension list");
 }
 
 void testValidateDeviceInitInputAcceptsWindowAdapterInput()
@@ -128,6 +141,19 @@ void testValidateDeviceInitInputRejectsMissingSurfaceFactory()
   require(
     mental::rhi::validateDeviceInitInput(mental::rhi::GraphicsApi::Vulkan, initInput) == Result::eInitializationFailed,
     "Missing Vulkan surface creation input should fail validation");
+}
+
+void testValidateDeviceInitInputRejectsMissingPlatformExtensions()
+{
+  FakeWindow window;
+  window.provideRequiredVulkanExtensions = false;
+  mental::render::WindowRenderHostAdapter adapter(&window);
+
+  const mental::rhi::DeviceInitInput initInput = adapter.createDeviceInitInput(mental::rhi::GraphicsApi::Vulkan);
+
+  require(
+    mental::rhi::validateDeviceInitInput(mental::rhi::GraphicsApi::Vulkan, initInput) == Result::eInitializationFailed,
+    "Missing required Vulkan platform extensions should fail validation");
 }
 
 void testValidateDeviceInitInputRejectsNullWindowContext()
@@ -208,6 +234,7 @@ int main()
     testCreateDeviceInitInputProvidesSurfaceFactory();
     testValidateDeviceInitInputAcceptsWindowAdapterInput();
     testValidateDeviceInitInputRejectsMissingSurfaceFactory();
+    testValidateDeviceInitInputRejectsMissingPlatformExtensions();
     testValidateDeviceInitInputRejectsNullWindowContext();
     testFenceResetOccursOnlyForSubmitEligibleAcquireResult();
     testRecoverNextFramebufferExtentReturnsCurrentExtent();

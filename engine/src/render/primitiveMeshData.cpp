@@ -119,9 +119,9 @@ void appendQuad(PrimitiveMeshData& mesh,
   mesh.indices.push_back(baseVertex + 0u);
   mesh.indices.push_back(baseVertex + 1u);
   mesh.indices.push_back(baseVertex + 2u);
-  mesh.indices.push_back(baseVertex + 0u);
   mesh.indices.push_back(baseVertex + 2u);
   mesh.indices.push_back(baseVertex + 3u);
+  mesh.indices.push_back(baseVertex + 0u);
 }
 
 [[nodiscard]] PrimitiveMeshData buildCubeMeshData()
@@ -178,10 +178,10 @@ void appendQuad(PrimitiveMeshData& mesh,
   PrimitiveMeshData mesh {};
   appendQuad(mesh,
     glm::vec3 {0.0f, 1.0f, 0.0f},
-    glm::vec3 {-kPlaneHalfExtent, 0.0f, -kPlaneHalfExtent},
     glm::vec3 {-kPlaneHalfExtent, 0.0f, kPlaneHalfExtent},
     glm::vec3 {kPlaneHalfExtent, 0.0f, kPlaneHalfExtent},
-    glm::vec3 {kPlaneHalfExtent, 0.0f, -kPlaneHalfExtent});
+    glm::vec3 {kPlaneHalfExtent, 0.0f, -kPlaneHalfExtent},
+    glm::vec3 {-kPlaneHalfExtent, 0.0f, -kPlaneHalfExtent});
   return mesh;
 }
 
@@ -233,12 +233,13 @@ void appendQuad(PrimitiveMeshData& mesh,
       const std::uint32_t bottomRight = bottomLeft + 1u;
       const std::uint32_t topRight = topLeft + 1u;
 
-      mesh.indices.push_back(topLeft);
-      mesh.indices.push_back(bottomRight);
       mesh.indices.push_back(bottomLeft);
-      mesh.indices.push_back(topLeft);
       mesh.indices.push_back(topRight);
       mesh.indices.push_back(bottomRight);
+
+      mesh.indices.push_back(topRight);
+      mesh.indices.push_back(bottomLeft);
+      mesh.indices.push_back(topLeft);
     }
   }
 

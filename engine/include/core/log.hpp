@@ -74,22 +74,21 @@ class Logger
 };
 } // namespace mental::core::log
 
-#define MENTAL_FATAL(message, ...)                                                                                     \
-  mental::core::log::Logger::getInstance().fatal(std::source_location::current(), message, __VA_ARGS__)
+#define MENTAL_LOG_CALL(method, message, ...)                                                                          \
+  mental::core::log::Logger::getInstance().method(std::source_location::current(), message __VA_OPT__(, ) __VA_ARGS__)
 
-#define MENTAL_ERROR(message, ...)                                                                                     \
-  mental::core::log::Logger::getInstance().error(std::source_location::current(), message, __VA_ARGS__)
+#define MENTAL_FATAL(message, ...) MENTAL_LOG_CALL(fatal, message, __VA_ARGS__)
+
+#define MENTAL_ERROR(message, ...) MENTAL_LOG_CALL(error, message, __VA_ARGS__)
 
 #ifdef MENTAL_LOG_WARNINGS
-#define MENTAL_WARN(message, ...)                                                                                      \
-  mental::core::log::Logger::getInstance().warn(std::source_location::current(), message, __VA_ARGS__)
+#define MENTAL_WARN(message, ...) MENTAL_LOG_CALL(warn, message, __VA_ARGS__)
 #else
 #define MENTAL_WARN(message, ...)
 #endif
 
 #ifdef MENTAL_LOG_INFO
-#define MENTAL_INFO(message, ...)                                                                                      \
-  mental::core::log::Logger::getInstance().info(std::source_location::current(), message, __VA_ARGS__)
+#define MENTAL_INFO(message, ...) MENTAL_LOG_CALL(info, message, __VA_ARGS__)
 #else
 #define MENTAL_INFO(message, ...)
 #endif
@@ -102,8 +101,7 @@ class Logger
 #endif
 
 #ifdef MENTAL_LOG_TRACES
-#define MENTAL_TRACE(message, ...)                                                                                     \
-  mental::core::log::Logger::getInstance().trace(std::source_location::current(), message, __VA_ARGS__)
+#define MENTAL_TRACE(message, ...) MENTAL_LOG_CALL(trace, message, __VA_ARGS__)
 #else
 #define MENTAL_TRACE(message, ...)
 #endif

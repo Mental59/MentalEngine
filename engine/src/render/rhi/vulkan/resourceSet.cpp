@@ -56,6 +56,7 @@ void mental::rhi::vk::ResourceLayout::destroy()
 {
   if (!mIsInitialized)
   {
+    MENTAL_WARN("Trying to destroy an uninitialized vk::ResourceLayout");
     return;
   }
 
@@ -135,6 +136,7 @@ void mental::rhi::vk::ResourceSet::destroy()
 {
   if (!mIsInitialized)
   {
+    MENTAL_WARN("Trying to destroy an uninitialized vk::ResourceSet");
     return;
   }
 
