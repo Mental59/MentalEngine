@@ -387,6 +387,13 @@ bool PhysicalDeviceInfo::isIntegratedGPU() const
   return properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
 }
 
+bool PhysicalDeviceInfo::isCPU() const
+{
+  VkPhysicalDeviceProperties properties;
+  vkGetPhysicalDeviceProperties(mPhysicalDevice, &properties);
+  return properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;
+}
+
 bool PhysicalDeviceInfo::checkDeviceExtensionSupport(const std::vector<const char*>& extensions) const
 {
   VkResult vkRes;
@@ -467,8 +474,8 @@ SwapchainSupportDetails PhysicalDeviceInfo::querySwapchainSupport() const
 
 int PhysicalDeviceInfo::calculateScore() const
 {
-  if (!mAreExtensionsSupported || !isGPU() || mGraphicsQueueFamily < 0 || mSwapchainSupportDetails.formats.empty() ||
-      mSwapchainSupportDetails.presentModes.empty())
+  if (!mAreExtensionsSupported || (!isGPU() && !isCPU()) || mGraphicsQueueFamily < 0 ||
+      mSwapchainSupportDetails.formats.empty() || mSwapchainSupportDetails.presentModes.empty())
   {
     return 0;
   }
