@@ -233,12 +233,13 @@ void appendQuad(PrimitiveMeshData& mesh,
       const std::uint32_t bottomRight = bottomLeft + 1u;
       const std::uint32_t topRight = topLeft + 1u;
 
-      mesh.indices.push_back(topLeft);
-      mesh.indices.push_back(bottomRight);
       mesh.indices.push_back(bottomLeft);
-      mesh.indices.push_back(topLeft);
       mesh.indices.push_back(topRight);
       mesh.indices.push_back(bottomRight);
+
+      mesh.indices.push_back(topRight);
+      mesh.indices.push_back(bottomLeft);
+      mesh.indices.push_back(topLeft);
     }
   }
 
