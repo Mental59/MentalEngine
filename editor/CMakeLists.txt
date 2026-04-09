@@ -19,13 +19,7 @@ if(WIN32)
 target_compile_definitions(MentalEditor PRIVATE NOMINMAX)
 endif()
 
-add_custom_command(
-  TARGET MentalEditor
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory "${MENTAL_SHADER_SOURCE_DIR}" "$<TARGET_FILE_DIR:MentalEditor>/shaders"
-  VERBATIM
-)
-mental_copy_shared_libs(MentalEditor ${MENTAL_SLANG_SHARED_LIB_PATH})
+add_dependencies(MentalEditor MentalRuntimeShaders)
 
 if(LOG_WARNINGS)
 target_compile_definitions(MentalEngine PRIVATE MENTAL_LOG_WARNINGS)
