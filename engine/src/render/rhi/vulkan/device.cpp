@@ -204,8 +204,8 @@ core::Result Device::init(const DeviceDesc& desc)
   }
 
   SwapchainDesc swapchainDesc {};
-  swapchainDesc.enableVerticalSync = desc.enableTripleBuffering;
-  swapchainDesc.textureCount = desc.enableTripleBuffering ? 3 : 2;
+  swapchainDesc.enableVerticalSync = desc.enableVerticalSync;
+  swapchainDesc.enableTripleBuffering = desc.enableTripleBuffering;
   res = mSwapchain.init(swapchainDesc);
   if (res != core::Result::eSuccess)
   {

@@ -185,12 +185,13 @@ mental::core::Result mental::rhi::vk::Swapchain::createSwapchain(
   VkPresentModeKHR presentMode = choosePresentMode(mDesc);
   VkExtent2D extent = chooseSwapchainExtent(surfaceCapabilities, width, height);
 
-  uint32_t minImageCount = std::max(surfaceCapabilities.minImageCount, mDesc.textureCount);
+  uint32_t textureCount = mDesc.enableTripleBuffering ? 3 : 2;
+  uint32_t minImageCount = std::max(surfaceCapabilities.minImageCount, textureCount);
   if (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount)
   {
     MENTAL_WARN("Surface max image count is {}, but got {}, minImageCount is set to {}",
       surfaceCapabilities.maxImageCount,
-      mDesc.textureCount,
+      textureCount,
       surfaceCapabilities.maxImageCount);
     minImageCount = surfaceCapabilities.maxImageCount;
   }
@@ -424,8 +425,15 @@ mental::rhi::TextureFormat mental::rhi::vk::Swapchain::surfaceFormatToTextureFor
 
 VkPresentModeKHR mental::rhi::vk::Swapchain::choosePresentMode(const SwapchainDesc& desc) const
 {
-  VkPresentModeKHR desiredPresentMode =
-    desc.enableVerticalSync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
+  VkPresentModeKHR desiredPresentMode;
+  if (desc.enableVerticalSync)
+  {
+    desiredPresentMode = VK_PRESENT_MODE_FIFO_KHR;
+  }
+  else
+  {
+    desiredPresentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+  }
 
   const auto& availablePresentModes = vk::getDevice().getPresentModes();
   for (VkPresentModeKHR mode : availablePresentModes)

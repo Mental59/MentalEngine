@@ -389,7 +389,7 @@ class ICommandQueue : public core::resource::IResource
 
 struct SwapchainDesc
 {
-  uint32_t textureCount;
+  bool enableTripleBuffering;
   bool enableVerticalSync;
 };
 class ISwapchain : public core::resource::IResource
